@@ -7,6 +7,7 @@ import FilterSidebar from '@/components/FilterSidebar'
 // ⚡ IMPORT YOUR NEW PRICE CALCULATOR UTILITY
 import { calculateProductPrice } from '@/utils/price'
 import PromoCarousel from '@/components/PromoCarousel'
+import NavUserMenu from '@/components/NavUserMenu'
 
 interface PageProps {
   params: Promise<{ locale: string }>
@@ -173,6 +174,7 @@ export default async function StorefrontHome({ params, searchParams }: PageProps
         }
       `}</style>
 
+      <NavUserMenu currentLocale={currentLocale} />
       <Navbar currentLocale={currentLocale} activeCategory={category} />
       <PromoCarousel currentLocale={currentLocale} />
       <div

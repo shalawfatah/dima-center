@@ -73,6 +73,7 @@ export interface Config {
     media: Media;
     categories: Category;
     promotions: Promotion;
+    'pc-builds': PcBuild;
     'payload-kv': PayloadKv;
     'payload-locked-documents': PayloadLockedDocument;
     'payload-preferences': PayloadPreference;
@@ -86,6 +87,7 @@ export interface Config {
     media: MediaSelect<false> | MediaSelect<true>;
     categories: CategoriesSelect<false> | CategoriesSelect<true>;
     promotions: PromotionsSelect<false> | PromotionsSelect<true>;
+    'pc-builds': PcBuildsSelect<false> | PcBuildsSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
     'payload-preferences': PayloadPreferencesSelect<false> | PayloadPreferencesSelect<true>;
@@ -131,6 +133,7 @@ export interface UserAuthOperations {
  */
 export interface User {
   id: number;
+  role: 'admin' | 'customer';
   updatedAt: string;
   createdAt: string;
   email: string;
@@ -228,21 +231,9 @@ export interface Media {
  */
 export interface Order {
   id: number;
-  customerName: string;
-  phoneNumber: string;
-  deliveryAddress?: string | null;
-  paymentMethod: 'in_store' | 'cash_on_delivery';
-  status?: ('pending' | 'processing' | 'ready' | 'completed' | 'cancelled') | null;
-  items: {
-    product: number | Product;
-    quantity: number;
-    /**
-     * Snapshotted price to protect historical logs if item prices change later.
-     */
-    priceAtPurchase: number;
-    id?: string | null;
-  }[];
-  totalOrderAmount: number;
+  user: number | User;
+  total: number;
+  status?: ('processing' | 'completed') | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -262,6 +253,28 @@ export interface Promotion {
    */
   linkUrl?: string | null;
   isActive?: boolean | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "pc-builds".
+ */
+export interface PcBuild {
+  id: number;
+  name: string;
+  user: number | User;
+  totalPrice: number;
+  components?: {
+    cpu?: (number | null) | Product;
+    gpu?: (number | null) | Product;
+    motherboard?: (number | null) | Product;
+    ram?: (number | null) | Product;
+    storage?: (number | null) | Product;
+    psu?: (number | null) | Product;
+    case?: (number | null) | Product;
+    cooler?: (number | null) | Product;
+  };
   updatedAt: string;
   createdAt: string;
 }
@@ -312,6 +325,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'promotions';
         value: number | Promotion;
+      } | null)
+    | ({
+        relationTo: 'pc-builds';
+        value: number | PcBuild;
       } | null);
   globalSlug?: string | null;
   user: {
@@ -360,6 +377,7 @@ export interface PayloadMigration {
  * via the `definition` "users_select".
  */
 export interface UsersSelect<T extends boolean = true> {
+  role?: T;
   updatedAt?: T;
   createdAt?: T;
   email?: T;
@@ -413,20 +431,9 @@ export interface ProductsSelect<T extends boolean = true> {
  * via the `definition` "orders_select".
  */
 export interface OrdersSelect<T extends boolean = true> {
-  customerName?: T;
-  phoneNumber?: T;
-  deliveryAddress?: T;
-  paymentMethod?: T;
+  user?: T;
+  total?: T;
   status?: T;
-  items?:
-    | T
-    | {
-        product?: T;
-        quantity?: T;
-        priceAtPurchase?: T;
-        id?: T;
-      };
-  totalOrderAmount?: T;
   updatedAt?: T;
   createdAt?: T;
 }
@@ -471,6 +478,29 @@ export interface PromotionsSelect<T extends boolean = true> {
   relatedProduct?: T;
   linkUrl?: T;
   isActive?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "pc-builds_select".
+ */
+export interface PcBuildsSelect<T extends boolean = true> {
+  name?: T;
+  user?: T;
+  totalPrice?: T;
+  components?:
+    | T
+    | {
+        cpu?: T;
+        gpu?: T;
+        motherboard?: T;
+        ram?: T;
+        storage?: T;
+        psu?: T;
+        case?: T;
+        cooler?: T;
+      };
   updatedAt?: T;
   createdAt?: T;
 }

@@ -3,6 +3,7 @@ import { Media } from './collections/Media'
 import { Orders } from './collections/Orders'
 import { Categories } from './collections/Categories'
 import { Promotions } from './collections/Promotions'
+import { PCBuilds } from './collections/PCBuilds'
 import { lexicalEditor } from '@payloadcms/richtext-lexical'
 import path from 'path'
 import { buildConfig } from 'payload'
@@ -16,9 +17,11 @@ const dirname = path.dirname(filename)
 
 export default buildConfig({
   admin: {
-    user: 'users', // Matches the slug inside the Users collection configuration
+    user: Users.slug,
+    disable: false,
   },
-  collections: [Users, Products, Orders, Media, Categories, Promotions],
+  // Ensure your dual collections array duplication typo from the paste is cleared out:
+  collections: [Users, Products, Orders, Media, Categories, Promotions, PCBuilds],
   editor: lexicalEditor({}),
   secret: process.env.PAYLOAD_SECRET || '',
   typescript: {

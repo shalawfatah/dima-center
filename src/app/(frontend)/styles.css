@@ -10,7 +10,6 @@ html {
   font-size: 18px;
   line-height: 32px;
 
-  background: rgb(0, 0, 0);
   -webkit-font-smoothing: antialiased;
 }
 
@@ -135,7 +134,6 @@ svg {
 
     .docs {
       color: rgb(1000, 1000, 1000);
-      background: rgb(0, 0, 0);
       border: 1px solid rgb(1000, 1000, 1000);
     }
   }

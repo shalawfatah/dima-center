@@ -3,81 +3,47 @@ import { CollectionConfig } from 'payload'
 export const Orders: CollectionConfig = {
   slug: 'orders',
   admin: {
-    useAsTitle: 'customerName',
-    defaultColumns: ['customerName', 'phoneNumber', 'paymentMethod', 'status', 'createdAt'],
+    useAsTitle: 'id',
+  },
+  access: {
+    // 🔒 Fix: Allow users to query and read their own orders
+    read: ({ req }) => {
+      // If no user is logged in, deny access completely
+      if (!req.user) return false
+
+      // If admin, let them see all orders
+      if (req.user.role === 'admin') return true
+
+      // If customer, restrict query results strictly to their own rows
+      return {
+        user: {
+          equals: req.user.id,
+        },
+      }
+    },
+    // Keep your other access control methods (create, update) here...
   },
   fields: [
     {
-      name: 'customerName',
-      type: 'text',
+      name: 'user',
+      type: 'relationship',
+      relationTo: 'users',
       required: true,
+      index: true,
     },
     {
-      name: 'phoneNumber',
-      type: 'text',
+      name: 'total',
+      type: 'number',
       required: true,
-    },
-    {
-      name: 'deliveryAddress',
-      type: 'textarea',
-      admin: {
-        condition: (data) => data?.paymentMethod === 'cash_on_delivery',
-      },
-    },
-    {
-      name: 'paymentMethod',
-      type: 'select',
-      required: true,
-      options: [
-        { label: 'In-Store Pickup', value: 'in_store' },
-        { label: 'Cash on Delivery (COD)', value: 'cash_on_delivery' },
-      ],
     },
     {
       name: 'status',
       type: 'select',
-      defaultValue: 'pending',
+      defaultValue: 'processing',
       options: [
-        { label: 'Pending / New Order', value: 'pending' },
         { label: 'Processing', value: 'processing' },
-        { label: 'Ready for Pickup / Out for Delivery', value: 'ready' },
         { label: 'Completed', value: 'completed' },
-        { label: 'Cancelled', value: 'cancelled' },
       ],
-    },
-    // Relational field linking straight back to your Products collection
-    {
-      name: 'items',
-      type: 'array',
-      required: true,
-      fields: [
-        {
-          name: 'product',
-          type: 'relationship',
-          relationTo: 'products',
-          required: true,
-        },
-        {
-          name: 'quantity',
-          type: 'number',
-          required: true,
-          defaultValue: 1,
-        },
-        {
-          name: 'priceAtPurchase',
-          type: 'number',
-          required: true,
-          admin: {
-            description:
-              'Snapshotted price to protect historical logs if item prices change later.',
-          },
-        },
-      ],
-    },
-    {
-      name: 'totalOrderAmount',
-      type: 'number',
-      required: true,
     },
   ],
 }
