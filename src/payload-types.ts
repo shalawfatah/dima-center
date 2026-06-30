@@ -72,6 +72,7 @@ export interface Config {
     orders: Order;
     media: Media;
     categories: Category;
+    promotions: Promotion;
     'payload-kv': PayloadKv;
     'payload-locked-documents': PayloadLockedDocument;
     'payload-preferences': PayloadPreference;
@@ -84,6 +85,7 @@ export interface Config {
     orders: OrdersSelect<false> | OrdersSelect<true>;
     media: MediaSelect<false> | MediaSelect<true>;
     categories: CategoriesSelect<false> | CategoriesSelect<true>;
+    promotions: PromotionsSelect<false> | PromotionsSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
     'payload-preferences': PayloadPreferencesSelect<false> | PayloadPreferencesSelect<true>;
@@ -163,8 +165,9 @@ export interface Product {
    * Select the specific child category (e.g., CPU, Mouse)
    */
   category?: (number | null) | Category;
-  isOnSale?: boolean | null;
-  salePrice?: number | null;
+  hasDiscount?: boolean | null;
+  discountType?: ('fixed' | 'percentage') | null;
+  discountValue?: number | null;
   technicalSpecs?:
     | {
         key: string;
@@ -245,6 +248,25 @@ export interface Order {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "promotions".
+ */
+export interface Promotion {
+  id: number;
+  title: string;
+  description?: string | null;
+  image: number | Media;
+  type?: ('generic' | 'product' | 'event') | null;
+  relatedProduct?: (number | null) | Product;
+  /**
+   * Optional URL if this links to an external site or specific page instead of a product.
+   */
+  linkUrl?: string | null;
+  isActive?: boolean | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-kv".
  */
 export interface PayloadKv {
@@ -286,6 +308,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'categories';
         value: number | Category;
+      } | null)
+    | ({
+        relationTo: 'promotions';
+        value: number | Promotion;
       } | null);
   globalSlug?: string | null;
   user: {
@@ -362,8 +388,9 @@ export interface ProductsSelect<T extends boolean = true> {
   stock?: T;
   condition?: T;
   category?: T;
-  isOnSale?: T;
-  salePrice?: T;
+  hasDiscount?: T;
+  discountType?: T;
+  discountValue?: T;
   technicalSpecs?:
     | T
     | {
@@ -429,6 +456,21 @@ export interface CategoriesSelect<T extends boolean = true> {
   title?: T;
   slug?: T;
   parent?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "promotions_select".
+ */
+export interface PromotionsSelect<T extends boolean = true> {
+  title?: T;
+  description?: T;
+  image?: T;
+  type?: T;
+  relatedProduct?: T;
+  linkUrl?: T;
+  isActive?: T;
   updatedAt?: T;
   createdAt?: T;
 }

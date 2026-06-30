@@ -2,6 +2,7 @@ import { postgresAdapter } from '@payloadcms/db-postgres'
 import { Media } from './collections/Media'
 import { Orders } from './collections/Orders'
 import { Categories } from './collections/Categories'
+import { Promotions } from './collections/Promotions'
 import { lexicalEditor } from '@payloadcms/richtext-lexical'
 import path from 'path'
 import { buildConfig } from 'payload'
@@ -17,7 +18,7 @@ export default buildConfig({
   admin: {
     user: 'users', // Matches the slug inside the Users collection configuration
   },
-  collections: [Users, Products, Orders, Media, Categories],
+  collections: [Users, Products, Orders, Media, Categories, Promotions],
   editor: lexicalEditor({}),
   secret: process.env.PAYLOAD_SECRET || '',
   typescript: {

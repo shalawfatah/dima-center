@@ -4,17 +4,18 @@ import Link from 'next/link'
 import Navbar from '@/components/Navbar'
 import Footer from '@/components/Footer'
 import { notFound } from 'next/navigation'
+// ⚡ IMPORT THE PRICING HELPER
+import { calculateProductPrice } from '@/utils/price'
 
 interface ProductPageProps {
   params: Promise<{
-    locale: string // Next.js passes this directly as a flat string token now
+    locale: string
     id: string
   }>
 }
 
 export default async function ProductDetailPage({ params }: ProductPageProps) {
   const resolvedParams = await params
-  // Fix the locale reading directly from the dynamic string token
   const currentLocale = resolvedParams.locale || 'en'
   const productId = resolvedParams.id
 
@@ -37,7 +38,17 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
     collection: 'products',
     locale: currentLocale as 'en' | 'ar' | 'ckb',
     where: {
-      and: [{ category: { equals: product.category } }, { id: { not_equals: product.id } }],
+      and: [
+        {
+          category: {
+            equals:
+              typeof product.category === 'object'
+                ? (product.category as any).id
+                : product.category,
+          },
+        },
+        { id: { not_equals: product.id } },
+      ],
     },
     limit: 4,
   })
@@ -48,6 +59,15 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
     product.featuredImage && typeof product.featuredImage === 'object'
       ? (product.featuredImage as any).url
       : null
+
+  // 🏷️ CALCULATE ACTIVE PRODUCT DISCOUNT METRICS
+  const mainPriceSpecs = calculateProductPrice(product)
+
+  // 👑 SAFE RELATION CATEGORY RESOLVER
+  const productCategoryName =
+    product.category && typeof product.category === 'object'
+      ? (product.category as any).title || (product.category as any).name
+      : ''
 
   return (
     <div
@@ -102,7 +122,8 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
             {currentLocale === 'ar' ? 'الرئيسية' : currentLocale === 'ckb' ? 'سەرەکی' : 'Home'}
           </Link>
           {' / '}
-          <span style={{ textTransform: 'uppercase' }}>{product.category}</span>
+          {/* 👑 FIXED: Render safe localized string value instead of raw relation object crash */}
+          <span style={{ textTransform: 'uppercase' }}>{productCategoryName || 'Hardware'}</span>
         </div>
 
         <div className="product-layout-grid">
@@ -116,8 +137,31 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
                 borderRadius: '12px',
                 overflow: 'hidden',
                 border: '1px solid #eee',
+                position: 'relative',
               }}
             >
+              {/* 🏷️ SALE CORNER BADGE OVERLAY */}
+              {mainPriceSpecs.isDiscounted && (
+                <span
+                  style={{
+                    position: 'absolute',
+                    top: '16px',
+                    left: isRtl ? 'auto' : '16px',
+                    right: isRtl ? '16px' : 'auto',
+                    background: '#ef4444',
+                    color: '#fff',
+                    fontSize: '12px',
+                    fontWeight: '700',
+                    padding: '6px 12px',
+                    borderRadius: '6px',
+                    zIndex: 10,
+                  }}
+                >
+                  {mainPriceSpecs.badgeText}{' '}
+                  {currentLocale === 'ar' ? 'خصم' : currentLocale === 'ckb' ? 'داشکانـدن' : 'OFF'}
+                </span>
+              )}
+
               {featuredImageUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
@@ -172,7 +216,7 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
               </div>
             )}
 
-            {/* === 🛠️ FIXED TECHNICAL SPECIFICATIONS MATRIX === */}
+            {/* === TECHNICAL SPECIFICATIONS MATRIX === */}
             <div style={{ marginTop: '3rem' }}>
               <h3
                 style={{
@@ -265,7 +309,7 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
                   textTransform: 'uppercase',
                 }}
               >
-                {product.condition}
+                {product.condition?.replace('_', ' ')}
               </span>
 
               <h1
@@ -357,6 +401,7 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
                     />
                   </div>
 
+                  {/* 🏷️ DYNAMICALLY BALANCED TOTAL VALUE AND PRICE DISPLAY */}
                   <div
                     style={{
                       display: 'flex',
@@ -373,9 +418,34 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
                           ? 'کۆی گشتی:'
                           : 'Total Amount:'}
                     </span>
-                    <span style={{ fontSize: '2.25rem', fontWeight: '800', color: '#000' }}>
-                      ${product.price}
-                    </span>
+
+                    <div
+                      style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}
+                    >
+                      {mainPriceSpecs.isDiscounted ? (
+                        <>
+                          <span
+                            style={{
+                              fontSize: '14px',
+                              textDecoration: 'line-through',
+                              color: '#94a3b8',
+                              fontWeight: '500',
+                            }}
+                          >
+                            ${mainPriceSpecs.originalPrice}
+                          </span>
+                          <span
+                            style={{ fontSize: '2.25rem', fontWeight: '800', color: '#ef4444' }}
+                          >
+                            ${mainPriceSpecs.finalPrice}
+                          </span>
+                        </>
+                      ) : (
+                        <span style={{ fontSize: '2.25rem', fontWeight: '800', color: '#000' }}>
+                          ${mainPriceSpecs.originalPrice}
+                        </span>
+                      )}
+                    </div>
                   </div>
 
                   <button
@@ -424,6 +494,10 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
               {relatedData.docs.map((item) => {
                 const itemImgObj = item.featuredImage && typeof item.featuredImage === 'object'
                 const itemImgUrl = itemImgObj ? (item.featuredImage as any).url : null
+
+                // 🏷️ CALCULATE RELATED ITEMS PRICING DYNAMICS INDEPENDENTLY
+                const relatedPriceSpecs = calculateProductPrice(item)
+
                 return (
                   <Link
                     key={item.id}
@@ -436,8 +510,29 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
                         borderRadius: '8px',
                         padding: '1rem',
                         background: '#fff',
+                        position: 'relative',
                       }}
                     >
+                      {relatedPriceSpecs.isDiscounted && (
+                        <span
+                          style={{
+                            position: 'absolute',
+                            top: '8px',
+                            left: isRtl ? 'auto' : '8px',
+                            right: isRtl ? '8px' : 'auto',
+                            background: '#ef4444',
+                            color: '#fff',
+                            fontSize: '10px',
+                            fontWeight: '700',
+                            padding: '2px 6px',
+                            borderRadius: '4px',
+                            zIndex: 5,
+                          }}
+                        >
+                          {relatedPriceSpecs.badgeText} OFF
+                        </span>
+                      )}
+
                       <div
                         style={{
                           width: '100%',
@@ -480,7 +575,32 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
                       >
                         {item.title}
                       </h4>
-                      <span style={{ fontWeight: 'bold', fontSize: '16px' }}>${item.price}</span>
+
+                      {/* RELATED ITEM DYNAMIC PRICING INLINE */}
+                      <div style={{ display: 'flex', gap: '8px', alignItems: 'baseline' }}>
+                        {relatedPriceSpecs.isDiscounted ? (
+                          <>
+                            <span
+                              style={{ fontWeight: 'bold', fontSize: '16px', color: '#ef4444' }}
+                            >
+                              ${relatedPriceSpecs.finalPrice}
+                            </span>
+                            <span
+                              style={{
+                                fontSize: '12px',
+                                textDecoration: 'line-through',
+                                color: '#94a3b8',
+                              }}
+                            >
+                              ${relatedPriceSpecs.originalPrice}
+                            </span>
+                          </>
+                        ) : (
+                          <span style={{ fontWeight: 'bold', fontSize: '16px' }}>
+                            ${relatedPriceSpecs.originalPrice}
+                          </span>
+                        )}
+                      </div>
                     </div>
                   </Link>
                 )

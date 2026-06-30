@@ -4,6 +4,9 @@ import Link from 'next/link'
 import Navbar from '@/components/Navbar'
 import Footer from '@/components/Footer'
 import FilterSidebar from '@/components/FilterSidebar'
+// ⚡ IMPORT YOUR NEW PRICE CALCULATOR UTILITY
+import { calculateProductPrice } from '@/utils/price'
+import PromoCarousel from '@/components/PromoCarousel'
 
 interface PageProps {
   params: Promise<{ locale: string }>
@@ -23,7 +26,6 @@ async function getFilterFacets(categorySlug?: string, locale: string = 'en') {
   const baseData = await payload.find({
     collection: 'products',
     locale: locale as any,
-    // 👑 FIX: Query by slug relationship instead of raw parent ID
     where: categorySlug ? { 'category.slug': { equals: categorySlug } } : undefined,
     limit: 100,
   })
@@ -72,7 +74,6 @@ export default async function StorefrontHome({ params, searchParams }: PageProps
 
   const andConditions: any[] = []
 
-  // 👑 FIX 2: Safely target the relational sub-field "category.slug" instead of "category"
   if (category) {
     andConditions.push({ 'category.slug': { equals: category } })
   }
@@ -173,7 +174,7 @@ export default async function StorefrontHome({ params, searchParams }: PageProps
       `}</style>
 
       <Navbar currentLocale={currentLocale} activeCategory={category} />
-
+      <PromoCarousel currentLocale={currentLocale} />
       <div
         style={{
           background: '#fff',
@@ -279,6 +280,10 @@ export default async function StorefrontHome({ params, searchParams }: PageProps
                       ? (product.category as any).title || (product.category as any).name
                       : ''
 
+                  // 🏷️ 1. CALCULATE DISCOUNT AND PRICE REAL-TIME VALUES
+                  const { isDiscounted, originalPrice, finalPrice, badgeText } =
+                    calculateProductPrice(product)
+
                   return (
                     <Link
                       key={product.id}
@@ -296,8 +301,35 @@ export default async function StorefrontHome({ params, searchParams }: PageProps
                           display: 'flex',
                           flexDirection: 'column',
                           width: '100%',
+                          position: 'relative',
                         }}
                       >
+                        {/* 🏷️ 2. VISUAL DISCOUNT SALE BADGE OUTLINE */}
+                        {isDiscounted && (
+                          <span
+                            style={{
+                              position: 'absolute',
+                              top: '12px',
+                              left: isRtl ? 'auto' : '12px',
+                              right: isRtl ? '12px' : 'auto',
+                              background: '#ef4444',
+                              color: '#fff',
+                              fontSize: '11px',
+                              fontWeight: '700',
+                              padding: '4px 8px',
+                              borderRadius: '6px',
+                              zIndex: 10,
+                            }}
+                          >
+                            {badgeText}{' '}
+                            {currentLocale === 'ar'
+                              ? 'خصم'
+                              : currentLocale === 'ckb'
+                                ? 'داشکانـدن'
+                                : 'OFF'}
+                          </span>
+                        )}
+
                         <div
                           style={{
                             width: '100%',
@@ -380,9 +412,39 @@ export default async function StorefrontHome({ params, searchParams }: PageProps
                               marginTop: 'auto',
                             }}
                           >
-                            <span style={{ fontSize: '1.4rem', fontWeight: '800', color: '#000' }}>
-                              ${product.price}
-                            </span>
+                            {/* 🏷️ 3. CONDITIONAL STRIKE-THROUGH PRICE BLOCK */}
+                            <div style={{ display: 'flex', flexDirection: 'column' }}>
+                              {isDiscounted ? (
+                                <>
+                                  <span
+                                    style={{
+                                      fontSize: '12px',
+                                      textDecoration: 'line-through',
+                                      color: '#94a3b8',
+                                      fontWeight: '500',
+                                    }}
+                                  >
+                                    ${originalPrice}
+                                  </span>
+                                  <span
+                                    style={{
+                                      fontSize: '1.4rem',
+                                      fontWeight: '800',
+                                      color: '#ef4444',
+                                    }}
+                                  >
+                                    ${finalPrice}
+                                  </span>
+                                </>
+                              ) : (
+                                <span
+                                  style={{ fontSize: '1.4rem', fontWeight: '800', color: '#000' }}
+                                >
+                                  ${originalPrice}
+                                </span>
+                              )}
+                            </div>
+
                             <span
                               style={{
                                 fontSize: '11px',

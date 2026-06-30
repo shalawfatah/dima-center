@@ -49,23 +49,45 @@ export const Products: CollectionConfig = {
       required: true,
       admin: {
         description: 'Select the specific child category (e.g., CPU, Mouse)',
-        // Optional UI cleanup: filter out parent categories in the selector
-        // so administrators always choose the specific leaf node category.
         condition: () => true,
       },
     },
+
+    // === 🏷️ DISCOUNT CONFIGURATION BLOCK ===
     {
-      name: 'isOnSale',
+      name: 'hasDiscount',
       type: 'checkbox',
-      label: 'Put on "Deals" section',
+      label: 'Apply Discount to this Product',
       defaultValue: false,
     },
     {
-      name: 'salePrice',
-      type: 'number',
-      admin: {
-        condition: (data) => data?.isOnSale,
-      },
+      type: 'row',
+      fields: [
+        {
+          name: 'discountType',
+          type: 'select',
+          label: 'Discount Type',
+          defaultValue: 'fixed',
+          options: [
+            { label: 'Fixed Amount ($)', value: 'fixed' },
+            { label: 'Percentage (%)', value: 'percentage' },
+          ],
+          admin: {
+            condition: (data) => data?.hasDiscount,
+            width: '50%',
+          },
+        },
+        {
+          name: 'discountValue',
+          type: 'number',
+          label: 'Discount Value',
+          min: 0,
+          admin: {
+            condition: (data) => data?.hasDiscount,
+            width: '50%',
+          },
+        },
+      ],
     },
 
     // === TECHNICAL SPECS ARRAY CLOSES CLEANLY HERE ===
@@ -86,16 +108,16 @@ export const Products: CollectionConfig = {
           localized: true,
         },
       ],
-    }, // <-- Make sure this bracket closes the array field block!
+    },
 
-    // === ✅ ROOT LEVEL FIELDS (PASTED AFTER THE ARRAY CLOSES) ===
+    // === ✅ ROOT LEVEL FIELDS ===
     {
       name: 'featuredImage',
       type: 'relationship',
       relationTo: 'media',
       required: false,
       admin: {
-        position: 'sidebar', // This tells Payload to shove it to the right sidebar panel
+        position: 'sidebar',
       },
     },
     {
