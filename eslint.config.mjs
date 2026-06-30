@@ -10,6 +10,17 @@ const compat = new FlatCompat({
 })
 
 const eslintConfig = [
+  // 1. GLOBAL IGNORES MUST GO FIRST TO PREVENT CIRLCULAR PLUGIN LOOPS
+  {
+    ignores: [
+      '.next/',
+      'src/payload-types.ts',
+      'src/payload-generated-schema.ts',
+      'payload.config.ts',
+      'next.config.mjs',
+    ],
+  },
+  // 2. EXTENSIONS AND CUSTOM RULES FOLLOW BELOW
   ...compat.extends('next/core-web-vitals', 'next/typescript'),
   {
     rules: {
@@ -29,9 +40,6 @@ const eslintConfig = [
         },
       ],
     },
-  },
-  {
-    ignores: ['.next/', 'src/payload-types.ts', 'src/payload-generated-schema.ts'],
   },
 ]
 

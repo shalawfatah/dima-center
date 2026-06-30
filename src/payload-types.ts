@@ -68,7 +68,10 @@ export interface Config {
   blocks: {};
   collections: {
     users: User;
+    products: Product;
+    orders: Order;
     media: Media;
+    categories: Category;
     'payload-kv': PayloadKv;
     'payload-locked-documents': PayloadLockedDocument;
     'payload-preferences': PayloadPreference;
@@ -77,19 +80,22 @@ export interface Config {
   collectionsJoins: {};
   collectionsSelect: {
     users: UsersSelect<false> | UsersSelect<true>;
+    products: ProductsSelect<false> | ProductsSelect<true>;
+    orders: OrdersSelect<false> | OrdersSelect<true>;
     media: MediaSelect<false> | MediaSelect<true>;
+    categories: CategoriesSelect<false> | CategoriesSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
     'payload-preferences': PayloadPreferencesSelect<false> | PayloadPreferencesSelect<true>;
     'payload-migrations': PayloadMigrationsSelect<false> | PayloadMigrationsSelect<true>;
   };
   db: {
-    defaultIDType: string;
+    defaultIDType: number;
   };
-  fallbackLocale: null;
+  fallbackLocale: ('false' | 'none' | 'null') | false | null | ('en' | 'ar' | 'ckb') | ('en' | 'ar' | 'ckb')[];
   globals: {};
   globalsSelect: {};
-  locale: null;
+  locale: 'en' | 'ar' | 'ckb';
   widgets: {
     collections: CollectionsWidget;
   };
@@ -122,7 +128,7 @@ export interface UserAuthOperations {
  * via the `definition` "users".
  */
 export interface User {
-  id: string;
+  id: number;
   updatedAt: string;
   createdAt: string;
   email: string;
@@ -144,10 +150,62 @@ export interface User {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "products".
+ */
+export interface Product {
+  id: number;
+  title: string;
+  description?: string | null;
+  price: number;
+  stock: number;
+  condition: 'new' | 'used' | 'refurbished' | 'open_box' | 'used_like_new' | 'used_no_box';
+  /**
+   * Select the specific child category (e.g., CPU, Mouse)
+   */
+  category?: (number | null) | Category;
+  isOnSale?: boolean | null;
+  salePrice?: number | null;
+  technicalSpecs?:
+    | {
+        key: string;
+        value: string;
+        id?: string | null;
+      }[]
+    | null;
+  featuredImage?: (number | null) | Media;
+  imagesGallery?:
+    | {
+        image: number | Media;
+        id?: string | null;
+      }[]
+    | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "categories".
+ */
+export interface Category {
+  id: number;
+  title: string;
+  /**
+   * Used in the URL (e.g., cpu, computer-parts)
+   */
+  slug: string;
+  /**
+   * Leave empty if this is a top-level Main Category.
+   */
+  parent?: (number | null) | Category;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "media".
  */
 export interface Media {
-  id: string;
+  id: number;
   alt: string;
   updatedAt: string;
   createdAt: string;
@@ -163,10 +221,34 @@ export interface Media {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "orders".
+ */
+export interface Order {
+  id: number;
+  customerName: string;
+  phoneNumber: string;
+  deliveryAddress?: string | null;
+  paymentMethod: 'in_store' | 'cash_on_delivery';
+  status?: ('pending' | 'processing' | 'ready' | 'completed' | 'cancelled') | null;
+  items: {
+    product: number | Product;
+    quantity: number;
+    /**
+     * Snapshotted price to protect historical logs if item prices change later.
+     */
+    priceAtPurchase: number;
+    id?: string | null;
+  }[];
+  totalOrderAmount: number;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-kv".
  */
 export interface PayloadKv {
-  id: string;
+  id: number;
   key: string;
   data:
     | {
@@ -183,20 +265,32 @@ export interface PayloadKv {
  * via the `definition` "payload-locked-documents".
  */
 export interface PayloadLockedDocument {
-  id: string;
+  id: number;
   document?:
     | ({
         relationTo: 'users';
-        value: string | User;
+        value: number | User;
+      } | null)
+    | ({
+        relationTo: 'products';
+        value: number | Product;
+      } | null)
+    | ({
+        relationTo: 'orders';
+        value: number | Order;
       } | null)
     | ({
         relationTo: 'media';
-        value: string | Media;
+        value: number | Media;
+      } | null)
+    | ({
+        relationTo: 'categories';
+        value: number | Category;
       } | null);
   globalSlug?: string | null;
   user: {
     relationTo: 'users';
-    value: string | User;
+    value: number | User;
   };
   updatedAt: string;
   createdAt: string;
@@ -206,10 +300,10 @@ export interface PayloadLockedDocument {
  * via the `definition` "payload-preferences".
  */
 export interface PayloadPreference {
-  id: string;
+  id: number;
   user: {
     relationTo: 'users';
-    value: string | User;
+    value: number | User;
   };
   key?: string | null;
   value?:
@@ -229,7 +323,7 @@ export interface PayloadPreference {
  * via the `definition` "payload-migrations".
  */
 export interface PayloadMigration {
-  id: string;
+  id: number;
   name?: string | null;
   batch?: number | null;
   updatedAt: string;
@@ -259,6 +353,58 @@ export interface UsersSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "products_select".
+ */
+export interface ProductsSelect<T extends boolean = true> {
+  title?: T;
+  description?: T;
+  price?: T;
+  stock?: T;
+  condition?: T;
+  category?: T;
+  isOnSale?: T;
+  salePrice?: T;
+  technicalSpecs?:
+    | T
+    | {
+        key?: T;
+        value?: T;
+        id?: T;
+      };
+  featuredImage?: T;
+  imagesGallery?:
+    | T
+    | {
+        image?: T;
+        id?: T;
+      };
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "orders_select".
+ */
+export interface OrdersSelect<T extends boolean = true> {
+  customerName?: T;
+  phoneNumber?: T;
+  deliveryAddress?: T;
+  paymentMethod?: T;
+  status?: T;
+  items?:
+    | T
+    | {
+        product?: T;
+        quantity?: T;
+        priceAtPurchase?: T;
+        id?: T;
+      };
+  totalOrderAmount?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "media_select".
  */
 export interface MediaSelect<T extends boolean = true> {
@@ -274,6 +420,17 @@ export interface MediaSelect<T extends boolean = true> {
   height?: T;
   focalX?: T;
   focalY?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "categories_select".
+ */
+export interface CategoriesSelect<T extends boolean = true> {
+  title?: T;
+  slug?: T;
+  parent?: T;
+  updatedAt?: T;
+  createdAt?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
