@@ -1,3 +1,3 @@
-# NIMA CENTER
+# DIMA CENTER
 
 Computer Hardware Store in the heart of Sulaimani, Iraq.
