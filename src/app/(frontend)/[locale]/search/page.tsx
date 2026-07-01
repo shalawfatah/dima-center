@@ -1,6 +1,7 @@
 import { getPayload } from 'payload'
 import config from '@/payload.config'
 import Link from 'next/link'
+import Image from 'next/image'
 
 interface SearchPageProps {
   params: Promise<{ locale: string }>
@@ -191,7 +192,9 @@ export default async function SearchResultsPage({ params, searchParams }: Search
                       }}
                     >
                       {imageUrl ? (
-                        <img
+                        <Image
+                          height={200}
+                          width={200}
                           src={imageUrl}
                           alt={displayTitle}
                           style={{ width: '100%', height: '100%', objectFit: 'contain' }}

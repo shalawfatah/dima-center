@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { calculateProductPrice } from '@/utils/price'
 import ProductBuyActions from '@/components/cart/ProductBuyActions'
+import Image from 'next/image'
 
 interface ProductPageProps {
   params: Promise<{
@@ -158,7 +159,9 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
 
               {featuredImageUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element
-                <img
+                <Image
+                  height={400}
+                  width={400}
                   src={featuredImageUrl}
                   alt={product.title}
                   style={{
@@ -188,7 +191,9 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
             {product.imagesGallery && product.imagesGallery.length > 0 && (
               <div className="gallery-strip">
                 {featuredImageUrl && (
-                  <img
+                  <Image
+                    height={400}
+                    width={400}
                     src={featuredImageUrl}
                     className="gallery-thumb"
                     style={{ borderColor: '#0070f3' }}
@@ -199,7 +204,9 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
                   const url = item.image && typeof item.image === 'object' ? item.image.url : null
                   if (!url) return null
                   return (
-                    <img
+                    <Image
+                      height={400}
+                      width={400}
                       key={item.id}
                       src={url}
                       className="gallery-thumb"
@@ -543,7 +550,9 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
                         }}
                       >
                         {itemImgUrl ? (
-                          <img
+                          <Image
+                            width={400}
+                            height={400}
                             src={itemImgUrl}
                             alt={item.title}
                             style={{ width: '100%', height: '100%', objectFit: 'contain' }}

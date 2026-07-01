@@ -2,6 +2,7 @@ import { getPayload } from 'payload'
 import config from '@/payload.config'
 import { headers } from 'next/headers'
 import Link from 'next/link'
+import Image from 'next/image'
 
 interface NavUserMenuProps {
   currentLocale: string
@@ -62,9 +63,11 @@ export default async function NavUserMenu({ currentLocale }: NavUserMenuProps) {
   return (
     <Link href={`/${currentLocale}/account`} style={baseCircleStyle} title={tooltips.account}>
       {userImageUrl ? (
-        <img
+        <Image
           src={userImageUrl}
-          alt={user.name || 'User Avatar'}
+          height={50}
+          width={50}
+          alt={user?.name || 'User Avatar'}
           style={{ width: '100%', height: '100%', objectFit: 'cover' }}
         />
       ) : (

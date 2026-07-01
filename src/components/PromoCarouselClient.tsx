@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from 'react'
 import Link from 'next/link'
 import useEmblaCarousel from 'embla-carousel-react'
 import Autoplay from 'embla-carousel-autoplay'
+import Image from 'next/image'
 
 interface PromoCarouselClientProps {
   promotions: any[]
@@ -124,9 +125,11 @@ export default function PromoCarouselClient({
                       overflow: 'hidden',
                     }}
                   >
-                    <img
+                    <Image
                       src={imageUrl}
                       alt={promo.title || 'Promotion'}
+                      width={1000}
+                      height={400}
                       draggable={false}
                       style={{
                         width: '100%',

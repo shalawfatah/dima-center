@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useLocalStorageState } from '../utils/pc_build_local_storage'
 import { COMPONENT_SLOTS, dict, PcBuilderClientProps } from '@/utils/pc_build_items'
+import Image from 'next/image'
 
 export default function PcBuilderClient({
   products,
@@ -207,7 +208,9 @@ export default function PcBuilderClient({
                     }}
                   >
                     {chosenItem?.meta?.image?.url ? (
-                      <img
+                      <Image
+                        height={100}
+                        width={100}
                         src={chosenItem.meta.image.url}
                         alt={chosenItem.title}
                         style={{ width: '100%', height: '100%', objectFit: 'cover' }}
@@ -591,8 +594,10 @@ export default function PcBuilderClient({
                         }}
                       >
                         {prod.meta?.image?.url ? (
-                          <img
+                          <Image
                             src={prod.meta.image.url}
+                            height={100}
+                            width={100}
                             alt={prod.title}
                             style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                           />

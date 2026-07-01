@@ -14,6 +14,7 @@ interface PageProps {
 import type { Metadata } from 'next'
 import { MAIN_CATEGORIES } from '@/utils/categories'
 import { getStorefrontMetadata } from '@/utils/seo'
+import Image from 'next/image'
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const resolvedParams = await params
@@ -101,7 +102,6 @@ export default async function StorefrontHome({ params, searchParams }: PageProps
                   : 'No products found in this category.'}
             </div>
           ) : (
-            /* Standard Grid for filtered category items view */
             <div
               style={{
                 display: 'grid',
@@ -143,8 +143,10 @@ export default async function StorefrontHome({ params, searchParams }: PageProps
                         }}
                       >
                         {imageUrl ? (
-                          <img
+                          <Image
                             src={imageUrl}
+                            width={200}
+                            height={200}
                             alt={product.title}
                             style={{ width: '100%', height: '100%', objectFit: 'contain' }}
                           />
@@ -157,6 +159,7 @@ export default async function StorefrontHome({ params, searchParams }: PageProps
                           fontSize: '1rem',
                           fontWeight: '600',
                           margin: '0 0 0.5rem 0',
+                          color: '#000',
                           flex: 1,
                         }}
                       >
