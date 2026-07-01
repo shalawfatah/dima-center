@@ -1,9 +1,10 @@
 'use client'
 
-import React, { useCallback, useEffect, useState } from 'react'
+import React, { useCallback, useEffect } from 'react'
 import Link from 'next/link'
 import useEmblaCarousel from 'embla-carousel-react'
 import { EngineType } from 'embla-carousel'
+import Image from 'next/image'
 
 interface ProductItem {
   id: string
@@ -14,7 +15,7 @@ interface ProductItem {
     url: string
     alt?: string
   } | null
-  [key: string]: any // Flexible for alternative Payload schemas
+  [key: string]: any
 }
 
 interface ProductCarouselProps {
@@ -24,16 +25,14 @@ interface ProductCarouselProps {
 }
 
 export default function ProductCarousel({ products, currentLocale, isRtl }: ProductCarouselProps) {
-  // 1. Core Embla Initialization
   const [emblaRef, emblaApi] = useEmblaCarousel({
-    loop: false, // Standard linear storefront listing context
-    duration: 25, // Fast, crispy snapping physics
-    dragFree: true, // Momentum sliding feel (great for long product tracks)
+    loop: false,
+    duration: 25,
+    dragFree: true,
     containScroll: 'trimSnaps',
     direction: isRtl ? 'rtl' : 'ltr',
   })
 
-  // 2. Parallax calculations tied to the native viewport scroll position
   const onScroll = useCallback((api: any) => {
     const engine = api.internalEngine() as EngineType
     const scrollSnapList = api.scrollSnapList()
@@ -52,9 +51,14 @@ export default function ProductCarousel({ products, currentLocale, isRtl }: Prod
         })
       }
 
-      // Parallax sensitivity shift (0.2 means background shifts at 20% speed)
-      const parallaxFactor = 0.2
-      const xTranslation = diffToTarget * (-1 * parallaxFactor * 100)
+      // 🎯 THE FIX: Cap the max displacement.
+      // With width: 130% and left/right: -15%, the absolute maximum safe translateX
+      // relative to the image's own size is roughly 11.5% before a gap shows.
+      const parallaxFactor = 0.15
+      let xTranslation = diffToTarget * (-1 * parallaxFactor * 100)
+
+      // Clamp the value between -11% and 11% to keep the image safely anchored inside the card mask
+      xTranslation = Math.max(-11, Math.min(11, xTranslation))
 
       const imgLayer = slide.querySelector('.product-parallax-img') as HTMLElement
       if (imgLayer) {
@@ -70,7 +74,6 @@ export default function ProductCarousel({ products, currentLocale, isRtl }: Prod
     onScroll(emblaApi)
   }, [emblaApi, onScroll])
 
-  // Setup font stacks dynamically matching localized routing properties
   const isRegionalLocale = currentLocale === 'ar' || currentLocale === 'ckb'
   const titleFont = isRegionalLocale ? '"Rudaw", sans-serif' : 'inherit'
   const textFont = isRegionalLocale ? '"Sarchia", sans-serif' : 'inherit'
@@ -83,7 +86,6 @@ export default function ProductCarousel({ products, currentLocale, isRtl }: Prod
           touch-action: pan-y;
         }
         .product-carousel-slide {
-          /* Responsive calculation: sizes down nicely based on layout widths */
           flex: 0 0 calc(100% / 2 - 12px); 
           min-width: 0;
         }
@@ -100,12 +102,10 @@ export default function ProductCarousel({ products, currentLocale, isRtl }: Prod
           .product-carousel-slide { flex: 0 0 calc(100% / 6 - 16px); }
         }
         @media (min-width: 1440px) {
-          /* Targets exactly ~7 clean square boxes visible side-by-side */
           .product-carousel-slide { flex: 0 0 calc(100% / 7 - 16px); }
         }
       `}</style>
 
-      {/* Embla Viewport Mask */}
       <div ref={emblaRef} style={{ overflow: 'hidden', width: '100%', cursor: 'grab' }}>
         <div
           className="product-carousel-track"
@@ -123,35 +123,36 @@ export default function ProductCarousel({ products, currentLocale, isRtl }: Prod
                 href={`/${currentLocale}/products/${product.id}`}
                 className="product-carousel-slide"
                 style={{ textDecoration: 'none', color: 'inherit' }}
-                draggable={false} // Halts systemic native browser drag-ghost previews
+                draggable={false}
               >
-                {/* Clean, Square Aspect Card Box */}
                 <div
                   style={{
                     position: 'relative',
                     width: '100%',
-                    aspectRatio: '1 / 1', // Forces perfect uniform square metrics
+                    aspectRatio: '1 / 1',
                     borderRadius: '12px',
                     overflow: 'hidden',
                     background: '#1e293b',
                     boxShadow: '0 4px 6px -1px rgba(0,0,0,0.03)',
                   }}
                 >
-                  {/* Parallax Framed Window Layer */}
                   <div style={{ position: 'absolute', inset: 0, overflow: 'hidden', zIndex: 1 }}>
                     {imageUrl ? (
-                      <img
+                      <Image
                         className="product-parallax-img"
+                        width={250}
+                        height={250}
                         src={imageUrl}
                         alt={imageAlt || product.title}
                         style={{
-                          width: '130%', // Extended footprint gives space for translating
+                          width: '130%',
                           height: '100%',
                           objectFit: 'cover',
                           position: 'absolute',
                           top: 0,
-                          left: isRtl ? 'auto' : '-15%',
-                          right: isRtl ? '-15%' : 'auto',
+                          // 🎯 FIX: Remove conditional LTR/RTL offsets.
+                          // This perfectly centers the 130% wide image on both LTR and RTL viewports.
+                          left: '0',
                           willChange: 'transform',
                         }}
                       />
@@ -170,7 +171,6 @@ export default function ProductCarousel({ products, currentLocale, isRtl }: Prod
                         📦
                       </div>
                     )}
-                    {/* Shadow Layer to guarantee bottom typography legibility */}
                     <div
                       style={{
                         position: 'absolute',
@@ -181,7 +181,6 @@ export default function ProductCarousel({ products, currentLocale, isRtl }: Prod
                     />
                   </div>
 
-                  {/* Foreground Card Content Metadata */}
                   <div
                     style={{
                       position: 'absolute',
@@ -198,7 +197,7 @@ export default function ProductCarousel({ products, currentLocale, isRtl }: Prod
                   >
                     <h3
                       style={{
-                        fontFamily: titleFont, // 'Rudaw' for headers
+                        fontFamily: titleFont,
                         fontSize: '15px',
                         fontWeight: '600',
                         color: '#fff',
@@ -213,10 +212,10 @@ export default function ProductCarousel({ products, currentLocale, isRtl }: Prod
 
                     <span
                       style={{
-                        fontFamily: textFont, // 'Sarchia' for values
+                        fontFamily: textFont,
                         fontSize: '16px',
                         fontWeight: '700',
-                        color: '#10b981', // Clean contrast green for prices
+                        color: '#10b981',
                       }}
                     >
                       {product.price} IQD
