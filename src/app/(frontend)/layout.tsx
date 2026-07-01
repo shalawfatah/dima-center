@@ -1,19 +1,26 @@
-import React from 'react'
-import './styles.css'
-import { Metadata } from 'next'
+import { getPayload } from 'payload'
+import config from '@/payload.config'
+import { headers } from 'next/headers'
+import { CartProvider } from '../../components/cart/CartContext'
 
-export const metadata: Metadata = {
-  description: 'A blank template using Payload in a Next.js app.',
-  title: 'Payload Blank Template',
-}
-
-export default async function RootLayout(props: { children: React.ReactNode }) {
-  const { children } = props
+export default async function LocalizedLayout({
+  children,
+  params,
+}: {
+  children: React.ReactNode
+  params: Promise<{ locale: string }>
+}) {
+  const { locale } = await params
+  const payload = await getPayload({ config })
+  const { user } = await payload.auth({ headers: await headers() })
 
   return (
-    <html lang="en">
+    <html lang={locale}>
       <body>
-        <main>{children}</main>
+        {/* Injecting context layers enables instant checkout calls from anywhere */}
+        <CartProvider user={user} currentLocale={locale}>
+          {children}
+        </CartProvider>
       </body>
     </html>
   )

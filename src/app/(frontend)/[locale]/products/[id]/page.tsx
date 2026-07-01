@@ -4,8 +4,8 @@ import Link from 'next/link'
 import Navbar from '@/components/Navbar'
 import Footer from '@/components/Footer'
 import { notFound } from 'next/navigation'
-// ⚡ IMPORT THE PRICING HELPER
 import { calculateProductPrice } from '@/utils/price'
+import ProductBuyActions from '@/components/cart/ProductBuyActions'
 
 interface ProductPageProps {
   params: Promise<{
@@ -18,7 +18,6 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
   const resolvedParams = await params
   const currentLocale = resolvedParams.locale || 'en'
   const productId = resolvedParams.id
-
   const payload = await getPayload({ config })
 
   // 1. Fetch primary product data bound to the active locale state
@@ -448,28 +447,13 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
                     </div>
                   </div>
 
-                  <button
-                    type="button"
-                    disabled={product.stock <= 0}
-                    style={{
-                      width: '100%',
-                      background: product.stock > 0 ? '#0070f3' : '#ccc',
-                      color: '#fff',
-                      border: 'none',
-                      padding: '1rem',
-                      borderRadius: '8px',
-                      fontSize: '16px',
-                      fontWeight: 'bold',
-                      cursor: product.stock > 0 ? 'pointer' : 'not-allowed',
-                      marginTop: '1rem',
-                    }}
-                  >
-                    {currentLocale === 'ar'
-                      ? 'إضافة إلى السلة'
-                      : currentLocale === 'ckb'
-                        ? 'بخەرە سەبەتەوە'
-                        : 'Add to Cart'}
-                  </button>
+                  <ProductBuyActions
+                    product={product}
+                    finalPrice={Number(mainPriceSpecs.finalPrice)}
+                    originalPrice={Number(mainPriceSpecs.originalPrice)}
+                    isDiscounted={mainPriceSpecs.isDiscounted}
+                    currentLocale={currentLocale}
+                  />
                 </form>
               </div>
             </div>
