@@ -20,15 +20,17 @@ export default async function SearchResultsPage({ params, searchParams }: Search
   let matchedProducts: any[] = []
 
   if (query) {
-    // 🎯 Fix: Use 'contains' instead of 'like' for case-insensitive database matching in Payload
+    // 🎯 FIX: Only query flat localized text fields to prevent Payload's JSON QueryError
     const orConditions: any[] = [
-      { title: { contains: query } },
-      { description: { contains: query } },
+      { 'title.en': { contains: query } },
+      { 'title.ar': { contains: query } },
+      { 'title.ckb': { contains: query } },
     ]
 
     const searchData = await payload.find({
       collection: 'products',
-      locale: currentLocale as 'en' | 'ar' | 'ckb',
+      // 🎯 FIX: Pull the entire locale matrix to cross-match entries safely
+      locale: 'all',
       where: {
         or: orConditions,
       },
@@ -37,14 +39,19 @@ export default async function SearchResultsPage({ params, searchParams }: Search
 
     matchedProducts = [...searchData.docs].sort((a, b) => {
       const q = query.toLowerCase()
-      const aTitle = (a.title || '').toLowerCase()
-      const bTitle = (b.title || '').toLowerCase()
 
-      // Safe evaluation extracting the title string whether category is populated or an ID
+      // Extract the correct string for the active locale or fall back to English
+      const aTitle = String(a.title?.[currentLocale] || a.title?.en || '').toLowerCase()
+      const bTitle = String(b.title?.[currentLocale] || b.title?.en || '').toLowerCase()
+
       const getCategoryString = (product: any): string => {
         if (!product.category) return ''
         if (typeof product.category === 'object') {
-          return (product.category.title || product.category.slug || '').toLowerCase()
+          const target =
+            product.category.title || product.category.slug || product.category.name || ''
+          return (
+            typeof target === 'object' ? target[currentLocale] || target.en || '' : String(target)
+          ).toLowerCase()
         }
         return String(product.category).toLowerCase()
       }
@@ -52,11 +59,9 @@ export default async function SearchResultsPage({ params, searchParams }: Search
       const aCat = getCategoryString(a)
       const bCat = getCategoryString(b)
 
-      // Priority 1: Category match
       if (aCat === q && bCat !== q) return -1
       if (bCat === q && aCat !== q) return 1
 
-      // Priority 2: Title starts with the query phrase
       if (aTitle.startsWith(q) && !bTitle.startsWith(q)) return -1
       if (bTitle.startsWith(q) && !aTitle.startsWith(q)) return 1
 
@@ -108,11 +113,39 @@ export default async function SearchResultsPage({ params, searchParams }: Search
               const hasImage = product.featuredImage && typeof product.featuredImage === 'object'
               const imageUrl = hasImage ? (product.featuredImage as any).url : null
 
-              // 🎯 Safe Render check: Extracts a string safely from the Category relational object
-              const displayCategory =
-                product.category && typeof product.category === 'object'
-                  ? product.category.title || product.category.slug
-                  : product.category
+              // 🎯 Get current localized title or fall back safely
+              const displayTitle = product.title?.[currentLocale] || product.title?.en || ''
+
+              // 🎯 Safe Category extraction across all localized variants
+              let displayCategory = ''
+              if (product.category) {
+                if (typeof product.category === 'object') {
+                  const target =
+                    product.category.title || product.category.slug || product.category.name || ''
+                  displayCategory =
+                    typeof target === 'object'
+                      ? target[currentLocale] || target.en || ''
+                      : String(target)
+                } else {
+                  displayCategory = String(product.category)
+                }
+              }
+
+              // 🎯 Safe snippet construction based on the currently displayed locale
+              let textSnippet = ''
+              try {
+                const localizedDesc =
+                  product.description?.[currentLocale] || product.description?.en
+                if (typeof localizedDesc === 'string') {
+                  textSnippet = localizedDesc
+                } else if (localizedDesc?.root?.children) {
+                  textSnippet = localizedDesc.root.children
+                    .map((ch: any) => ch.children?.map((g: any) => g.text).join('') || '')
+                    .join(' ')
+                }
+              } catch (e) {
+                textSnippet = ''
+              }
 
               return (
                 <Link
@@ -160,7 +193,7 @@ export default async function SearchResultsPage({ params, searchParams }: Search
                       {imageUrl ? (
                         <img
                           src={imageUrl}
-                          alt={product.title}
+                          alt={displayTitle}
                           style={{ width: '100%', height: '100%', objectFit: 'contain' }}
                         />
                       ) : (
@@ -180,7 +213,7 @@ export default async function SearchResultsPage({ params, searchParams }: Search
                         {displayCategory}
                       </span>
                       <h3 style={{ fontSize: '1.15rem', margin: '2px 0 6px 0', fontWeight: '600' }}>
-                        {product.title}
+                        {displayTitle}
                       </h3>
                       <p
                         style={{
@@ -193,13 +226,13 @@ export default async function SearchResultsPage({ params, searchParams }: Search
                           overflow: 'hidden',
                         }}
                       >
-                        {product.description}
+                        {textSnippet}
                       </p>
                     </div>
 
                     <div style={{ textAlign: isRtl ? 'left' : 'right', flexShrink: 0 }}>
                       <div style={{ fontSize: '1.4rem', fontWeight: '800', color: '#000' }}>
-                        ${product.price}
+                        {product.price} IQD
                       </div>
                       <span
                         style={{
@@ -212,7 +245,7 @@ export default async function SearchResultsPage({ params, searchParams }: Search
                           fontWeight: 'bold',
                         }}
                       >
-                        {product.condition}
+                        {product.condition?.replace('_', ' ')}
                       </span>
                     </div>
                   </div>

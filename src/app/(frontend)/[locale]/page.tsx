@@ -4,10 +4,11 @@ import { calculateProductPrice } from '@/utils/price'
 import PromoCarousel from '@/components/PromoCarousel'
 import ProductCarousel from '@/components/ProductCarousel'
 import LocalizedHeading from '@/components/LocalizedHeading'
+import Link from 'next/link' // Added for grid item layout links
 
 interface PageProps {
   params: Promise<{ locale: string }>
-  searchParams: Promise<{ [key: string]: any }>
+  searchParams: Promise<{ category?: string; [key: string]: any }>
 }
 
 import type { Metadata } from 'next'
@@ -21,12 +22,163 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
 export default async function StorefrontHome({ params, searchParams }: PageProps) {
   const resolvedParams = await params
+  const resolvedSearchParams = await searchParams // 🎯 Await search params securely
+
   const currentLocale = resolvedParams.locale || 'en'
+  const activeCategory = resolvedSearchParams.category || '' // 🎯 Grab target filter slug
   const isRtl = currentLocale === 'ar' || currentLocale === 'ckb'
 
   const payload = await getPayload({ config })
 
-  // 1. Fetch Hot Discounts
+  // -----------------------------------------------------------------
+  // CONDITION A: IF A CATEGORY IS CLICKED (Show clean filtered Grid list)
+  // -----------------------------------------------------------------
+  if (activeCategory) {
+    const matchedCat = MAIN_CATEGORIES.find((c) => c.slug === activeCategory)
+
+    const res = await payload.find({
+      collection: 'products',
+      locale: currentLocale as any,
+      where: { 'category.slug': { equals: activeCategory } },
+      limit: 100,
+    })
+
+    return (
+      <div
+        style={{
+          display: 'flex',
+          flexDirection: 'column',
+          minHeight: '100vh',
+          direction: isRtl ? 'rtl' : 'ltr',
+          backgroundColor: '#fafafa',
+        }}
+      >
+        <main style={{ flex: '1', padding: '2rem max(1.5rem, calc((100% - 1200px)/2))' }}>
+          <div
+            style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              marginBottom: '1.5rem',
+            }}
+          >
+            <LocalizedHeading
+              currentLocale={currentLocale}
+              en={matchedCat?.en || 'Products'}
+              ar={matchedCat?.ar || 'المنتجات'}
+              ckb={matchedCat?.ckb || 'کاڵاکان'}
+              style={{ fontSize: '1.75rem', fontWeight: '700' }}
+            />
+            {/* Clear Filters back button */}
+            <Link
+              href={`/${currentLocale}`}
+              style={{ fontSize: '14px', color: '#0070f3', textDecoration: 'none' }}
+            >
+              {currentLocale === 'ar'
+                ? '← عرض الكل'
+                : currentLocale === 'ckb'
+                  ? '← پیشاندانی هەموو'
+                  : '← Show All'}
+            </Link>
+          </div>
+
+          {res.docs.length === 0 ? (
+            <div
+              style={{
+                background: '#fff',
+                padding: '4rem',
+                textAlign: 'center',
+                color: '#666',
+                borderRadius: '12px',
+                border: '1px solid #eef0f2',
+              }}
+            >
+              📦{' '}
+              {currentLocale === 'ar'
+                ? 'لا توجد منتجات في هذه الفئة حالياً.'
+                : currentLocale === 'ckb'
+                  ? 'هیچ کاڵایەک لەم بەشەدا نییە.'
+                  : 'No products found in this category.'}
+            </div>
+          ) : (
+            /* Standard Grid for filtered category items view */
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))',
+                gap: '1.5rem',
+              }}
+            >
+              {res.docs.map((product: any) => {
+                const hasImage = product.featuredImage && typeof product.featuredImage === 'object'
+                const imageUrl = hasImage ? (product.featuredImage as any).url : null
+                return (
+                  <Link
+                    key={product.id}
+                    href={`/${currentLocale}/products/${product.id}`}
+                    style={{ textDecoration: 'none', color: 'inherit' }}
+                  >
+                    <div
+                      style={{
+                        background: '#fff',
+                        border: '1px solid #eef0f2',
+                        borderRadius: '12px',
+                        padding: '1rem',
+                        height: '100%',
+                        display: 'flex',
+                        flexDirection: 'column',
+                      }}
+                    >
+                      <div
+                        style={{
+                          width: '100%',
+                          height: '180px',
+                          background: '#f4f6f8',
+                          borderRadius: '8px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          overflow: 'hidden',
+                          marginBottom: '1rem',
+                        }}
+                      >
+                        {imageUrl ? (
+                          <img
+                            src={imageUrl}
+                            alt={product.title}
+                            style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+                          />
+                        ) : (
+                          <span style={{ fontSize: '2rem' }}>📦</span>
+                        )}
+                      </div>
+                      <h3
+                        style={{
+                          fontSize: '1rem',
+                          fontWeight: '600',
+                          margin: '0 0 0.5rem 0',
+                          flex: 1,
+                        }}
+                      >
+                        {product.title}
+                      </h3>
+                      <div style={{ fontSize: '1.2rem', fontWeight: '800', color: '#000' }}>
+                        {product.price} IQD
+                      </div>
+                    </div>
+                  </Link>
+                )
+              })}
+            </div>
+          )}
+        </main>
+      </div>
+    )
+  }
+
+  // -----------------------------------------------------------------
+  // CONDITION B: NO FILTERS ACTIVE (Default Storefront Carousels Layout)
+  // -----------------------------------------------------------------
   let productsWithDiscount: any[] = []
   try {
     const fetchedDiscounts = await payload.find({
@@ -45,7 +197,6 @@ export default async function StorefrontHome({ params, searchParams }: PageProps
     productsWithDiscount = fallbackData.docs.filter((p) => calculateProductPrice(p).isDiscounted)
   }
 
-  // 2. Fetch Category Specific Products Parallelized
   const categoriesWithProducts = await Promise.all(
     MAIN_CATEGORIES.map(async (cat) => {
       const res = await payload.find({
@@ -58,7 +209,6 @@ export default async function StorefrontHome({ params, searchParams }: PageProps
     }),
   )
 
-  // 3. Fetch "Others" Category (Products not matching listed primary categories)
   let otherProducts: any[] = []
   try {
     const otherRes = await payload.find({
@@ -86,12 +236,9 @@ export default async function StorefrontHome({ params, searchParams }: PageProps
         backgroundColor: '#fff',
       }}
     >
-      {/* HERO HERO PROMOTIONS */}
       <PromoCarousel currentLocale={currentLocale} />
 
-      {/* MAIN CAROUSEL BROWSING LAYOUT */}
       <main style={{ flex: '1', paddingBottom: '3rem' }}>
-        {/* 🌟 HOT DISCOUNTS */}
         {productsWithDiscount.length > 0 && (
           <section style={{ padding: '1.5rem max(1.5rem, calc((100% - 1200px)/2)) 0' }}>
             <LocalizedHeading
@@ -109,10 +256,8 @@ export default async function StorefrontHome({ params, searchParams }: PageProps
           </section>
         )}
 
-        {/* 📦 MAP FIXED DYNAMIC CATEGORIES (Hidden if empty) */}
         {categoriesWithProducts.map((cat) => {
           if (cat.products.length === 0) return null
-
           return (
             <section
               key={cat.slug}
@@ -134,7 +279,6 @@ export default async function StorefrontHome({ params, searchParams }: PageProps
           )
         })}
 
-        {/* 🔄 FALLBACK REMAINING CATEGORIES (Hidden if empty) */}
         {otherProducts.length > 0 && (
           <section style={{ padding: '2rem max(1.5rem, calc((100% - 1200px)/2)) 0' }}>
             <LocalizedHeading

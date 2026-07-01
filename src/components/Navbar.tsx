@@ -5,6 +5,11 @@ import { usePathname } from 'next/navigation'
 import { navTree } from '@/utils/nav_tree'
 import { getNavbarStyles } from '@/styles/navbar_styles'
 
+interface NavbarProps {
+  currentLocale?: string
+  activeCategory?: string | null
+}
+
 export default function Navbar({ currentLocale: initialLocale, activeCategory }: NavbarProps) {
   const pathname = usePathname()
 
@@ -13,15 +18,11 @@ export default function Navbar({ currentLocale: initialLocale, activeCategory }:
     ? segments[1]
     : initialLocale || 'en'
 
-  // 🎯 Calculate this dynamically using the fresh client-side locale variable
   const isRtl = currentLocale === 'ar' || currentLocale === 'ckb'
 
   return (
     <>
-      {/* 🎯 FORCE the style generator function to run with the updated layout direction */}
       <style dangerouslySetInnerHTML={{ __html: getNavbarStyles(isRtl) }} />
-
-      {/* ... rest of your layout container markup */}
 
       <div className="nav-container">
         <input type="checkbox" id="menu-toggle" />
@@ -49,6 +50,7 @@ export default function Navbar({ currentLocale: initialLocale, activeCategory }:
                         : currentLocale === 'ckb'
                           ? child.ckb
                           : child.en
+
                     const isActive = activeCategory === child.slug
 
                     return (
