@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import Link from 'next/link'
 import useEmblaCarousel from 'embla-carousel-react'
 import Autoplay from 'embla-carousel-autoplay'
@@ -104,7 +104,7 @@ export default function PromoCarouselClient({
                 style={{
                   width: '100%',
                   height: '100%',
-                  backgroundColor: '#1e293b',
+                  backgroundColor: '#df8026',
                   display: 'flex',
                   flexDirection: 'column',
                   justifyContent: 'flex-end',
@@ -155,7 +155,7 @@ export default function PromoCarouselClient({
                         fontSize: '11px',
                         textTransform: 'uppercase',
                         letterSpacing: '1px',
-                        background: promo.type === 'product' ? '#3b82f6' : '#10b981',
+                        background: promo.type === 'product' ? '#df8026' : '#10b981',
                         padding: '4px 8px',
                         borderRadius: '4px',
                         fontWeight: 'bold',

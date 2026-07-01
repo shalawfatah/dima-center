@@ -1,18 +1,27 @@
+'use client'
+
 import Link from 'next/link'
+import { usePathname } from 'next/navigation'
 import { navTree } from '@/utils/nav_tree'
 import { getNavbarStyles } from '@/styles/navbar_styles'
 
-interface NavbarProps {
-  currentLocale: string
-  activeCategory?: string
-}
+export default function Navbar({ currentLocale: initialLocale, activeCategory }: NavbarProps) {
+  const pathname = usePathname()
 
-export default function Navbar({ currentLocale, activeCategory }: NavbarProps) {
+  const segments = pathname.split('/')
+  const currentLocale = ['en', 'ar', 'ckb'].includes(segments[1])
+    ? segments[1]
+    : initialLocale || 'en'
+
+  // 🎯 Calculate this dynamically using the fresh client-side locale variable
   const isRtl = currentLocale === 'ar' || currentLocale === 'ckb'
 
   return (
     <>
-      <style>{getNavbarStyles(isRtl)}</style>
+      {/* 🎯 FORCE the style generator function to run with the updated layout direction */}
+      <style dangerouslySetInnerHTML={{ __html: getNavbarStyles(isRtl) }} />
+
+      {/* ... rest of your layout container markup */}
 
       <div className="nav-container">
         <input type="checkbox" id="menu-toggle" />
@@ -20,7 +29,6 @@ export default function Navbar({ currentLocale, activeCategory }: NavbarProps) {
           ☰
         </label>
 
-        {/* Group 1: The standard categories layout loop */}
         <div className="nav-links">
           {navTree.map((group, index) => {
             const parentLabel =
@@ -62,7 +70,6 @@ export default function Navbar({ currentLocale, activeCategory }: NavbarProps) {
           })}
         </div>
 
-        {/* 🌟 FIX: Moved outside .nav-links wrapper into the parent flex container */}
         <div className="pc-builder-wrapper">
           <Link
             href={`/${currentLocale}/pc-builder`}

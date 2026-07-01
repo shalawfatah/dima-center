@@ -1,4 +1,3 @@
-// 🌟 CRITICAL FIX: You must import your global frontend stylesheet here so the fonts load!
 import './styles.css'
 
 import { getPayload } from 'payload'
@@ -13,7 +12,9 @@ export default async function LocalizedLayout({
   children: React.ReactNode
   params: Promise<{ locale: string }>
 }) {
+  // 1. Await and extract the locale from route params
   const { locale } = await params
+
   const payload = await getPayload({ config })
   const { user } = await payload.auth({ headers: await headers() })
 

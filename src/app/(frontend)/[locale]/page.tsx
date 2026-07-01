@@ -1,16 +1,7 @@
 import { getPayload } from 'payload'
 import config from '@/payload.config'
-import Link from 'next/link'
-import Navbar from '@/components/Navbar'
-import Footer from '@/components/Footer'
 import { calculateProductPrice } from '@/utils/price'
 import PromoCarousel from '@/components/PromoCarousel'
-import NavUserMenu from '@/components/NavUserMenu'
-import Image from 'next/image'
-
-import logoImg from '../../../../public/media/logo.png'
-import { search_styles } from '@/styles/search_styles'
-import Languages from '@/components/Languages'
 import ProductCarousel from '@/components/ProductCarousel'
 import LocalizedHeading from '@/components/LocalizedHeading'
 
@@ -95,74 +86,6 @@ export default async function StorefrontHome({ params, searchParams }: PageProps
         backgroundColor: '#fff',
       }}
     >
-      <style>{search_styles()}</style>
-
-      {/* HEADER SECTION */}
-      <header className="master-header">
-        <div className="top-nav-bar">
-          <Link
-            href={`/${currentLocale}`}
-            style={{ textDecoration: 'none', display: 'flex', alignItems: 'center' }}
-          >
-            <Image src={logoImg} alt="Dima Logo" width={100} height={60} priority />
-          </Link>
-          <form action={`/${currentLocale}`} method="GET" className="search-form-wrapper">
-            <input
-              type="text"
-              name="search"
-              placeholder={
-                currentLocale === 'ar'
-                  ? 'ابحث عن قطع ومكونات...'
-                  : currentLocale === 'ckb'
-                    ? 'گەڕان بۆ پارچەکان...'
-                    : 'Search hardware components...'
-              }
-              className="search-input-field"
-            />
-            <button
-              type="submit"
-              style={{
-                position: 'absolute',
-                top: '50%',
-                right: isRtl ? 'auto' : '12px',
-                left: isRtl ? '12px' : 'auto',
-                transform: 'translateY(-50%)',
-                background: 'none',
-                border: 'none',
-                color: '#94a3b8',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-              }}
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="16"
-                height="16"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <circle cx="11" cy="11" r="8"></circle>
-                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-              </svg>
-            </button>
-          </form>
-
-          <div className="actions-cluster">
-            <NavUserMenu currentLocale={currentLocale} />
-            <Languages currentLocale={currentLocale} />
-          </div>
-        </div>
-
-        <div className="independent-nav-row">
-          <Navbar currentLocale={currentLocale} />
-        </div>
-      </header>
-
       {/* HERO HERO PROMOTIONS */}
       <PromoCarousel currentLocale={currentLocale} />
 
@@ -173,9 +96,9 @@ export default async function StorefrontHome({ params, searchParams }: PageProps
           <section style={{ padding: '1.5rem max(1.5rem, calc((100% - 1200px)/2)) 0' }}>
             <LocalizedHeading
               currentLocale={currentLocale}
-              en="Hot Discounts"
-              ar="خصومات كبرى"
-              ckb="داشکانە گەرمەکان"
+              en="Hot Discounts 🔥"
+              ar="خصومات كبرى 🔥"
+              ckb="داشکانە گەورەکان 🔥"
               style={{ fontSize: '1.4rem', marginBottom: '0.5rem' }}
             />
             <ProductCarousel
@@ -225,7 +148,6 @@ export default async function StorefrontHome({ params, searchParams }: PageProps
           </section>
         )}
       </main>
-      <Footer currentLocale={currentLocale} />
     </div>
   )
 }

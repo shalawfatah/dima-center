@@ -1,8 +1,6 @@
 import { getPayload } from 'payload'
 import config from '@/payload.config'
 import Link from 'next/link'
-import Navbar from '@/components/Navbar'
-import Footer from '@/components/Footer'
 import { notFound } from 'next/navigation'
 import { calculateProductPrice } from '@/utils/price'
 import ProductBuyActions from '@/components/cart/ProductBuyActions'
@@ -78,8 +76,6 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
         backgroundColor: '#fff',
       }}
     >
-      <Navbar currentLocale={currentLocale} />
-
       <style>{`
         .product-layout-grid {
           display: grid;
@@ -614,8 +610,6 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
           )}
         </div>
       </main>
-
-      <Footer currentLocale={currentLocale} />
     </div>
   )
 }
