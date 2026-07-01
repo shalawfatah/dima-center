@@ -12,6 +12,8 @@ import Image from 'next/image'
 import logoImg from '../../../../public/media/logo.png'
 import { search_styles } from '@/styles/search_styles'
 import Languages from '@/components/Languages'
+import ProductCarousel from '@/components/ProductCarousel'
+import LocalizedHeading from '@/components/LocalizedHeading'
 
 interface PageProps {
   params: Promise<{ locale: string }>
@@ -157,11 +159,36 @@ export default async function StorefrontHome({ params, searchParams }: PageProps
     }
   }
 
+  // 🌟 RUN COMPATIBLE CONDITIONAL QUERIES FOR DISCOUNT CAROUSEL FOOTPRINTS
+  let productsWithDiscount: any[] = []
+  try {
+    const fetchedDiscounts = await payload.find({
+      collection: 'products',
+      locale: currentLocale as any,
+      where: {
+        hasDiscount: {
+          equals: true,
+        },
+      },
+      limit: 100,
+    })
+    productsWithDiscount = fetchedDiscounts.docs
+  } catch (err) {
+    // Failover safely using the dynamic code evaluator if index parsing fails
+    const fallbackData = await payload.find({
+      collection: 'products',
+      locale: currentLocale as any,
+      limit: 100,
+    })
+    productsWithDiscount = fallbackData.docs.filter((p) => {
+      const { isDiscounted } = calculateProductPrice(p)
+      return isDiscounted
+    })
+  }
+
   return (
     <div
       style={{
-        fontFamily:
-          '"Sarchia", sans-serif' /* 🌟 Injected Sarchia as default base body font layout stack */,
         display: 'flex',
         flexDirection: 'column',
         minHeight: '100vh',
@@ -190,7 +217,6 @@ export default async function StorefrontHome({ params, searchParams }: PageProps
                     : 'Search hardware components...'
               }
               className="search-input-field"
-              style={{ fontFamily: '"Sarchia", sans-serif' }}
             />
             <button
               type="submit"
@@ -240,6 +266,23 @@ export default async function StorefrontHome({ params, searchParams }: PageProps
 
       <PromoCarousel currentLocale={currentLocale} />
 
+      <LocalizedHeading
+        currentLocale={currentLocale}
+        en="Hot Discounts"
+        ar="خصومات كبرى"
+        ckb="داشکانە گەرمەکان"
+        style={{ fontSize: '1.4rem', marginBottom: '0.5rem' }}
+      />
+      {!category && productsWithDiscount.length > 0 && (
+        <section style={{ padding: '1.5rem max(1.5rem, calc((100% - 1200px)/2)) 0' }}>
+          <ProductCarousel
+            isRtl={isRtl}
+            currentLocale={currentLocale}
+            products={productsWithDiscount}
+          />
+        </section>
+      )}
+
       <main style={{ flex: '1', padding: '2.5rem max(1.5rem, calc((100% - 1200px)/2))' }}>
         <div className="archive-layout-container">
           {category && (
@@ -251,7 +294,7 @@ export default async function StorefrontHome({ params, searchParams }: PageProps
           <div style={{ flex: '1', minWidth: '0' }}>
             <h2
               style={{
-                fontFamily: '"Rudaw", sans-serif' /* 🌟 Headings use Rudaw */,
+                fontFamily: '"Rudaw", sans-serif',
                 color: '#1e293b',
                 fontSize: '1.65rem',
                 marginBottom: '1.5rem',
@@ -276,7 +319,7 @@ export default async function StorefrontHome({ params, searchParams }: PageProps
                   borderRadius: '12px',
                   padding: '4rem 1rem',
                   textAlign: 'center',
-                  color: '#64748b',
+                  color: '#888',
                 }}
               >
                 📦{' '}
@@ -402,8 +445,7 @@ export default async function StorefrontHome({ params, searchParams }: PageProps
                           )}
                           <h3
                             style={{
-                              fontFamily:
-                                '"Rudaw", sans-serif' /* 🌟 Structural headers take Rudaw */,
+                              fontFamily: '"Rudaw", sans-serif',
                               color: '#1e293b',
                               margin: '0.4rem 0',
                               fontSize: '1.15rem',
@@ -414,7 +456,7 @@ export default async function StorefrontHome({ params, searchParams }: PageProps
                           </h3>
                           <p
                             style={{
-                              color: '#475569',
+                              color: '#666',
                               fontSize: '14px',
                               margin: '0 0 1.25rem 0',
                               display: '-webkit-box',
@@ -441,12 +483,13 @@ export default async function StorefrontHome({ params, searchParams }: PageProps
                                   <span
                                     style={{
                                       fontSize: '12px',
+                                      textTransform: 'uppercase',
                                       textDecoration: 'line-through',
                                       color: '#94a3b8',
                                       fontWeight: '500',
                                     }}
                                   >
-                                    ${originalPrice}
+                                    {originalPrice} IQD
                                   </span>
                                   <span
                                     style={{
@@ -455,18 +498,14 @@ export default async function StorefrontHome({ params, searchParams }: PageProps
                                       color: '#ef4444',
                                     }}
                                   >
-                                    ${finalPrice}
+                                    {finalPrice} IQD
                                   </span>
                                 </>
                               ) : (
                                 <span
-                                  style={{
-                                    fontSize: '1.4rem',
-                                    fontWeight: '800',
-                                    color: '#0f172a',
-                                  }}
+                                  style={{ fontSize: '1.4rem', fontWeight: '800', color: '#000' }}
                                 >
-                                  ${originalPrice}
+                                  {originalPrice} IQD
                                 </span>
                               )}
                             </div>

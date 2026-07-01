@@ -68,9 +68,9 @@ export default function Navbar({ currentLocale, activeCategory }: NavbarProps) {
             href={`/${currentLocale}/pc-builder`}
             className="pc-builder-btn"
             style={{
-              background: '#0070f3',
+              background: '#df8026',
               color: '#fff',
-              padding: '0.5rem 1rem',
+              padding: '0.2rem 1rem',
               borderRadius: '6px',
               textDecoration: 'none',
               fontSize: '14px',

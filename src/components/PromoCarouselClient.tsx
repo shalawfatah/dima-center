@@ -1,7 +1,9 @@
 'use client'
 
-import { useRef, useState, useEffect } from 'react'
+import React, { useCallback, useEffect, useState } from 'react'
 import Link from 'next/link'
+import useEmblaCarousel from 'embla-carousel-react'
+import Autoplay from 'embla-carousel-autoplay'
 
 interface PromoCarouselClientProps {
   promotions: any[]
@@ -14,98 +16,36 @@ export default function PromoCarouselClient({
   currentLocale,
   isRtl,
 }: PromoCarouselClientProps) {
-  const trackRef = useRef<HTMLDivElement>(null)
   const [activeIndex, setActiveIndex] = useState(0)
 
-  // Mouse Drag Tracking States
-  const isDown = useRef(false)
-  const startX = useRef(0)
-  const scrollLeftState = useRef(0)
-  const isDragging = useRef(false) // Prevents accidental links clicking while dragging
+  const [emblaRef, emblaApi] = useEmblaCarousel(
+    {
+      loop: true,
+      duration: 30,
+      direction: isRtl ? 'rtl' : 'ltr',
+    },
+    [
+      Autoplay({
+        delay: 5000,
+        stopOnInteraction: false,
+      }),
+    ],
+  )
 
-  // 1. Dynamic Scroll Tracking for Dots
-  const handleScroll = () => {
-    if (!trackRef.current || isDown.current) return
-    const { scrollLeft, clientWidth } = trackRef.current
-    const index = Math.round(Math.abs(scrollLeft) / clientWidth)
-    if (index >= 0 && index < promotions.length) {
-      setActiveIndex(index)
-    }
-  }
+  const onSelect = useCallback((api: any) => {
+    setActiveIndex(api.selectedScrollSnap())
+  }, [])
+
+  useEffect(() => {
+    if (!emblaApi) return
+    emblaApi.on('select', onSelect)
+    emblaApi.on('reInit', onSelect)
+    onSelect(emblaApi)
+  }, [emblaApi, onSelect])
 
   const scrollToSlide = (index: number) => {
-    if (!trackRef.current) return
-    const clientWidth = trackRef.current.clientWidth
-    const targetScroll = isRtl ? -index * clientWidth : index * clientWidth
-
-    trackRef.current.scrollTo({
-      left: targetScroll,
-      behavior: 'smooth',
-    })
-    setActiveIndex(index)
-  }
-
-  // 2. 5-Second Autoplay Engine
-  useEffect(() => {
-    if (promotions.length <= 1) return
-
-    const interval = setInterval(() => {
-      // If user is actively dragging with mouse, skip this cycle
-      if (isDown.current) return
-
-      setActiveIndex((prevIndex) => {
-        const nextIndex = prevIndex === promotions.length - 1 ? 0 : prevIndex + 1
-        scrollToSlide(nextIndex)
-        return nextIndex
-      })
-    }, 5000)
-
-    return () => clearInterval(interval)
-  }, [promotions.length])
-
-  // 3. Desktop Mouse Drag Mechanics
-  const handleMouseDown = (e: React.MouseEvent) => {
-    if (!trackRef.current) return
-    isDown.current = true
-    isDragging.current = false
-    trackRef.current.style.scrollSnapType = 'none' // Temporarily disable snapping during raw drag
-    startX.current = e.pageX - trackRef.current.offsetLeft
-    scrollLeftState.current = trackRef.current.scrollLeft
-  }
-
-  const handleMouseLeave = () => {
-    if (!isDown.current) return
-    isDown.current = false
-    snapToNearest()
-  }
-
-  const handleMouseUp = (e: React.MouseEvent) => {
-    isDown.current = false
-    if (isDragging.current) {
-      e.preventDefault()
-    }
-    snapToNearest()
-  }
-
-  const handleMouseMove = (e: React.MouseEvent) => {
-    if (!isDown.current || !trackRef.current) return
-    e.preventDefault()
-    const x = e.pageX - trackRef.current.offsetLeft
-    const walk = (x - startX.current) * 1.5
-
-    if (Math.abs(walk) > 5) {
-      isDragging.current = true
-    }
-
-    trackRef.current.scrollLeft = scrollLeftState.current - walk
-  }
-
-  const snapToNearest = () => {
-    if (!trackRef.current) return
-    trackRef.current.style.scrollSnapType = 'x mandatory'
-    const { scrollLeft, clientWidth } = trackRef.current
-    const index = Math.round(Math.abs(scrollLeft) / clientWidth)
-    scrollToSlide(index)
+    if (!emblaApi) return
+    emblaApi.scrollTo(index)
   }
 
   return (
@@ -113,26 +53,17 @@ export default function PromoCarouselClient({
       <style>{`
         .carousel-track {
           display: flex;
-          overflow-x: auto;
-          scroll-snap-type: x mandatory;
-          scroll-behavior: smooth;
-          -webkit-overflow-scrolling: touch;
-          cursor: grab;
-        }
-        .carousel-track:active {
-          cursor: grabbing;
-        }
-        .carousel-track::-webkit-scrollbar {
-          display: none;
+          touch-action: pan-y;
+          user-select: none;
+          -webkit-touch-callout: none;
         }
         .carousel-slide {
           flex: 0 0 100%;
           width: 100%;
           height: 350px;
-          scroll-snap-align: start;
           position: relative;
-          user-select: none;
-          -webkit-user-drag: none;
+          overflow: hidden;
+          display: block;
         }
         @media (max-width: 768px) {
           .carousel-slide {
@@ -151,110 +82,135 @@ export default function PromoCarouselClient({
       `}</style>
 
       <div
-        className="carousel-track"
-        ref={trackRef}
-        onScroll={handleScroll}
-        onMouseDown={handleMouseDown}
-        onMouseLeave={handleMouseLeave}
-        onMouseUp={handleMouseUp}
-        onMouseMove={handleMouseMove}
+        ref={emblaRef}
+        style={{ overflow: 'hidden', width: '100%', cursor: 'grab' }}
+        className="embla-viewport"
       >
-        {promotions.map((promo: any) => {
-          const imageUrl = promo.image && typeof promo.image === 'object' ? promo.image.url : null
+        <div className="carousel-track" style={{ direction: isRtl ? 'rtl' : 'ltr' }}>
+          {promotions.map((promo: any) => {
+            const imageUrl = promo.image && typeof promo.image === 'object' ? promo.image.url : null
 
-          let targetUrl = promo.linkUrl || '#'
-          if (promo.type === 'product' && promo.relatedProduct) {
-            const prodId =
-              typeof promo.relatedProduct === 'object'
-                ? promo.relatedProduct.id
-                : promo.relatedProduct
-            targetUrl = `/${currentLocale}/products/${prodId}`
-          }
+            let targetUrl = promo.linkUrl || '#'
+            if (promo.type === 'product' && promo.relatedProduct) {
+              const prodId =
+                typeof promo.relatedProduct === 'object'
+                  ? promo.relatedProduct.id
+                  : promo.relatedProduct
+              targetUrl = `/${currentLocale}/products/${prodId}`
+            }
 
-          const slideContent = (
-            <div
-              style={{
-                width: '100%',
-                height: '100%',
-                backgroundImage: imageUrl
-                  ? `linear-gradient(to top, rgba(0,0,0,0.7) 30%, rgba(0,0,0,0.2) 100%), url(${imageUrl})`
-                  : 'none',
-                backgroundColor: '#1e293b',
-                backgroundSize: 'cover',
-                backgroundPosition: 'center',
-                display: 'flex',
-                flexDirection: 'column',
-                justifyContent: 'flex-end',
-                padding: '3rem max(1.5rem, calc((100% - 1200px)/2))',
-                color: '#fff',
-                textAlign: isRtl ? 'right' : 'left',
-              }}
-            >
-              <div style={{ maxWidth: '600px' }}>
-                {promo.type !== 'generic' && (
-                  <span
+            const slideContent = (
+              <div
+                style={{
+                  width: '100%',
+                  height: '100%',
+                  backgroundColor: '#1e293b',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  justifyContent: 'flex-end',
+                  padding: '3rem max(1.5rem, calc((100% - 1200px)/2))',
+                  color: '#fff',
+                  textAlign: isRtl ? 'right' : 'left',
+                  position: 'relative',
+                }}
+              >
+                {/* Standard full-bleed background image, no offset/oversize */}
+                {imageUrl && (
+                  <div
                     style={{
-                      fontFamily: '"Rudaw", sans-serif' /* 🌟 Applied Rudaw to badge */,
-                      fontSize: '11px',
-                      textTransform: 'uppercase',
-                      letterSpacing: '1px',
-                      background: promo.type === 'product' ? '#3b82f6' : '#10b981',
-                      padding: '4px 8px',
-                      borderRadius: '4px',
-                      fontWeight: 'bold',
+                      position: 'absolute',
+                      inset: 0,
+                      zIndex: 0,
+                      overflow: 'hidden',
                     }}
                   >
-                    {promo.type}
-                  </span>
+                    <img
+                      src={imageUrl}
+                      alt={promo.title || 'Promotion'}
+                      draggable={false}
+                      style={{
+                        width: '100%',
+                        height: '100%',
+                        objectFit: 'cover',
+                        objectPosition: 'center',
+                      }}
+                    />
+                    <div
+                      style={{
+                        position: 'absolute',
+                        inset: 0,
+                        background: isRtl
+                          ? 'linear-gradient(to left, rgba(0,0,0,0.8) 30%, rgba(0,0,0,0.2) 100%)'
+                          : 'linear-gradient(to right, rgba(0,0,0,0.8) 30%, rgba(0,0,0,0.2) 100%)',
+                      }}
+                    />
+                  </div>
                 )}
-                <h2
-                  style={{
-                    fontFamily: '"Rudaw", sans-serif' /* 🌟 FIX: Applied Rudaw to Heading Titles */,
-                    fontSize: '2.25rem',
-                    fontWeight: '800',
-                    marginTop: '0.5rem',
-                    marginBottom: '0.5rem',
-                    lineHeight: '1.2',
-                  }}
-                >
-                  {promo.title}
-                </h2>
-                {promo.description && (
-                  <p
+
+                <div style={{ maxWidth: '600px', position: 'relative', zIndex: 1 }}>
+                  {promo.type !== 'generic' && (
+                    <span
+                      style={{
+                        fontFamily: '"Rudaw", sans-serif',
+                        fontSize: '11px',
+                        textTransform: 'uppercase',
+                        letterSpacing: '1px',
+                        background: promo.type === 'product' ? '#3b82f6' : '#10b981',
+                        padding: '4px 8px',
+                        borderRadius: '4px',
+                        fontWeight: 'bold',
+                        display: 'inline-block',
+                      }}
+                    >
+                      {promo.type}
+                    </span>
+                  )}
+                  <h2
                     style={{
-                      fontFamily:
-                        '"Sarchia", sans-serif' /* 🌟 FIX: Applied Sarchia to Description text */,
-                      fontSize: '1rem',
-                      color: '#cbd5e1',
-                      marginBottom: '1rem',
-                      lineHeight: '1.5',
+                      fontFamily: '"Rudaw", sans-serif',
+                      fontSize: '2.25rem',
+                      fontWeight: '800',
+                      marginTop: '0.5rem',
+                      marginBottom: '0.5rem',
+                      lineHeight: '1.2',
                     }}
                   >
-                    {promo.description}
-                  </p>
-                )}
+                    {promo.title}
+                  </h2>
+                  {promo.description && (
+                    <p
+                      style={{
+                        fontFamily: '"Sarchia", sans-serif',
+                        fontSize: '1rem',
+                        color: '#cbd5e1',
+                        marginBottom: '1rem',
+                        lineHeight: '1.5',
+                      }}
+                    >
+                      {promo.description}
+                    </p>
+                  )}
+                </div>
               </div>
-            </div>
-          )
+            )
 
-          return promo.type === 'product' || promo.linkUrl ? (
-            <Link
-              key={promo.id}
-              href={targetUrl}
-              className="carousel-slide"
-              style={{ textDecoration: 'none' }}
-              onClick={(e) => {
-                if (isDragging.current) e.preventDefault()
-              }}
-            >
-              {slideContent}
-            </Link>
-          ) : (
-            <div key={promo.id} className="carousel-slide">
-              {slideContent}
-            </div>
-          )
-        })}
+            return promo.type === 'product' || promo.linkUrl ? (
+              <Link
+                key={promo.id}
+                href={targetUrl}
+                className="carousel-slide"
+                style={{ textDecoration: 'none' }}
+                draggable={false}
+              >
+                {slideContent}
+              </Link>
+            ) : (
+              <div key={promo.id} className="carousel-slide">
+                {slideContent}
+              </div>
+            )
+          })}
+        </div>
       </div>
 
       {promotions.length > 1 && (
