@@ -160,3 +160,81 @@ svg {
     }
   }
 }
+
+/* ----------------------------------------------------
+   KURDISH LOCAL FONTS DECLARATION (FRONT-END GLOBALS)
+------------------------------------------------------- */
+
+@font-face {
+  font-family: 'Rudaw';
+  src: url('/fonts/rudaw_regular_new.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Rudaw';
+  src: url('/fonts/rudaw_bold_new.ttf') format('truetype');
+  font-weight: bold;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Sarchia';
+  src: url('/fonts/sarchia_kurdish.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Sarchia TV';
+  src: url('/fonts/sarchia_tv.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Sarkar Masmak';
+  src: url('/fonts/sarkar_masmak_regular.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'UniQaidar Sahifa';
+  src: url('/fonts/uniqaidar_ak_sahifa.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'UniQaidar Headline';
+  src: url('/fonts/uniqaidar_news_head_line_019.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* 🌟 CRITICAL FIX: Standard CSS handles nested styles differently than SCSS. 
+   If your front-end file ends in .css instead of .scss, write it flat like this: */
+
+html[lang='ckb'] body {
+  font-family: 'Rudaw', 'Sarchia', sans-serif !important;
+}
+
+html[lang='ckb'] h1,
+html[lang='ckb'] h2,
+html[lang='ckb'] h3,
+html[lang='ckb'] h4,
+html[lang='ckb'] h5,
+html[lang='ckb'] h6,
+html[lang='ckb'] .headline-text {
+  font-family: 'UniQaidar Headline', 'Rudaw', sans-serif !important;
+  font-weight: bold;
+}

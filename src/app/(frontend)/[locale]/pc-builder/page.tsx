@@ -1,7 +1,7 @@
 import { getPayload } from 'payload'
 import config from '@/payload.config'
 import { headers } from 'next/headers'
-import PcBuilderClient from '../../../../components/PcBuilderClient'
+import PcBuilderClient from '@/components/PcBuilderClient'
 
 interface PcBuilderPageProps {
   params: Promise<{ locale: string }>

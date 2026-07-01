@@ -121,7 +121,6 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
             {currentLocale === 'ar' ? 'الرئيسية' : currentLocale === 'ckb' ? 'سەرەکی' : 'Home'}
           </Link>
           {' / '}
-          {/* 👑 FIXED: Render safe localized string value instead of raw relation object crash */}
           <span style={{ textTransform: 'uppercase' }}>{productCategoryName || 'Hardware'}</span>
         </div>
 
@@ -219,6 +218,8 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
             <div style={{ marginTop: '3rem' }}>
               <h3
                 style={{
+                  fontFamily: '"Rudaw", sans-serif' /* 🌟 FIX: Applied Rudaw & Darker Text */,
+                  color: '#1e293b',
                   borderBottom: '2px solid #f0f0f0',
                   paddingBottom: '0.5rem',
                   marginBottom: '1rem',
@@ -313,6 +314,8 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
 
               <h1
                 style={{
+                  fontFamily: '"Rudaw", sans-serif' /* 🌟 FIX: Added Font Family */,
+                  color: '#1e293b' /* 🌟 FIX: Forced to slate-charcoal instead of white */,
                   fontSize: '2rem',
                   marginTop: '1rem',
                   marginBottom: '0.5rem',
@@ -410,7 +413,14 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
                       paddingTop: '1.5rem',
                     }}
                   >
-                    <span style={{ fontSize: '16px', color: '#444', fontWeight: 'bold' }}>
+                    <span
+                      style={{
+                        fontSize: '16px',
+                        color: '#444',
+                        fontWeight: 'bold',
+                        fontFamily: 'Rudaw',
+                      }}
+                    >
                       {currentLocale === 'ar'
                         ? 'المجموع الكلي:'
                         : currentLocale === 'ckb'
@@ -462,7 +472,16 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
 
         {/* RELATED RECOMMENDATIONS FOOTER */}
         <div style={{ marginTop: '6rem', borderTop: '1px solid #eee', paddingTop: '3rem' }}>
-          <h3 style={{ fontSize: '1.5rem', fontWeight: '600' }}>
+          <h3
+            style={{
+              fontFamily: '"Rudaw", sans-serif',
+              fontSize: '1.5rem',
+              fontWeight: '600',
+              color: '#1e293b',
+            }}
+          >
+            {' '}
+            {/* 🌟 FIX: Added Font & Color */}
             {currentLocale === 'ar'
               ? 'منتجات مشابهة قد تعجبك'
               : currentLocale === 'ckb'
@@ -550,6 +569,8 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
                       </div>
                       <h4
                         style={{
+                          fontFamily: '"Rudaw", sans-serif' /* 🌟 FIX: Added Font */,
+                          color: '#1e293b' /* 🌟 FIX: Added explicit color */,
                           fontSize: '14px',
                           margin: '0 0 0.5rem 0',
                           whiteSpace: 'nowrap',

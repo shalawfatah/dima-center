@@ -43,6 +43,7 @@ export default function ProductBuyActions({
         fontWeight: 'bold',
         cursor: product.stock > 0 ? 'pointer' : 'not-allowed',
         marginTop: '1rem',
+        fontFamily: 'Rudaw',
       }}
     >
       {currentLocale === 'ar'

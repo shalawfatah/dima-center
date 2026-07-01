@@ -22,6 +22,68 @@ const COMPONENT_SLOTS = [
   { key: 'cooler', label: 'CPU Cooler', categorySlug: 'cooler' },
 ]
 
+const dict: Record<string, Record<string, string>> = {
+  en: {
+    title: 'Build Your Dream PC',
+    subtitle:
+      'Mix and match components to build your custom desktop configuration. Progress is auto-saved locally!',
+    noPart: 'No part selected',
+    clear: 'Clear',
+    change: 'Change',
+    choose: 'Choose Part',
+    summary: 'Configuration Summary',
+    configName: 'Configuration Name',
+    totalPrice: 'Total Price:',
+    saving: 'Saving Blueprint...',
+    saveBtn: 'Save Configuration',
+    partLabel: 'PART',
+    noItems: 'No items found under category',
+    loginPrompt: '💡 Want to save this layout?',
+    signIn: 'Sign in',
+    saveSuffix: 'to save blueprints.',
+    modalSelectPrefix: 'Select',
+  },
+  ckb: {
+    title: 'کۆمپیوتەری خەونەکانت دروست بکە',
+    subtitle:
+      'پارچەکان تێکەڵ بکە و بگونجێنە بۆ دروستکردنی کۆمپیوتەرەکەت. پێشکەوتنەکان خۆکارانە پاشەکەوت دەبن!',
+    noPart: 'هیچ پارچەیەک دیاری نەکراوە',
+    clear: 'سڕینەوە',
+    change: 'گۆڕین',
+    choose: 'دیاریکردنی پارچە',
+    summary: 'کورتەی پێکهاتەکان',
+    configName: 'ناوی پێکهاتەکە',
+    totalPrice: 'کۆی گشتی نرخ:',
+    saving: 'پاشەکەوتکردنی نەخشە...',
+    saveBtn: 'پاشەکەوتکردنی پێکهاتە',
+    partLabel: 'پارچە',
+    noItems: 'هیچ بڕگەیەک نەدۆزرایەوە لەژێر ئەم هاوپۆلەدا',
+    loginPrompt: '💡 دەتەوێت ئەم نەخشەیە پاشەکەوت بکەیت؟',
+    signIn: 'چوونەژوورەوە',
+    saveSuffix: 'بۆ پاشەکەوتکردنی نەخشەکان.',
+    modalSelectPrefix: 'دیاریکردنی',
+  },
+  ar: {
+    title: 'ابنِ جهاز الكمبيوتر الأحلام',
+    subtitle: 'قم بمطابقة المكونات لبناء جهاز الكمبيوتر المخصص لك. يتم حفظ التقدم تلقائيًا محليًا!',
+    noPart: 'لم يتم اختيار أي قطعة',
+    clear: 'مسح',
+    change: 'تغيير',
+    choose: 'اختر قطعة',
+    summary: 'ملخص التجميعة',
+    configName: 'اسم التجميعة',
+    totalPrice: 'السعر الإجمالي:',
+    saving: 'جاري حفظ المخطط...',
+    saveBtn: 'حفظ التجميعة',
+    partLabel: 'قطعة',
+    noItems: 'لم يتم العثور على عناصر تحت هذه الفئة',
+    loginPrompt: '💡 هل تريد حفظ هذا المخطط؟',
+    signIn: 'تسجيل الدخول',
+    saveSuffix: 'لحفظ المخططات.',
+    modalSelectPrefix: 'اختر',
+  },
+}
+
 export default function PcBuilderClient({
   products,
   user,
@@ -38,7 +100,6 @@ export default function PcBuilderClient({
     {},
   )
 
-  // Modal tracking state (null means closed, string key means open for that slot)
   const [activeModalSlot, setActiveModalSlot] = useState<string | null>(null)
   const [isSaving, setIsSaving] = useState(false)
   const [message, setMessage] = useState({ type: '', text: '' })
@@ -46,7 +107,6 @@ export default function PcBuilderClient({
   const openModal = (slotKey: string) => setActiveModalSlot(slotKey)
   const closeModal = () => setActiveModalSlot(null)
 
-  // Select a hardware component for the active modal slot
   const selectComponent = (slotKey: string, product: any) => {
     setSelections((prev) => ({
       ...prev,
@@ -55,7 +115,6 @@ export default function PcBuilderClient({
     closeModal()
   }
 
-  // Remove a component from a designated layout slot
   const removeComponent = (slotKey: string) => {
     setSelections((prev) => {
       const updated = { ...prev }
@@ -69,7 +128,6 @@ export default function PcBuilderClient({
     0,
   )
 
-  // Filter products for the currently active modal slot
   const currentSlotConfig = COMPONENT_SLOTS.find((s) => s.key === activeModalSlot)
   const filteredProducts = products.filter((prod) => {
     if (!currentSlotConfig) return false
@@ -80,7 +138,6 @@ export default function PcBuilderClient({
     return String(prodCategory).toLowerCase() === currentSlotConfig.categorySlug.toLowerCase()
   })
 
-  // Save the configuration to the backend database
   const handleSaveBuild = async () => {
     if (!user) return
     setIsSaving(true)
@@ -106,7 +163,6 @@ export default function PcBuilderClient({
       })
 
       if (res.ok) {
-        // Clear local storage metrics upon successful DB synchronization save
         window.localStorage.removeItem('pc_build_selections')
         window.localStorage.removeItem('pc_build_name')
 
@@ -122,6 +178,21 @@ export default function PcBuilderClient({
     }
   }
 
+  // Next.js localization check (Fix tracking for 'ckb')
+  const isRegionalLocale =
+    currentLocale === 'ar' || currentLocale === 'ku' || currentLocale === 'ckb'
+
+  // Dynamic Font Families explicitly mapped out as requested
+  const titleFontFamily = isRegionalLocale
+    ? '"Rudaw", "Inter", "Noto Sans Arabic", -apple-system, sans-serif'
+    : '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+
+  const generalFontFamily = isRegionalLocale
+    ? '"Sarchia", "Inter", "Noto Sans Arabic", -apple-system, sans-serif'
+    : '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif'
+
+  const t = dict[currentLocale] || dict['en']
+
   return (
     <div
       style={{
@@ -130,17 +201,25 @@ export default function PcBuilderClient({
         padding: '0 1.5rem',
         direction: isRtl ? 'rtl' : 'ltr',
         textAlign: isRtl ? 'right' : 'left',
+        fontFamily: generalFontFamily,
       }}
     >
       <header
         style={{ marginBottom: '2rem', borderBottom: '1px solid #e2e8f0', paddingBottom: '1.5rem' }}
       >
-        <h1 style={{ fontSize: '2.25rem', fontWeight: '800', margin: 0, color: '#000' }}>
-          Build Your Dream PC
+        <h1
+          style={{
+            fontSize: '2.25rem',
+            fontWeight: '800',
+            margin: 0,
+            color: '#000',
+            fontFamily: titleFontFamily, // Applied 'Rudaw'
+          }}
+        >
+          {t.title}
         </h1>
-        <p style={{ color: '#64748b', marginTop: '0.5rem' }}>
-          Mix and match components to build your custom desktop configuration. Progress is
-          auto-saved locally!
+        <p style={{ color: '#64748b', marginTop: '0.5rem', fontFamily: generalFontFamily }}>
+          {t.subtitle}
         </p>
       </header>
 
@@ -153,6 +232,7 @@ export default function PcBuilderClient({
             backgroundColor: message.type === 'success' ? '#dcfce7' : '#fee2e2',
             color: message.type === 'success' ? '#15803d' : '#b91c1c',
             fontWeight: '500',
+            fontFamily: generalFontFamily,
           }}
         >
           {message.text}
@@ -167,7 +247,7 @@ export default function PcBuilderClient({
           alignItems: 'start',
         }}
       >
-        {/* LEFT COLUMN: ARCHITECTURAL COMPONENT SLOTS LIST */}
+        {/* LEFT COLUMN: COMPONENTS LIST */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
           {COMPONENT_SLOTS.map((slot) => {
             const chosenItem = selections[slot.key]
@@ -175,7 +255,7 @@ export default function PcBuilderClient({
             return (
               <div
                 key={slot.key}
-                onClick={() => openModal(slot.key)} // ⚡ Entire box triggers modal open!
+                onClick={() => openModal(slot.key)}
                 style={{
                   border: '1px solid #e2e8f0',
                   borderRadius: '8px',
@@ -191,7 +271,7 @@ export default function PcBuilderClient({
                 onMouseLeave={(e) => (e.currentTarget.style.borderColor = '#e2e8f0')}
               >
                 <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', flex: 1 }}>
-                  {/* Part Image Thumbnail Showcase */}
+                  {/* Thumbnail */}
                   <div
                     style={{
                       width: '50px',
@@ -212,8 +292,15 @@ export default function PcBuilderClient({
                         style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                       />
                     ) : (
-                      <span style={{ fontSize: '10px', color: '#94a3b8', fontWeight: 'bold' }}>
-                        PART
+                      <span
+                        style={{
+                          fontSize: '10px',
+                          color: '#94a3b8',
+                          fontWeight: 'bold',
+                          fontFamily: generalFontFamily,
+                        }}
+                      >
+                        {t.partLabel}
                       </span>
                     )}
                   </div>
@@ -226,8 +313,10 @@ export default function PcBuilderClient({
                         color: '#64748b',
                         textTransform: 'uppercase',
                         display: 'block',
+                        fontFamily: generalFontFamily,
                       }}
                     >
+                      {/* Dynamic loop fallback support would typically use translation objects for slot names */}
                       {slot.label}
                     </span>
                     {chosenItem ? (
@@ -237,10 +326,17 @@ export default function PcBuilderClient({
                           fontWeight: '600',
                           fontSize: '16px',
                           color: '#000',
+                          fontFamily: generalFontFamily,
                         }}
                       >
                         {chosenItem.title}{' '}
-                        <span style={{ color: '#10b981', marginLeft: '8px' }}>
+                        <span
+                          style={{
+                            color: '#10b981',
+                            marginLeft: isRtl ? '0' : '8px',
+                            marginRight: isRtl ? '8px' : '0',
+                          }}
+                        >
                           ({chosenItem.price} IQD)
                         </span>
                       </div>
@@ -251,9 +347,10 @@ export default function PcBuilderClient({
                           color: '#cbd5e1',
                           fontStyle: 'italic',
                           fontSize: '14px',
+                          fontFamily: generalFontFamily,
                         }}
                       >
-                        No part selected
+                        {t.noPart}
                       </div>
                     )}
                   </div>
@@ -263,7 +360,7 @@ export default function PcBuilderClient({
                   {chosenItem && (
                     <button
                       onClick={(e) => {
-                        e.stopPropagation() // Prevent triggering the modal open handler
+                        e.stopPropagation() // Stops modal window popping up on button interaction triggers
                         removeComponent(slot.key)
                       }}
                       style={{
@@ -275,12 +372,17 @@ export default function PcBuilderClient({
                         cursor: 'pointer',
                         fontSize: '13px',
                         fontWeight: '500',
+                        fontFamily: generalFontFamily,
                       }}
                     >
-                      Clear
+                      {t.clear}
                     </button>
                   )}
                   <button
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      openModal(slot.key)
+                    }}
                     style={{
                       padding: '6px 12px',
                       background: '#f1f5f9',
@@ -290,9 +392,10 @@ export default function PcBuilderClient({
                       cursor: 'pointer',
                       fontSize: '13px',
                       fontWeight: '500',
+                      fontFamily: generalFontFamily,
                     }}
                   >
-                    {chosenItem ? 'Change' : 'Choose Part'}
+                    {chosenItem ? t.change : t.choose}
                   </button>
                 </div>
               </div>
@@ -319,9 +422,15 @@ export default function PcBuilderClient({
             }}
           >
             <h3
-              style={{ margin: '0 0 1rem 0', fontSize: '18px', fontWeight: '700', color: '#000' }}
+              style={{
+                margin: '0 0 1rem 0',
+                fontSize: '18px',
+                fontWeight: '700',
+                color: '#000',
+                fontFamily: generalFontFamily,
+              }}
             >
-              Configuration Summary
+              {t.summary}
             </h3>
 
             <div style={{ marginBottom: '1rem' }}>
@@ -331,9 +440,10 @@ export default function PcBuilderClient({
                   color: '#94a3b8',
                   display: 'block',
                   marginBottom: '4px',
+                  fontFamily: generalFontFamily,
                 }}
               >
-                Configuration Name
+                {t.configName}
               </label>
               <input
                 type="text"
@@ -347,6 +457,7 @@ export default function PcBuilderClient({
                   background: '#fff',
                   color: '#000',
                   fontSize: '14px',
+                  fontFamily: generalFontFamily,
                 }}
               />
             </div>
@@ -361,8 +472,17 @@ export default function PcBuilderClient({
                 marginBottom: '1.5rem',
               }}
             >
-              <span style={{ fontSize: '14px', color: '#64748b' }}>Total Price:</span>
-              <span style={{ fontSize: '24px', fontWeight: '800', color: '#10b981' }}>
+              <span style={{ fontSize: '14px', color: '#64748b', fontFamily: generalFontFamily }}>
+                {t.totalPrice}
+              </span>
+              <span
+                style={{
+                  fontSize: '24px',
+                  fontWeight: '800',
+                  color: '#10b981',
+                  fontFamily: generalFontFamily,
+                }}
+              >
                 {totalPrice} IQD
               </span>
             </div>
@@ -381,9 +501,10 @@ export default function PcBuilderClient({
                   fontWeight: '600',
                   cursor: Object.keys(selections).length === 0 ? 'not-allowed' : 'pointer',
                   opacity: Object.keys(selections).length === 0 || isSaving ? 0.6 : 1,
+                  fontFamily: generalFontFamily,
                 }}
               >
-                {isSaving ? 'Saving Blueprint...' : 'Save Configuration'}
+                {isSaving ? t.saving : t.saveBtn}
               </button>
             ) : (
               <div
@@ -395,16 +516,22 @@ export default function PcBuilderClient({
                   textAlign: 'center',
                   fontSize: '13px',
                   color: '#64748b',
+                  fontFamily: generalFontFamily,
                 }}
               >
-                💡 Want to save this layout? <br />
+                {t.loginPrompt} <br />
                 <a
                   href={`/${currentLocale}/login`}
-                  style={{ color: '#3b82f6', fontWeight: '600', textDecoration: 'underline' }}
+                  style={{
+                    color: '#3b82f6',
+                    fontWeight: '600',
+                    textDecoration: 'underline',
+                    fontFamily: generalFontFamily,
+                  }}
                 >
-                  Sign in
+                  {t.signIn}
                 </a>{' '}
-                to save blueprints.
+                {t.saveSuffix}
               </div>
             )}
           </div>
@@ -453,8 +580,16 @@ export default function PcBuilderClient({
                 alignItems: 'center',
               }}
             >
-              <h3 style={{ margin: 0, fontSize: '18px', fontWeight: '700', color: '#000' }}>
-                Select {currentSlotConfig.label}
+              <h3
+                style={{
+                  margin: 0,
+                  fontSize: '18px',
+                  fontWeight: '700',
+                  color: '#000',
+                  fontFamily: generalFontFamily,
+                }}
+              >
+                {t.modalSelectPrefix} {currentSlotConfig.label}
               </h3>
               <button
                 onClick={closeModal}
@@ -471,7 +606,7 @@ export default function PcBuilderClient({
               </button>
             </div>
 
-            {/* Modal Body / Product Picker List */}
+            {/* Modal Body */}
             <div
               style={{
                 padding: '1.25rem',
@@ -489,9 +624,10 @@ export default function PcBuilderClient({
                     fontStyle: 'italic',
                     textAlign: 'center',
                     padding: '2rem 0',
+                    fontFamily: generalFontFamily,
                   }}
                 >
-                  No items found under category "{currentSlotConfig.categorySlug}".
+                  {t.noItems} "{currentSlotConfig.categorySlug}".
                 </p>
               ) : (
                 filteredProducts.map((prod) => (
@@ -540,14 +676,36 @@ export default function PcBuilderClient({
                             style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                           />
                         ) : (
-                          <span style={{ fontSize: '10px', color: '#cbd5e1' }}>IMG</span>
+                          <span
+                            style={{
+                              fontSize: '10px',
+                              color: '#cbd5e1',
+                              fontFamily: generalFontFamily,
+                            }}
+                          >
+                            IMG
+                          </span>
                         )}
                       </div>
-                      <span style={{ fontWeight: '600', color: '#1e293b', fontSize: '14px' }}>
+                      <span
+                        style={{
+                          fontWeight: '600',
+                          color: '#1e293b',
+                          fontSize: '14px',
+                          fontFamily: generalFontFamily,
+                        }}
+                      >
                         {prod.title}
                       </span>
                     </div>
-                    <span style={{ fontWeight: '700', color: '#10b981', fontSize: '15px' }}>
+                    <span
+                      style={{
+                        fontWeight: '700',
+                        color: '#10b981',
+                        fontSize: '15px',
+                        fontFamily: generalFontFamily,
+                      }}
+                    >
                       {prod.price} IQD
                     </span>
                   </div>

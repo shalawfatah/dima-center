@@ -24,18 +24,26 @@ export default function Footer({ currentLocale }: FooterProps) {
 
       <footer
         style={{
+          fontFamily: '"Sarchia", sans-serif' /* 🌟 Applied Sarchia as body font */,
           background: '#f8f9fa',
           borderTop: '1px solid #eaeaea',
           padding: '3rem 1.5rem',
-          marginTop: 'auto', // Pushes footer to bottom if page content is short
+          marginTop: 'auto',
           fontSize: '14px',
-          color: '#555',
+          color: '#475569' /* Slightly darker slate for better contrast with Sarchia */,
           textAlign: isRtl ? 'right' : 'left',
         }}
       >
         <div className="footer-grid">
           <div>
-            <h4 style={{ color: '#000', marginBottom: '0.75rem', fontWeight: '600' }}>
+            <h4
+              style={{
+                fontFamily: '"Rudaw", sans-serif',
+                color: '#0f172a',
+                marginBottom: '0.75rem',
+                fontWeight: '600',
+              }}
+            >
               {currentLocale === 'ar'
                 ? 'حول المركز'
                 : currentLocale === 'ckb'
@@ -52,7 +60,14 @@ export default function Footer({ currentLocale }: FooterProps) {
           </div>
 
           <div>
-            <h4 style={{ color: '#000', marginBottom: '0.75rem', fontWeight: '600' }}>
+            <h4
+              style={{
+                fontFamily: '"Rudaw", sans-serif',
+                color: '#0f172a',
+                marginBottom: '0.75rem',
+                fontWeight: '600',
+              }}
+            >
               {currentLocale === 'ar'
                 ? 'الموقع والدعم'
                 : currentLocale === 'ckb'
@@ -66,7 +81,14 @@ export default function Footer({ currentLocale }: FooterProps) {
           </div>
 
           <div>
-            <h4 style={{ color: '#000', marginBottom: '0.75rem', fontWeight: '600' }}>
+            <h4
+              style={{
+                fontFamily: '"Rudaw", sans-serif',
+                color: '#0f172a',
+                marginBottom: '0.75rem',
+                fontWeight: '600',
+              }}
+            >
               {currentLocale === 'ar'
                 ? 'سياسة الطلبات'
                 : currentLocale === 'ckb'
@@ -85,12 +107,13 @@ export default function Footer({ currentLocale }: FooterProps) {
 
         <div
           style={{
+            fontFamily: '"Sarchia", sans-serif',
             textAlign: 'center',
             marginTop: '3rem',
             borderTop: '1px solid #e2e8f0',
             paddingTop: '1.5rem',
             fontSize: '12px',
-            color: '#888',
+            color: '#94a3b8',
           }}
         >
           © {new Date().getFullYear()} Nima Center. All rights reserved.

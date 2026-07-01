@@ -135,12 +135,13 @@ export default function FilterSidebar({ locale, facets }: FilterSidebarProps) {
     >
       <h2
         style={{
+          fontFamily: '"Rudaw", sans-serif' /* 🌟 Headlines take Rudaw */,
           fontSize: '1.2rem',
           fontWeight: '700',
           marginBottom: '1.5rem',
           borderBottom: '2px solid #f8fafc',
           paddingBottom: '0.5rem',
-          color: '#111',
+          color: '#1e293b',
         }}
       >
         {translations.title}
@@ -150,10 +151,11 @@ export default function FilterSidebar({ locale, facets }: FilterSidebarProps) {
       <div style={{ marginBottom: '1.75rem' }}>
         <label
           style={{
+            fontFamily: '"Sarchia", sans-serif' /* 🌟 Body UI fields take Sarchia */,
             display: 'block',
             fontSize: '12px',
             fontWeight: '700',
-            color: '#666',
+            color: '#475569',
             marginBottom: '0.5rem',
             textTransform: 'uppercase',
           }}
@@ -167,13 +169,14 @@ export default function FilterSidebar({ locale, facets }: FilterSidebarProps) {
             updateFilters(selectedConditions, priceRange, e.target.value, activeSpecs)
           }}
           style={{
+            fontFamily: '"Sarchia", sans-serif',
             width: '100%',
             padding: '0.6rem',
             borderRadius: '8px',
             border: '1px solid #e2e8f0',
             fontSize: '14px',
             backgroundColor: '#fff',
-            color: '#333',
+            color: '#1e293b',
           }}
         >
           <option value="price_asc">{translations.lowHigh}</option>
@@ -185,11 +188,12 @@ export default function FilterSidebar({ locale, facets }: FilterSidebarProps) {
       <div style={{ marginBottom: '1.75rem' }}>
         <div
           style={{
+            fontFamily: '"Sarchia", sans-serif',
             display: 'flex',
             justifyContent: 'space-between',
             fontSize: '12px',
             fontWeight: '700',
-            color: '#666',
+            color: '#475569',
             marginBottom: '0.5rem',
             textTransform: 'uppercase',
           }}
@@ -204,11 +208,12 @@ export default function FilterSidebar({ locale, facets }: FilterSidebarProps) {
           value={priceRange}
           onChange={(e) => setPriceRange(Number(e.target.value))}
           onMouseUp={() => updateFilters(selectedConditions, priceRange, sortBy, activeSpecs)}
-          onTouchEnd={() => updateFilters(selectedConditions, priceRange, sortBy, activeSpecs)}
+          onTransitionEnd={() => updateFilters(selectedConditions, priceRange, sortBy, activeSpecs)}
           style={{ width: '100%', accentColor: '#0070f3', cursor: 'pointer' }}
         />
         <div
           style={{
+            fontFamily: '"Sarchia", sans-serif',
             display: 'flex',
             justifyContent: 'space-between',
             fontSize: '11px',
@@ -226,10 +231,11 @@ export default function FilterSidebar({ locale, facets }: FilterSidebarProps) {
         <div style={{ marginBottom: '1.75rem' }}>
           <span
             style={{
+              fontFamily: '"Sarchia", sans-serif',
               display: 'block',
               fontSize: '12px',
               fontWeight: '700',
-              color: '#666',
+              color: '#475569',
               marginBottom: '0.5rem',
               textTransform: 'uppercase',
             }}
@@ -240,6 +246,7 @@ export default function FilterSidebar({ locale, facets }: FilterSidebarProps) {
             <label
               key={cond}
               style={{
+                fontFamily: '"Sarchia", sans-serif',
                 display: 'flex',
                 alignItems: 'center',
                 gap: '0.6rem',
@@ -247,7 +254,7 @@ export default function FilterSidebar({ locale, facets }: FilterSidebarProps) {
                 margin: '0.5rem 0',
                 cursor: 'pointer',
                 textTransform: 'capitalize',
-                color: '#333',
+                color: '#1e293b',
               }}
             >
               <input
@@ -270,6 +277,7 @@ export default function FilterSidebar({ locale, facets }: FilterSidebarProps) {
         >
           <span
             style={{
+              fontFamily: '"Sarchia", sans-serif',
               display: 'block',
               fontSize: '12px',
               fontWeight: '700',
@@ -286,13 +294,14 @@ export default function FilterSidebar({ locale, facets }: FilterSidebarProps) {
               <label
                 key={val}
                 style={{
+                  fontFamily: '"Sarchia", sans-serif',
                   display: 'flex',
                   alignItems: 'center',
                   gap: '0.6rem',
                   fontSize: '14px',
                   margin: '0.5rem 0',
                   cursor: 'pointer',
-                  color: '#333',
+                  color: '#1e293b',
                 }}
               >
                 <input

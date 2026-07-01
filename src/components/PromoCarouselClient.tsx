@@ -58,7 +58,7 @@ export default function PromoCarouselClient({
         scrollToSlide(nextIndex)
         return nextIndex
       })
-    }, 5000) // 5000ms = 5 Seconds
+    }, 5000)
 
     return () => clearInterval(interval)
   }, [promotions.length])
@@ -81,7 +81,6 @@ export default function PromoCarouselClient({
 
   const handleMouseUp = (e: React.MouseEvent) => {
     isDown.current = false
-    // If they actually moved the mouse, intercept the click so it doesn't open links accidentally
     if (isDragging.current) {
       e.preventDefault()
     }
@@ -92,19 +91,18 @@ export default function PromoCarouselClient({
     if (!isDown.current || !trackRef.current) return
     e.preventDefault()
     const x = e.pageX - trackRef.current.offsetLeft
-    const walk = (x - startX.current) * 1.5 // Multiplier adjustments control drag speed sensitivity
+    const walk = (x - startX.current) * 1.5
 
     if (Math.abs(walk) > 5) {
-      isDragging.current = true // Confirms they are intent-dragging, not just clicking
+      isDragging.current = true
     }
 
     trackRef.current.scrollLeft = scrollLeftState.current - walk
   }
 
-  // Clean snap placement evaluation when releasing drag actions
   const snapToNearest = () => {
     if (!trackRef.current) return
-    trackRef.current.style.scrollSnapType = 'x mandatory' // Re-enable beautiful standard snapping
+    trackRef.current.style.scrollSnapType = 'x mandatory'
     const { scrollLeft, clientWidth } = trackRef.current
     const index = Math.round(Math.abs(scrollLeft) / clientWidth)
     scrollToSlide(index)
@@ -196,6 +194,7 @@ export default function PromoCarouselClient({
                 {promo.type !== 'generic' && (
                   <span
                     style={{
+                      fontFamily: '"Rudaw", sans-serif' /* 🌟 Applied Rudaw to badge */,
                       fontSize: '11px',
                       textTransform: 'uppercase',
                       letterSpacing: '1px',
@@ -210,6 +209,7 @@ export default function PromoCarouselClient({
                 )}
                 <h2
                   style={{
+                    fontFamily: '"Rudaw", sans-serif' /* 🌟 FIX: Applied Rudaw to Heading Titles */,
                     fontSize: '2.25rem',
                     fontWeight: '800',
                     marginTop: '0.5rem',
@@ -222,6 +222,8 @@ export default function PromoCarouselClient({
                 {promo.description && (
                   <p
                     style={{
+                      fontFamily:
+                        '"Sarchia", sans-serif' /* 🌟 FIX: Applied Sarchia to Description text */,
                       fontSize: '1rem',
                       color: '#cbd5e1',
                       marginBottom: '1rem',
@@ -242,7 +244,6 @@ export default function PromoCarouselClient({
               className="carousel-slide"
               style={{ textDecoration: 'none' }}
               onClick={(e) => {
-                // Critical: If they were pulling/dragging the slider with mouse, prevent Link fire
                 if (isDragging.current) e.preventDefault()
               }}
             >

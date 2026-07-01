@@ -4,10 +4,14 @@ import Link from 'next/link'
 import Navbar from '@/components/Navbar'
 import Footer from '@/components/Footer'
 import FilterSidebar from '@/components/FilterSidebar'
-// ⚡ IMPORT YOUR NEW PRICE CALCULATOR UTILITY
 import { calculateProductPrice } from '@/utils/price'
 import PromoCarousel from '@/components/PromoCarousel'
 import NavUserMenu from '@/components/NavUserMenu'
+import Image from 'next/image'
+
+import logoImg from '../../../../public/media/logo.png'
+import { search_styles } from '@/styles/search_styles'
+import Languages from '@/components/Languages'
 
 interface PageProps {
   params: Promise<{ locale: string }>
@@ -156,69 +160,85 @@ export default async function StorefrontHome({ params, searchParams }: PageProps
   return (
     <div
       style={{
+        fontFamily:
+          '"Sarchia", sans-serif' /* 🌟 Injected Sarchia as default base body font layout stack */,
         display: 'flex',
         flexDirection: 'column',
         minHeight: '100vh',
         direction: isRtl ? 'rtl' : 'ltr',
-        backgroundColor: '#fafafa',
+        backgroundColor: '#fff',
       }}
     >
-      <style>{`
-        .product-card { transition: transform 0.2s ease, box-shadow 0.2s ease !important; }
-        .product-card:hover { transform: translateY(-4px); box-shadow: 0 10px 20px rgba(0,0,0,0.05) !important; }
-        .archive-layout-container { display: flex; gap: 2rem; width: 100%; }
-        .sidebar-wrapper { flex: 0 0 280px; width: 280px; }
-        @media (max-width: 768px) {
-          .archive-layout-container { flex-direction: column !important; }
-          .sidebar-wrapper { flex: 1 1 100% !important; width: 100% !important; }
-        }
-      `}</style>
+      <style>{search_styles()}</style>
+      <header className="master-header">
+        <div className="top-nav-bar">
+          <Link
+            href={`/${currentLocale}`}
+            style={{ textDecoration: 'none', display: 'flex', alignItems: 'center' }}
+          >
+            <Image src={logoImg} alt="Dima Logo" width={100} height={60} priority />
+          </Link>
+          <form action={`/${currentLocale}`} method="GET" className="search-form-wrapper">
+            <input
+              type="text"
+              name="search"
+              placeholder={
+                currentLocale === 'ar'
+                  ? 'ابحث عن قطع ومكونات...'
+                  : currentLocale === 'ckb'
+                    ? 'گەڕان بۆ پارچەکان...'
+                    : 'Search hardware components...'
+              }
+              className="search-input-field"
+              style={{ fontFamily: '"Sarchia", sans-serif' }}
+            />
+            <button
+              type="submit"
+              style={{
+                position: 'absolute',
+                top: '50%',
+                right: isRtl ? 'auto' : '12px',
+                left: isRtl ? '12px' : 'auto',
+                transform: 'translateY(-50%)',
+                background: 'none',
+                border: 'none',
+                color: '#94a3b8',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+              }}
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <circle cx="11" cy="11" r="8"></circle>
+                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+              </svg>
+            </button>
+          </form>
 
-      <NavUserMenu currentLocale={currentLocale} />
-      <Navbar currentLocale={currentLocale} activeCategory={category} />
+          {/* PROFILE USER MENU & LANGUAGE SELECTOR GROUP */}
+          <div className="actions-cluster">
+            <NavUserMenu currentLocale={currentLocale} />
+            <Languages currentLocale={currentLocale} />
+          </div>
+        </div>
+
+        {/* LINE 2: Independent Main Navigation links bar */}
+        <div className="independent-nav-row">
+          <Navbar currentLocale={currentLocale} activeCategory={category} />
+        </div>
+      </header>
+
       <PromoCarousel currentLocale={currentLocale} />
-      <div
-        style={{
-          background: '#fff',
-          padding: '0.6rem 2rem',
-          display: 'flex',
-          justifyContent: 'flex-end',
-          gap: '1.25rem',
-          fontSize: '13px',
-          borderBottom: '1px solid #eef0f2',
-        }}
-      >
-        <Link
-          href="/en"
-          style={{
-            color: currentLocale === 'en' ? '#0070f3' : '#666',
-            textDecoration: 'none',
-            fontWeight: currentLocale === 'en' ? '600' : 'normal',
-          }}
-        >
-          English
-        </Link>
-        <Link
-          href="/ar"
-          style={{
-            color: currentLocale === 'ar' ? '#0070f3' : '#666',
-            textDecoration: 'none',
-            fontWeight: currentLocale === 'ar' ? '600' : 'normal',
-          }}
-        >
-          العربية
-        </Link>
-        <Link
-          href="/ckb"
-          style={{
-            color: currentLocale === 'ckb' ? '#0070f3' : '#666',
-            textDecoration: 'none',
-            fontWeight: currentLocale === 'ckb' ? '600' : 'normal',
-          }}
-        >
-          کوردی
-        </Link>
-      </div>
 
       <main style={{ flex: '1', padding: '2.5rem max(1.5rem, calc((100% - 1200px)/2))' }}>
         <div className="archive-layout-container">
@@ -231,11 +251,12 @@ export default async function StorefrontHome({ params, searchParams }: PageProps
           <div style={{ flex: '1', minWidth: '0' }}>
             <h2
               style={{
+                fontFamily: '"Rudaw", sans-serif' /* 🌟 Headings use Rudaw */,
+                color: '#1e293b',
                 fontSize: '1.65rem',
                 marginBottom: '1.5rem',
                 fontWeight: '700',
                 textTransform: 'uppercase',
-                color: '#111',
               }}
             >
               {category
@@ -255,7 +276,7 @@ export default async function StorefrontHome({ params, searchParams }: PageProps
                   borderRadius: '12px',
                   padding: '4rem 1rem',
                   textAlign: 'center',
-                  color: '#888',
+                  color: '#64748b',
                 }}
               >
                 📦{' '}
@@ -282,7 +303,6 @@ export default async function StorefrontHome({ params, searchParams }: PageProps
                       ? (product.category as any).title || (product.category as any).name
                       : ''
 
-                  // 🏷️ 1. CALCULATE DISCOUNT AND PRICE REAL-TIME VALUES
                   const { isDiscounted, originalPrice, finalPrice, badgeText } =
                     calculateProductPrice(product)
 
@@ -306,7 +326,6 @@ export default async function StorefrontHome({ params, searchParams }: PageProps
                           position: 'relative',
                         }}
                       >
-                        {/* 🏷️ 2. VISUAL DISCOUNT SALE BADGE OUTLINE */}
                         {isDiscounted && (
                           <span
                             style={{
@@ -383,17 +402,19 @@ export default async function StorefrontHome({ params, searchParams }: PageProps
                           )}
                           <h3
                             style={{
+                              fontFamily:
+                                '"Rudaw", sans-serif' /* 🌟 Structural headers take Rudaw */,
+                              color: '#1e293b',
                               margin: '0.4rem 0',
                               fontSize: '1.15rem',
                               fontWeight: '600',
-                              color: '#111',
                             }}
                           >
                             {product.title}
                           </h3>
                           <p
                             style={{
-                              color: '#666',
+                              color: '#475569',
                               fontSize: '14px',
                               margin: '0 0 1.25rem 0',
                               display: '-webkit-box',
@@ -414,7 +435,6 @@ export default async function StorefrontHome({ params, searchParams }: PageProps
                               marginTop: 'auto',
                             }}
                           >
-                            {/* 🏷️ 3. CONDITIONAL STRIKE-THROUGH PRICE BLOCK */}
                             <div style={{ display: 'flex', flexDirection: 'column' }}>
                               {isDiscounted ? (
                                 <>
@@ -440,7 +460,11 @@ export default async function StorefrontHome({ params, searchParams }: PageProps
                                 </>
                               ) : (
                                 <span
-                                  style={{ fontSize: '1.4rem', fontWeight: '800', color: '#000' }}
+                                  style={{
+                                    fontSize: '1.4rem',
+                                    fontWeight: '800',
+                                    color: '#0f172a',
+                                  }}
                                 >
                                   ${originalPrice}
                                 </span>

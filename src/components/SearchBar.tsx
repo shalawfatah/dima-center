@@ -69,6 +69,7 @@ export default function SearchBar({ locale }: SearchBarProps) {
           padding: 10px 16px;
           box-shadow: 0 4px 12px rgba(0,0,0,0.08);
           z-index: 99;
+
           border-bottom: 1px solid #eee;
         }
 

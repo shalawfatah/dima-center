@@ -3,6 +3,8 @@ import config from '@/payload.config'
 import { headers } from 'next/headers'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
+import LogoutButton from '@/components/LogoutButton' // Import our client logout button
+import { translations } from '@/utils/translations'
 
 interface AccountPageProps {
   params: Promise<{ locale: string }>
@@ -37,6 +39,7 @@ export default async function AccountPage({ params }: AccountPageProps) {
   const pcBuilds = buildsData.docs
   const isRtl = locale === 'ar' || locale === 'ckb'
 
+  const t = translations[locale as 'en' | 'ar' | 'ckb'] || translations.en
   return (
     <div
       style={{
@@ -48,19 +51,31 @@ export default async function AccountPage({ params }: AccountPageProps) {
       }}
     >
       <header
-        style={{ borderBottom: '1px solid #e2e8f0', paddingBottom: '1.5rem', marginBottom: '2rem' }}
+        style={{
+          borderBottom: '1px solid #e2e8f0',
+          paddingBottom: '1.5rem',
+          marginBottom: '2rem',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'flex-start',
+        }}
       >
-        <h1 style={{ fontSize: '2rem', fontWeight: '800', color: '#1e293b' }}>Account Dashboard</h1>
-        <p style={{ color: '#64748b', marginTop: '0.25rem' }}>
-          Logged in as: <strong>{user.email}</strong>
-        </p>
+        <div>
+          <h1 style={{ fontSize: '2rem', fontWeight: '800', color: '#1e293b', margin: 0 }}>
+            {t.title}
+          </h1>
+          <p style={{ color: '#64748b', marginTop: '0.5rem', margin: 0 }}>
+            {t.loggedIn} <strong>{user.email}</strong>
+          </p>
+        </div>
+
+        {/* Client-Side Safe Logout button avoids standard form NaN exception */}
+        <LogoutButton label={t.logout} locale={locale} />
       </header>
 
       {/* SECTION 1: ORDERS TABLE */}
       <section style={{ marginBottom: '3rem' }}>
-        <h2 style={{ fontSize: '1.5rem', fontWeight: '700', marginBottom: '1rem' }}>
-          Order History
-        </h2>
+        <h2 style={{ fontSize: '1.5rem', fontWeight: '700', marginBottom: '1rem' }}>{t.orders}</h2>
 
         {orders.length === 0 ? (
           <div
@@ -71,7 +86,7 @@ export default async function AccountPage({ params }: AccountPageProps) {
               color: '#64748b',
             }}
           >
-            No orders found yet.
+            {t.noOrders}
           </div>
         ) : (
           <div style={{ overflowX: 'auto', border: '1px solid #e2e8f0', borderRadius: '8px' }}>
@@ -85,17 +100,34 @@ export default async function AccountPage({ params }: AccountPageProps) {
             >
               <thead>
                 <tr style={{ backgroundColor: '#f8fafc', borderBottom: '1px solid #e2e8f0' }}>
-                  <th style={{ padding: '12px 16px', color: '#475569' }}>Order ID</th>
-                  <th style={{ padding: '12px 16px', color: '#475569' }}>Date</th>
-                  <th style={{ padding: '12px 16px', color: '#475569' }}>Total Price</th>
-                  <th style={{ padding: '12px 16px', color: '#475569' }}>Status</th>
+                  <th style={{ padding: '12px 16px', color: '#475569' }}>{t.orderId}</th>
+                  <th style={{ padding: '12px 16px', color: '#475569' }}>{t.date}</th>
+                  <th style={{ padding: '12px 16px', color: '#475569' }}>{t.total}</th>
+                  <th style={{ padding: '12px 16px', color: '#475569' }}>{t.status}</th>
                 </tr>
               </thead>
               <tbody>
                 {orders.map((order: any) => (
                   <tr key={order.id} style={{ borderBottom: '1px solid #e2e8f0' }}>
                     <td style={{ padding: '14px 16px', fontWeight: '600' }}>
-                      #{order.id.slice(-6)}
+                      <span style={{ color: '#334155' }}>#{String(order.id).slice(-6)}</span>
+                      {/* Sub-item display row directly below ID to keep things working out-of-the-box */}
+                      {order.items && order.items.length > 0 && (
+                        <div
+                          style={{
+                            fontSize: '12px',
+                            color: '#64748b',
+                            fontWeight: 'normal',
+                            marginTop: '4px',
+                          }}
+                        >
+                          {order.items.map((item: any, idx: number) => (
+                            <div key={idx}>
+                              • {item.product?.name || 'Product'} (x{item.quantity || 1})
+                            </div>
+                          ))}
+                        </div>
+                      )}
                     </td>
                     <td style={{ padding: '14px 16px', color: '#334155' }}>
                       {new Date(order.createdAt).toLocaleDateString(
@@ -127,9 +159,7 @@ export default async function AccountPage({ params }: AccountPageProps) {
 
       {/* SECTION 2: PC BUILDS LIST */}
       <section>
-        <h2 style={{ fontSize: '1.5rem', fontWeight: '700', marginBottom: '1rem' }}>
-          Saved PC Layouts
-        </h2>
+        <h2 style={{ fontSize: '1.5rem', fontWeight: '700', marginBottom: '1rem' }}>{t.layouts}</h2>
 
         {pcBuilds.length === 0 ? (
           <div
@@ -141,7 +171,7 @@ export default async function AccountPage({ params }: AccountPageProps) {
               color: '#64748b',
             }}
           >
-            You haven't configured any custom PC configurations yet.
+            {t.noLayouts}
           </div>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
@@ -161,16 +191,18 @@ export default async function AccountPage({ params }: AccountPageProps) {
               >
                 <div>
                   <h3 style={{ fontSize: '16px', fontWeight: '600', margin: 0 }}>
-                    {build.name || `Custom Workspace Build #${build.id.slice(-4)}`}
+                    {build.name || `Custom Workspace Build #${String(build.id).slice(-4)}`}
                   </h3>
                   <p style={{ fontSize: '13px', color: '#64748b', margin: '4px 0 0 0' }}>
                     Configured on: {new Date(build.createdAt).toLocaleDateString()}
                   </p>
                 </div>
+                {/* Redirects directly to pc-builder workspace route */}
                 <Link
-                  href={`/${locale}/pc-builder/view/${build.id}`}
+                  href={`/${locale}/pc-builder?load=${build.id}`}
                   style={{
                     padding: '8px 14px',
+                    background: '#0070f3',
                     color: '#fff',
                     borderRadius: '6px',
                     fontSize: '13px',
@@ -178,7 +210,7 @@ export default async function AccountPage({ params }: AccountPageProps) {
                     textDecoration: 'none',
                   }}
                 >
-                  View Blueprint
+                  {t.view}
                 </Link>
               </div>
             ))}
