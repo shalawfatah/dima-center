@@ -11,7 +11,6 @@ export default function SearchBar({ locale: initialLocale }: { locale: string })
   const [isMobileOpen, setIsMobileOpen] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
 
-  // 🎯 Safe Locale Parsing from current viewport URL path
   const segments = pathname.split('/')
   const locale = ['en', 'ar', 'ckb'].includes(segments[1]) ? segments[1] : initialLocale || 'en'
   const isRtl = locale === 'ar' || locale === 'ckb'
@@ -36,11 +35,20 @@ export default function SearchBar({ locale: initialLocale }: { locale: string })
   }
 
   return (
+    /* 🎯 FIX: Restored original clean layout positioning wrapper */
     <div className="search-component-root" style={{ position: 'relative' }}>
       <style>{`
-        .search-form-desktop { display: flex; width: 100%; max-width: 400px; position: relative; }
+        /* 🚀 Expanded desktop container bounds without overriding your outer alignment */
+        .search-form-desktop { 
+          display: flex; 
+          width: 100%; 
+          width: 550px; /* Forces a wider comfortable width on desktop viewports */
+          max-width: 100%;
+          position: relative; 
+        }
         .search-mobile-toggle-btn { display: none; background: none; border: none; font-size: 20px; cursor: pointer; padding: 8px; color: #94a3b8; }
         .search-mobile-overlay { display: none; position: absolute; top: calc(100% + 12px); left: 0; right: 0; width: 100%; background: #1e293b; padding: 10px 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); z-index: 99; border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.1); }
+        
         @media (max-width: 768px) {
           .search-form-desktop { display: none !important; }
           .search-mobile-toggle-btn { display: block !important; }
@@ -56,6 +64,7 @@ export default function SearchBar({ locale: initialLocale }: { locale: string })
         {isMobileOpen ? '✕' : '🔍'}
       </button>
 
+      {/* MOBILE OVERLAY DROPDOWN */}
       <div className={`search-mobile-overlay ${isMobileOpen ? 'is-active' : ''}`}>
         <form
           onSubmit={handleSearch}
@@ -74,16 +83,17 @@ export default function SearchBar({ locale: initialLocale }: { locale: string })
               borderRadius: '8px',
               border: '1px solid #3b82f6',
               outline: 'none',
-              backgroundColor: '#fff',
-              color: '#000',
+              backgroundColor: '#ffffff',
+              color: '#0f172a',
               paddingInlineEnd: '45px',
+              fontFamily: 'inherit',
             }}
           />
           <button
             type="submit"
             style={{
               position: 'absolute',
-              [isRtl ? 'left' : 'right']: '12px',
+              [isRtl ? 'left' : 'right']: '14px',
               top: '50%',
               transform: 'translateY(-50%)',
               background: 'none',
@@ -97,6 +107,7 @@ export default function SearchBar({ locale: initialLocale }: { locale: string })
         </form>
       </div>
 
+      {/* DESKTOP SEARCH BAR */}
       <form onSubmit={handleSearch} className="search-form-desktop">
         <input
           type="text"
@@ -105,24 +116,31 @@ export default function SearchBar({ locale: initialLocale }: { locale: string })
           placeholder={placeholders[locale] || placeholders.en}
           style={{
             width: '100%',
-            padding: '0.6rem 1rem',
+            padding: '0.75rem 1.2rem',
             fontSize: '14px',
-            borderRadius: '8px',
-            border: '1px solid rgba(255, 255, 255, 0.2)',
+            borderRadius: '9999px',
+            border: '1px solid #cbd5e1',
             outline: 'none',
-            backgroundColor: 'rgba(255, 255, 255, 0.05)',
-            color: '#fff',
-            transition: 'border-color 0.15s ease',
-            paddingInlineEnd: '40px',
+            backgroundColor: '#ffffff',
+            color: '#0f172a',
+            transition: 'all 0.15s ease',
+            paddingInlineEnd: '44px',
+            fontFamily: locale === 'en' ? 'inherit' : '"Rudaw", sans-serif',
           }}
-          onFocus={(e) => (e.currentTarget.style.borderColor = '#3b82f6')}
-          onBlur={(e) => (e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.2)')}
+          onFocus={(e) => {
+            e.currentTarget.style.borderColor = '#3b82f6'
+            e.currentTarget.style.boxShadow = '0 0 0 3px rgba(59, 130, 246, 0.15)'
+          }}
+          onBlur={(e) => {
+            e.currentTarget.style.borderColor = '#cbd5e1'
+            e.currentTarget.style.boxShadow = 'none'
+          }}
         />
         <button
           type="submit"
           style={{
             position: 'absolute',
-            [isRtl ? 'left' : 'right']: '12px',
+            [isRtl ? 'left' : 'right']: '16px',
             top: '50%',
             transform: 'translateY(-50%)',
             background: 'none',

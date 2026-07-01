@@ -1,8 +1,6 @@
 import { getPayload } from 'payload'
 import config from '@/payload.config'
 import Link from 'next/link'
-import Navbar from '@/components/Navbar'
-import Footer from '@/components/Footer'
 
 interface SearchPageProps {
   params: Promise<{ locale: string }>
@@ -22,39 +20,39 @@ export default async function SearchResultsPage({ params, searchParams }: Search
   let matchedProducts: any[] = []
 
   if (query) {
-    const cleanQuery = query.toLowerCase().trim()
-
-    // Define the strict array of categories accepted by your Postgres enum table column
-    const VALID_CATEGORIES = ['cpu', 'gpu', 'laptop', 'motherboard']
-    const isQueryAValidCategory = VALID_CATEGORIES.includes(cleanQuery)
-
-    // Build the baseline array for text fields that always support fuzzy searching
-    const orConditions: any[] = [{ title: { like: query } }, { description: { like: query } }]
-
-    // ONLY inject the category filter if the string safely matches an exact enum value
-    if (isQueryAValidCategory) {
-      orConditions.push({ category: { equals: cleanQuery } })
-    }
+    // 🎯 Fix: Use 'contains' instead of 'like' for case-insensitive database matching in Payload
+    const orConditions: any[] = [
+      { title: { contains: query } },
+      { description: { contains: query } },
+    ]
 
     const searchData = await payload.find({
       collection: 'products',
       locale: currentLocale as 'en' | 'ar' | 'ckb',
       where: {
-        or: orConditions, // Pass our safely constructed array here
+        or: orConditions,
       },
       limit: 50,
-    }) // PRIORITY SORTING LOGIC:
-    // 1. Category matches first
-    // 2. Exact/Starts-with Title matches second
-    // 3. Description substring matches third
+    })
+
     matchedProducts = [...searchData.docs].sort((a, b) => {
       const q = query.toLowerCase()
       const aTitle = (a.title || '').toLowerCase()
       const bTitle = (b.title || '').toLowerCase()
-      const aCat = (a.category || '').toLowerCase()
-      const bCat = (b.category || '').toLowerCase()
 
-      // Priority 1: Category exact match
+      // Safe evaluation extracting the title string whether category is populated or an ID
+      const getCategoryString = (product: any): string => {
+        if (!product.category) return ''
+        if (typeof product.category === 'object') {
+          return (product.category.title || product.category.slug || '').toLowerCase()
+        }
+        return String(product.category).toLowerCase()
+      }
+
+      const aCat = getCategoryString(a)
+      const bCat = getCategoryString(b)
+
+      // Priority 1: Category match
       if (aCat === q && bCat !== q) return -1
       if (bCat === q && aCat !== q) return 1
 
@@ -76,8 +74,6 @@ export default async function SearchResultsPage({ params, searchParams }: Search
         backgroundColor: '#fafafa',
       }}
     >
-      <Navbar currentLocale={currentLocale} />
-
       <main style={{ flex: '1', padding: '3rem max(1.5rem, calc((100% - 1200px)/2))' }}>
         <h1 style={{ fontSize: '1.75rem', fontWeight: '700', marginBottom: '1.5rem' }}>
           {currentLocale === 'ar'
@@ -94,7 +90,7 @@ export default async function SearchResultsPage({ params, searchParams }: Search
               background: '#fff',
               border: '1px solid #eef0f2',
               borderRadius: '12px',
-              padding: '4rem text-align',
+              padding: '4rem 2rem',
               textAlign: 'center',
               color: '#666',
             }}
@@ -111,6 +107,12 @@ export default async function SearchResultsPage({ params, searchParams }: Search
             {matchedProducts.map((product, index) => {
               const hasImage = product.featuredImage && typeof product.featuredImage === 'object'
               const imageUrl = hasImage ? (product.featuredImage as any).url : null
+
+              // 🎯 Safe Render check: Extracts a string safely from the Category relational object
+              const displayCategory =
+                product.category && typeof product.category === 'object'
+                  ? product.category.title || product.category.slug
+                  : product.category
 
               return (
                 <Link
@@ -131,7 +133,6 @@ export default async function SearchResultsPage({ params, searchParams }: Search
                       boxShadow: '0 2px 4px rgba(0,0,0,0.01)',
                     }}
                   >
-                    {/* Tiny Rank Indicator Badge */}
                     <span
                       style={{
                         fontSize: '12px',
@@ -143,7 +144,6 @@ export default async function SearchResultsPage({ params, searchParams }: Search
                       #{index + 1}
                     </span>
 
-                    {/* Image Thumbnail */}
                     <div
                       style={{
                         width: '80px',
@@ -168,7 +168,6 @@ export default async function SearchResultsPage({ params, searchParams }: Search
                       )}
                     </div>
 
-                    {/* Meta Info */}
                     <div style={{ flex: 1 }}>
                       <span
                         style={{
@@ -178,7 +177,7 @@ export default async function SearchResultsPage({ params, searchParams }: Search
                           fontWeight: '700',
                         }}
                       >
-                        {product.category}
+                        {displayCategory}
                       </span>
                       <h3 style={{ fontSize: '1.15rem', margin: '2px 0 6px 0', fontWeight: '600' }}>
                         {product.title}
@@ -198,7 +197,6 @@ export default async function SearchResultsPage({ params, searchParams }: Search
                       </p>
                     </div>
 
-                    {/* Transaction Block */}
                     <div style={{ textAlign: isRtl ? 'left' : 'right', flexShrink: 0 }}>
                       <div style={{ fontSize: '1.4rem', fontWeight: '800', color: '#000' }}>
                         ${product.price}
@@ -224,8 +222,6 @@ export default async function SearchResultsPage({ params, searchParams }: Search
           </div>
         )}
       </main>
-
-      <Footer currentLocale={currentLocale} />
     </div>
   )
 }
