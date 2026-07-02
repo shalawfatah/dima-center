@@ -5,7 +5,7 @@ export const search_styles = () => `
         .sidebar-wrapper { flex: 0 0 280px; width: 280px; }
         
         .master-header { width: 100%; font-family: sans-serif; }
-        .top-nav-bar { display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,0.1); }
+        .top-nav-bar { display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,0.1);padding: .5rem 2rem; }
         .search-form-wrapper { flex: 1; max-width: 500px; display: flex; position: relative; border: 1px solid #d3d3d3; border-radius:100px; }
         
         .search-input-field { 
