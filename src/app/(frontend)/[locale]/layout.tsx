@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic'
 import Footer from '@/components/Footer'
 import FullNavbar from '@/components/FullNavbar'
 
