@@ -15,6 +15,7 @@ import type { Metadata } from 'next'
 import { MAIN_CATEGORIES } from '@/utils/categories'
 import { getStorefrontMetadata } from '@/utils/seo'
 import Image from 'next/image'
+import PCBuilderSection from '@/components/PCBuilderSection'
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const resolvedParams = await params
@@ -39,7 +40,6 @@ export default async function StorefrontHome({ params, searchParams }: PageProps
 
     const res = await payload.find({
       collection: 'products',
-      locale: currentLocale as any,
       where: { 'category.slug': { equals: activeCategory } },
       limit: 100,
     })
@@ -186,7 +186,6 @@ export default async function StorefrontHome({ params, searchParams }: PageProps
   try {
     const fetchedDiscounts = await payload.find({
       collection: 'products',
-      locale: currentLocale as any,
       where: { hasDiscount: { equals: true } },
       limit: 20,
     })
@@ -194,7 +193,6 @@ export default async function StorefrontHome({ params, searchParams }: PageProps
   } catch (err) {
     const fallbackData = await payload.find({
       collection: 'products',
-      locale: currentLocale as any,
       limit: 50,
     })
     productsWithDiscount = fallbackData.docs.filter(
@@ -206,7 +204,6 @@ export default async function StorefrontHome({ params, searchParams }: PageProps
     MAIN_CATEGORIES.map(async (cat) => {
       const res = await payload.find({
         collection: 'products',
-        locale: currentLocale as any,
         where: { 'category.slug': { equals: cat.slug } },
         limit: 20,
       })
@@ -218,7 +215,6 @@ export default async function StorefrontHome({ params, searchParams }: PageProps
   try {
     const otherRes = await payload.find({
       collection: 'products',
-      locale: currentLocale as any,
       where: {
         and: MAIN_CATEGORIES.map((cat) => ({
           'category.slug': { not_equals: cat.slug },
@@ -231,7 +227,6 @@ export default async function StorefrontHome({ params, searchParams }: PageProps
     console.error('Failed fetching other categories:', e)
   }
 
-  // Helper utility function to cleanly match ProductItem signature requirements
   const formatProductForCarousel = (p: any) => {
     const isImageObj = p.featuredImage && typeof p.featuredImage === 'object' && p.featuredImage.url
     return {
@@ -255,6 +250,7 @@ export default async function StorefrontHome({ params, searchParams }: PageProps
     >
       <PromoCarousel currentLocale={currentLocale} />
 
+      <PCBuilderSection currentLocale={currentLocale} isRtl={isRtl} />
       <main style={{ flex: '1', paddingBottom: '3rem' }}>
         {productsWithDiscount.length > 0 && (
           <section style={{ padding: '1.5rem max(1.5rem, calc((100% - 1200px)/2)) 0' }}>

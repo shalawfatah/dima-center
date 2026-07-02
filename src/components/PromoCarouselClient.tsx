@@ -50,7 +50,7 @@ export default function PromoCarouselClient({
   }
 
   return (
-    <section style={{ width: '100%', position: 'relative', marginBottom: '2rem' }}>
+    <section style={{ width: '100%', position: 'relative' }}>
       <style>{`
         .carousel-track {
           display: flex;
