@@ -1,6 +1,7 @@
 import { postgresAdapter } from '@payloadcms/db-postgres'
 import { Media } from './collections/Media'
 import { Orders } from './collections/Orders'
+import { s3Storage } from '@payloadcms/storage-s3'
 import { Categories } from './collections/Categories'
 import { Promotions } from './collections/Promotions'
 import { PCBuilds } from './collections/PCBuilds'
@@ -20,7 +21,6 @@ export default buildConfig({
     user: Users.slug,
     disable: false,
   },
-  // 🎯 Reverted to clean configuration references to keep types happy
   collections: [Users, Products, Orders, Media, Categories, Promotions, PCBuilds],
   editor: lexicalEditor({}),
   secret: process.env.PAYLOAD_SECRET || '',
@@ -43,4 +43,29 @@ export default buildConfig({
     defaultLocale: 'ckb',
     fallback: true,
   },
+  plugins: [
+    s3Storage({
+      collections: {
+        [Media.slug]: {
+          prefix: 'media',
+          // 🎯 Fixed by explicitly giving 'filename' a string type
+          generateFileURL: ({ filename }: { filename: string }) => {
+            return `https://crqqyejtyxqbehfechcg.supabase.co/storage/v1/object/public/media/media/${filename}`
+          },
+        },
+      },
+      bucket: process.env.S3_BUCKET || 'media',
+      config: {
+        endpoint:
+          process.env.NEXT_PUBLIC_S3_ENDPOINT ||
+          'https://crqqyejtyxqbehfechcg.storage.supabase.co/storage/v1/s3',
+        credentials: {
+          accessKeyId: process.env.S3_ACCESS_KEY_ID || '',
+          secretAccessKey: process.env.S3_SECRET_ACCESS_KEY || '',
+        },
+        region: process.env.S3_REGION || 'eu-central-1',
+        forcePathStyle: true,
+      },
+    }),
+  ],
 })
