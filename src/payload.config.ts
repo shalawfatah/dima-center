@@ -23,7 +23,7 @@ export default buildConfig({
   },
   collections: [Users, Products, Orders, Media, Categories, Promotions, PCBuilds],
   editor: lexicalEditor({}),
-  secret: process.env.PAYLOAD_SECRET || '',
+  secret: process.env.PAYLOAD_SECRET || 'fallback-secret-for-vercel-build-phase',
   typescript: {
     outputFile: path.resolve(dirname, 'payload-types.ts'),
   },
@@ -48,7 +48,6 @@ export default buildConfig({
       collections: {
         [Media.slug]: {
           prefix: 'media',
-          // 🎯 Fixed by explicitly giving 'filename' a string type
           generateFileURL: ({ filename }: { filename: string }) => {
             return `https://crqqyejtyxqbehfechcg.supabase.co/storage/v1/object/public/media/media/${filename}`
           },
@@ -60,8 +59,9 @@ export default buildConfig({
           process.env.NEXT_PUBLIC_S3_ENDPOINT ||
           'https://crqqyejtyxqbehfechcg.storage.supabase.co/storage/v1/s3',
         credentials: {
-          accessKeyId: process.env.S3_ACCESS_KEY_ID || '',
-          secretAccessKey: process.env.S3_SECRET_ACCESS_KEY || '',
+          // 🎯 Crucial: Fallbacks protect Next.js dynamic routing chunks from breaking during Vercel's build pipeline
+          accessKeyId: process.env.S3_ACCESS_KEY_ID || 'dummy-key-for-build',
+          secretAccessKey: process.env.S3_SECRET_ACCESS_KEY || 'dummy-secret-for-build',
         },
         region: process.env.S3_REGION || 'eu-central-1',
         forcePathStyle: true,
