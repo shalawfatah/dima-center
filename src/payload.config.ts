@@ -46,20 +46,14 @@ export default buildConfig({
   plugins: [
     s3Storage({
       collections: {
-        [Media.slug]: {
-          prefix: 'media',
-          generateFileURL: ({ filename }: { filename: string }) => {
-            return `https://crqqyejtyxqbehfechcg.supabase.co/storage/v1/object/public/media/media/${filename}`
-          },
-        },
+        [Media.slug]: {}, // Native pathing
       },
       bucket: process.env.S3_BUCKET || 'media',
       config: {
+        // 🎯 FIX: Point to the clean base domain. The client appends bucket & keys perfectly.
         endpoint:
-          process.env.NEXT_PUBLIC_S3_ENDPOINT ||
-          'https://crqqyejtyxqbehfechcg.storage.supabase.co/storage/v1/s3',
+          process.env.NEXT_PUBLIC_S3_ENDPOINT || 'https://crqqyejtyxqbehfechcg.storage.supabase.co',
         credentials: {
-          // 🎯 Crucial: Fallbacks protect Next.js dynamic routing chunks from breaking during Vercel's build pipeline
           accessKeyId: process.env.S3_ACCESS_KEY_ID || 'dummy-key-for-build',
           secretAccessKey: process.env.S3_SECRET_ACCESS_KEY || 'dummy-secret-for-build',
         },
