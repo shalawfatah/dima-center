@@ -123,6 +123,7 @@ export default function PromoCarouselClient({
                       inset: 0,
                       zIndex: 0,
                       overflow: 'hidden',
+                      /* Removed isolation: 'isolate' so mixBlendMode can see the orange background */
                     }}
                   >
                     <Image

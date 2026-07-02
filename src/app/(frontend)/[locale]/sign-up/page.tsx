@@ -4,11 +4,12 @@ import { useState } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import Link from 'next/link'
 
-export default function LoginPage() {
+export default function SignUpPage() {
   const router = useRouter()
   const params = useParams()
   const locale = params.locale || 'en'
 
+  const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
@@ -27,36 +28,32 @@ export default function LoginPage() {
     setLoading(true)
 
     try {
-      const res = await fetch('/api/users/login', {
+      // 🚀 REST execution creating user document context entries in Payload CMS
+      const res = await fetch('/api/users', {
         method: 'POST',
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ name, email, password }),
         headers: { 'Content-Type': 'application/json' },
       })
 
       if (res.ok) {
-        const data = await res.json()
-        if (data.user?.role === 'admin') {
-          router.push('/admin')
-        } else {
+        // Automatically perform a pass login fetch right after success
+        const loginRes = await fetch('/api/users/login', {
+          method: 'POST',
+          body: JSON.stringify({ email, password }),
+          headers: { 'Content-Type': 'application/json' },
+        })
+
+        if (loginRes.ok) {
           router.push(`/${locale}/account`)
+        } else {
+          router.push(`/${locale}/login`)
         }
       } else {
-        setError(
-          locale === 'ar'
-            ? 'البريد الإلكتروني أو كلمة المرور غير صالحة.'
-            : locale === 'ckb'
-              ? 'ئیمەیڵ یان وشەی نهێنی هەڵەیە.'
-              : 'Invalid email or password.',
-        )
+        const data = await res.json()
+        setError(data?.errors?.[0]?.message || 'Failed to construct a secure profile blueprint.')
       }
     } catch (err) {
-      setError(
-        locale === 'ar'
-          ? 'حدث خطأ ما. يرجى المحاولة مرة أخرى.'
-          : locale === 'ckb'
-            ? 'کێشەیەک ڕوویدا. تکایە دووبارە تاقیبکەرەوە.'
-            : 'Something went wrong. Please try again.',
-      )
+      setError('An unexpected system networking error occurred.')
     } finally {
       setLoading(false)
     }
@@ -64,31 +61,34 @@ export default function LoginPage() {
 
   const strings: Record<string, any> = {
     en: {
-      title: 'Sign In',
+      title: 'Create Account',
+      name: 'Full Name',
       email: 'Email Address',
       password: 'Password',
-      btn: 'Login',
-      loggingIn: 'Signing In...',
-      noAccount: "Don't have an account?",
-      signUpLink: 'Sign Up here',
+      btn: 'Register',
+      registering: 'Creating Account...',
+      hasAccount: 'Already have an account?',
+      loginLink: 'Sign In here',
     },
     ar: {
-      title: 'تسجيل الدخول',
+      title: 'إنشاء حساب',
+      name: 'الاسم الكامل',
       email: 'البريد الإلكتروني',
       password: 'كلمة المرور',
-      btn: 'دخول',
-      loggingIn: 'جاري الدخول...',
-      noAccount: 'ليس لديك حساب؟',
-      signUpLink: 'سجل هنا',
+      btn: 'تسجيل',
+      registering: 'جاري إنشاء الحساب...',
+      hasAccount: 'لديك حساب بالفعل؟',
+      loginLink: 'سجل دخولك هنا',
     },
     ckb: {
-      title: 'چوونە ژوورەوە',
+      title: 'دروستکردنی ئەکاونت',
+      name: 'ناوی تەواو',
       email: 'ناونیشانی ئیمەیڵ',
       password: 'وشەی نهێنی',
-      btn: 'بچۆ ژوورەوە',
-      loggingIn: 'چوونەژوورەوە...',
-      noAccount: 'ئەکاونتت نییە؟',
-      signUpLink: 'لێرە ناونووس بکە',
+      btn: 'تۆمارکردن',
+      registering: 'تۆمارکردن...',
+      hasAccount: 'ئەکاونتت هەیە؟',
+      loginLink: 'لێرەوە بچۆ ژوورەوە',
     },
   }
 
@@ -111,7 +111,7 @@ export default function LoginPage() {
       }}
     >
       <style>{`
-        .login-input {
+        .signup-input {
           width: 100%;
           padding: 0.75rem 1rem;
           font-size: 14px;
@@ -124,12 +124,11 @@ export default function LoginPage() {
           font-family: inherit;
           box-sizing: border-box;
         }
-        .login-input:focus {
+        .signup-input:focus {
           border-color: #df8026;
           box-shadow: 0 0 0 4px rgba(223, 128, 38, 0.12);
         }
-        /* 🎯 Primary brand configuration color updated */
-        .login-submit-btn {
+        .signup-submit-btn {
           width: 100%;
           padding: 0.75rem;
           font-size: 15px;
@@ -143,10 +142,10 @@ export default function LoginPage() {
           font-family: inherit;
           margin-top: 0.5rem;
         }
-        .login-submit-btn:hover:not(:disabled) {
+        .signup-submit-btn:hover:not(:disabled) {
           background-color: #c66f1c;
         }
-        .login-submit-btn:disabled {
+        .signup-submit-btn:disabled {
           opacity: 0.65;
           cursor: not-allowed;
         }
@@ -180,8 +179,19 @@ export default function LoginPage() {
       >
         <div>
           <input
+            type="text"
+            className="signup-input"
+            placeholder={t.name}
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            required
+          />
+        </div>
+
+        <div>
+          <input
             type="email"
-            className="login-input"
+            className="signup-input"
             placeholder={t.email}
             value={email}
             onChange={(e) => setEmail(e.target.value)}
@@ -192,7 +202,7 @@ export default function LoginPage() {
         <div>
           <input
             type="password"
-            className="login-input"
+            className="signup-input"
             placeholder={t.password}
             value={password}
             onChange={(e) => setPassword(e.target.value)}
@@ -200,21 +210,20 @@ export default function LoginPage() {
           />
         </div>
 
-        <button type="submit" className="login-submit-btn" disabled={loading}>
-          {loading ? t.loggingIn : t.btn}
+        <button type="submit" className="signup-submit-btn" disabled={loading}>
+          {loading ? t.registering : t.btn}
         </button>
       </form>
 
-      {/* 🎯 Sign Up Option Redirect Link Block */}
       <div style={{ marginTop: '1.5rem', textAlign: 'center', fontSize: '14px', color: '#64748b' }}>
-        {t.noAccount}{' '}
+        {t.hasAccount}{' '}
         <Link
-          href={`/${locale}/sign-up`}
+          href={`/${locale}/login`}
           style={{ color: '#df8026', fontWeight: '600', textDecoration: 'none' }}
           onMouseEnter={(e) => (e.currentTarget.style.textDecoration = 'underline')}
           onMouseLeave={(e) => (e.currentTarget.style.textDecoration = 'none')}
         >
-          {t.signUpLink}
+          {t.loginLink}
         </Link>
       </div>
     </div>

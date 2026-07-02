@@ -6,6 +6,7 @@ export const Media: CollectionConfig = {
     useAsTitle: 'filename',
   },
   // 🔐 Open read permissions so the storefront layout can show images publicly
+
   access: {
     read: () => true, // Anyone can view images
     create: ({ req: { user } }) => Boolean(user), // Only logged-in users can upload

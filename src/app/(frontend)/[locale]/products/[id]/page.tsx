@@ -8,16 +8,7 @@ import Image from 'next/image'
 
 import type { Metadata } from 'next'
 import { getStorefrontMetadata } from '@/utils/seo'
-
-interface PageProps {
-  params: Promise<{ locale: string }>
-  searchParams: Promise<{ category?: string; [key: string]: any }>
-}
-
-export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
-  const resolvedParams = await params
-  return getStorefrontMetadata({ locale: resolvedParams.locale })
-}
+import ProductGallery from '@/components/ProductGallery'
 
 interface ProductPageProps {
   params: Promise<{
@@ -26,13 +17,21 @@ interface ProductPageProps {
   }>
 }
 
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>
+}): Promise<Metadata> {
+  const resolvedParams = await params
+  return getStorefrontMetadata({ locale: resolvedParams.locale })
+}
+
 export default async function ProductDetailPage({ params }: ProductPageProps) {
   const resolvedParams = await params
   const currentLocale = resolvedParams.locale || 'en'
   const productId = resolvedParams.id
   const payload = await getPayload({ config })
 
-  // 1. Fetch primary product data bound to the active locale state
   let product
   try {
     product = await payload.findByID({
@@ -44,7 +43,6 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
     return notFound()
   }
 
-  // 2. Fetch related items from the same hardware category
   const relatedData = await payload.find({
     collection: 'products',
     locale: currentLocale as 'en' | 'ar' | 'ckb',
@@ -64,17 +62,14 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
     limit: 4,
   })
 
-  // RTL Direction tracking flag
   const isRtl = currentLocale === 'ar' || currentLocale === 'ckb'
   const featuredImageUrl =
     product.featuredImage && typeof product.featuredImage === 'object'
       ? (product.featuredImage as any).url
       : null
 
-  // 🏷️ CALCULATE ACTIVE PRODUCT DISCOUNT METRICS
   const mainPriceSpecs = calculateProductPrice(product)
 
-  // 👑 SAFE RELATION CATEGORY RESOLVER
   const productCategoryName =
     product.category && typeof product.category === 'object'
       ? (product.category as any).title || (product.category as any).name
@@ -102,20 +97,6 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
             grid-template-columns: 1.2fr 0.8fr;
           }
         }
-        .gallery-strip {
-          display: flex;
-          gap: 0.5rem;
-          margin-top: 1rem;
-          overflow-x: auto;
-        }
-        .gallery-thumb {
-          width: 80px;
-          height: 60px;
-          object-fit: cover;
-          border-radius: 6px;
-          border: 1px solid #ddd;
-          background: #f4f4f4;
-        }
         .related-grid {
           display: grid;
           grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
@@ -125,7 +106,6 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
       `}</style>
 
       <main style={{ flex: '1', padding: '2rem max(1.5rem, calc((100% - 1200px)/2))' }}>
-        {/* Localization Link Breadcrumb Bar */}
         <div style={{ marginBottom: '1.5rem', fontSize: '13px', color: '#666' }}>
           <Link href={`/${currentLocale}`} style={{ color: 'inherit', textDecoration: 'none' }}>
             {currentLocale === 'ar' ? 'الرئيسية' : currentLocale === 'ckb' ? 'سەرەکی' : 'Home'}
@@ -135,106 +115,41 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
         </div>
 
         <div className="product-layout-grid">
-          {/* === LEFT COLUMN: VISUAL MEDIA & MATRIX PANEL === */}
-          <div>
-            <div
-              style={{
-                width: '100%',
-                maxHeight: '450px',
-                background: '#fafafa',
-                borderRadius: '12px',
-                overflow: 'hidden',
-                border: '1px solid #eee',
-                position: 'relative',
-              }}
-            >
-              {/* 🏷️ SALE CORNER BADGE OVERLAY */}
-              {mainPriceSpecs.isDiscounted && (
-                <span
-                  style={{
-                    position: 'absolute',
-                    top: '16px',
-                    left: isRtl ? 'auto' : '16px',
-                    right: isRtl ? '16px' : 'auto',
-                    background: '#ef4444',
-                    color: '#fff',
-                    fontSize: '12px',
-                    fontWeight: '700',
-                    padding: '6px 12px',
-                    borderRadius: '6px',
-                    zIndex: 10,
-                  }}
-                >
-                  {mainPriceSpecs.badgeText}{' '}
-                  {currentLocale === 'ar' ? 'خصم' : currentLocale === 'ckb' ? 'داشکانـدن' : 'OFF'}
-                </span>
-              )}
-
-              {featuredImageUrl ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <Image
-                  height={400}
-                  width={400}
-                  src={featuredImageUrl}
-                  alt={product.title}
-                  style={{
-                    width: '100%',
-                    maxHeight: '450px',
-                    objectFit: 'contain',
-                    display: 'block',
-                    margin: '0 auto',
-                  }}
-                />
-              ) : (
-                <div
-                  style={{
-                    height: '300px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    color: '#aaa',
-                  }}
-                >
-                  📦 No Image Provided
-                </div>
-              )}
-            </div>
-
-            {/* Images Carousel Gallery strip */}
-            {product.imagesGallery && product.imagesGallery.length > 0 && (
-              <div className="gallery-strip">
-                {featuredImageUrl && (
-                  <Image
-                    height={400}
-                    width={400}
-                    src={featuredImageUrl}
-                    className="gallery-thumb"
-                    style={{ borderColor: '#0070f3' }}
-                    alt="Thumb master"
-                  />
-                )}
-                {product.imagesGallery.map((item: any) => {
-                  const url = item.image && typeof item.image === 'object' ? item.image.url : null
-                  if (!url) return null
-                  return (
-                    <Image
-                      height={400}
-                      width={400}
-                      key={item.id}
-                      src={url}
-                      className="gallery-thumb"
-                      alt="Gallery strip segment"
-                    />
-                  )
-                })}
-              </div>
+          {/* === LEFT COLUMN: VISUAL MEDIA & CAROUSEL PANEL === */}
+          <div style={{ position: 'relative' }}>
+            {mainPriceSpecs.isDiscounted && (
+              <span
+                style={{
+                  position: 'absolute',
+                  top: '16px',
+                  left: isRtl ? 'auto' : '16px',
+                  right: isRtl ? '16px' : 'auto',
+                  background: '#ef4444',
+                  color: '#fff',
+                  fontSize: '12px',
+                  fontWeight: '700',
+                  padding: '6px 12px',
+                  borderRadius: '6px',
+                  zIndex: 10,
+                }}
+              >
+                {mainPriceSpecs.badgeText}{' '}
+                {currentLocale === 'ar' ? 'خصم' : currentLocale === 'ckb' ? 'داشکانـدن' : 'OFF'}
+              </span>
             )}
+
+            <ProductGallery
+              title={product.title}
+              featuredImageUrl={featuredImageUrl}
+              imagesGallery={product.imagesGallery}
+              isRtl={isRtl}
+            />
 
             {/* === TECHNICAL SPECIFICATIONS MATRIX === */}
             <div style={{ marginTop: '3rem' }}>
               <h3
                 style={{
-                  fontFamily: '"Rudaw", sans-serif' /* 🌟 FIX: Applied Rudaw & Darker Text */,
+                  fontFamily: '"Rudaw", sans-serif',
                   color: '#1e293b',
                   borderBottom: '2px solid #f0f0f0',
                   paddingBottom: '0.5rem',
@@ -330,8 +245,8 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
 
               <h1
                 style={{
-                  fontFamily: '"Rudaw", sans-serif' /* 🌟 FIX: Added Font Family */,
-                  color: '#1e293b' /* 🌟 FIX: Forced to slate-charcoal instead of white */,
+                  fontFamily: '"Rudaw", sans-serif',
+                  color: '#1e293b',
                   fontSize: '2rem',
                   marginTop: '1rem',
                   marginBottom: '0.5rem',
@@ -419,7 +334,6 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
                     />
                   </div>
 
-                  {/* 🏷️ DYNAMICALLY BALANCED TOTAL VALUE AND PRICE DISPLAY */}
                   <div
                     style={{
                       display: 'flex',
@@ -496,8 +410,6 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
               color: '#1e293b',
             }}
           >
-            {' '}
-            {/* 🌟 FIX: Added Font & Color */}
             {currentLocale === 'ar'
               ? 'منتجات مشابهة قد تعجبك'
               : currentLocale === 'ckb'
@@ -513,8 +425,6 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
               {relatedData.docs.map((item) => {
                 const itemImgObj = item.featuredImage && typeof item.featuredImage === 'object'
                 const itemImgUrl = itemImgObj ? (item.featuredImage as any).url : null
-
-                // 🏷️ CALCULATE RELATED ITEMS PRICING DYNAMICS INDEPENDENTLY
                 const relatedPriceSpecs = calculateProductPrice(item)
 
                 return (
@@ -587,8 +497,8 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
                       </div>
                       <h4
                         style={{
-                          fontFamily: '"Rudaw", sans-serif' /* 🌟 FIX: Added Font */,
-                          color: '#1e293b' /* 🌟 FIX: Added explicit color */,
+                          fontFamily: '"Rudaw", sans-serif',
+                          color: '#1e293b',
                           fontSize: '14px',
                           margin: '0 0 0.5rem 0',
                           whiteSpace: 'nowrap',
@@ -599,7 +509,6 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
                         {item.title}
                       </h4>
 
-                      {/* RELATED ITEM DYNAMIC PRICING INLINE */}
                       <div style={{ display: 'flex', gap: '8px', alignItems: 'baseline' }}>
                         {relatedPriceSpecs.isDiscounted ? (
                           <>

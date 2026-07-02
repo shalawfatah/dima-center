@@ -100,11 +100,9 @@ export default function PcBuilderClient({
     }
   }
 
-  // Next.js localization check (Fix tracking for 'ckb')
   const isRegionalLocale =
     currentLocale === 'ar' || currentLocale === 'ku' || currentLocale === 'ckb'
 
-  // Dynamic Font Families explicitly mapped out as requested
   const titleFontFamily = isRegionalLocale
     ? '"Rudaw", "Inter", "Noto Sans Arabic", -apple-system, sans-serif'
     : '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
@@ -126,6 +124,58 @@ export default function PcBuilderClient({
         fontFamily: generalFontFamily,
       }}
     >
+      {/* 🚀 INJECT RESPONSIVE MEDIA QUERIES FOR LAYOUT FLEXIBILITY */}
+      <style>{`
+        .pc-builder-layout-grid {
+          display: grid;
+          grid-template-columns: 1fr 380px;
+          gap: 2rem;
+          align-items: start;
+        }
+        .pc-builder-sidebar {
+          position: sticky;
+          top: 2rem;
+          display: flex;
+          flex-direction: column;
+          gap: 1.5rem;
+        }
+        .pc-builder-component-card {
+          border: 1px solid #e2e8f0;
+          border-radius: 8px;
+          padding: 1.25rem;
+          background: #fff;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          cursor: pointer;
+          transition: all 0.15s ease-in-out;
+        }
+
+        @media (max-width: 992px) {
+          /* Drops layout columns into unified stacked structures */
+          .pc-builder-layout-grid {
+            grid-template-columns: 1fr !important;
+            gap: 1.5rem !important;
+          }
+          /* Removes layout pin logic so the context summary container settles on the bottom */
+          .pc-builder-sidebar {
+            position: relative !important;
+            top: 0 !important;
+            width: 100% !important;
+          }
+          /* Adjusts row card items on micro mobile viewports safely */
+          .pc-builder-component-card {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 1rem;
+          }
+          .pc-builder-component-card > div:last-child {
+            width: 100%;
+            justify-content: flex-end;
+          }
+        }
+      `}</style>
+
       <header
         style={{ marginBottom: '2rem', borderBottom: '1px solid #e2e8f0', paddingBottom: '1.5rem' }}
       >
@@ -135,7 +185,7 @@ export default function PcBuilderClient({
             fontWeight: '800',
             margin: 0,
             color: '#000',
-            fontFamily: titleFontFamily, // Applied 'Rudaw'
+            fontFamily: titleFontFamily,
           }}
         >
           {t.title}
@@ -161,14 +211,8 @@ export default function PcBuilderClient({
         </div>
       )}
 
-      <div
-        style={{
-          display: 'grid',
-          gridTemplateColumns: '1fr 380px',
-          gap: '2rem',
-          alignItems: 'start',
-        }}
-      >
+      {/* MASTER RESPONSIVE GRID ELEMENT */}
+      <div className="pc-builder-layout-grid">
         {/* LEFT COLUMN: COMPONENTS LIST */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
           {COMPONENT_SLOTS.map((slot) => {
@@ -178,17 +222,7 @@ export default function PcBuilderClient({
               <div
                 key={slot.key}
                 onClick={() => openModal(slot.key)}
-                style={{
-                  border: '1px solid #e2e8f0',
-                  borderRadius: '8px',
-                  padding: '1.25rem',
-                  background: '#fff',
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
-                  cursor: 'pointer',
-                  transition: 'all 0.15s ease-in-out',
-                }}
+                className="pc-builder-component-card"
                 onMouseEnter={(e) => (e.currentTarget.style.borderColor = '#3b82f6')}
                 onMouseLeave={(e) => (e.currentTarget.style.borderColor = '#e2e8f0')}
               >
@@ -240,7 +274,6 @@ export default function PcBuilderClient({
                         fontFamily: generalFontFamily,
                       }}
                     >
-                      {/* Dynamic loop fallback support would typically use translation objects for slot names */}
                       {slot.label}
                     </span>
                     {chosenItem ? (
@@ -284,7 +317,7 @@ export default function PcBuilderClient({
                   {chosenItem && (
                     <button
                       onClick={(e) => {
-                        e.stopPropagation() // Stops modal window popping up on button interaction triggers
+                        e.stopPropagation()
                         removeComponent(slot.key)
                       }}
                       style={{
@@ -327,16 +360,8 @@ export default function PcBuilderClient({
           })}
         </div>
 
-        {/* RIGHT COLUMN: SUMMARY CONTAINER PANEL */}
-        <div
-          style={{
-            position: 'sticky',
-            top: '2rem',
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '1.5rem',
-          }}
-        >
+        {/* RIGHT COLUMN: STACKED DYNAMIC SUMMARY CONTAINER */}
+        <div className="pc-builder-sidebar">
           <div
             style={{
               border: '1px solid #e2e8f0',

@@ -139,20 +139,15 @@ export default function ProductCarousel({ products, currentLocale, isRtl }: Prod
                   <div style={{ position: 'absolute', inset: 0, overflow: 'hidden', zIndex: 1 }}>
                     {imageUrl ? (
                       <Image
-                        className="product-parallax-img"
                         width={250}
                         height={250}
                         src={imageUrl}
                         alt={imageAlt || product.title}
                         style={{
-                          width: '130%',
-                          height: '100%',
-                          objectFit: 'cover',
+                          width: '100%',
+                          height: 'auto',
+                          objectFit: 'scale-down',
                           position: 'absolute',
-                          top: 0,
-                          // 🎯 FIX: Remove conditional LTR/RTL offsets.
-                          // This perfectly centers the 130% wide image on both LTR and RTL viewports.
-                          left: '0',
                           willChange: 'transform',
                         }}
                       />
