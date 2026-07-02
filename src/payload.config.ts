@@ -20,7 +20,7 @@ export default buildConfig({
     user: Users.slug,
     disable: false,
   },
-  // Ensure your dual collections array duplication typo from the paste is cleared out:
+  // 🎯 Reverted to clean configuration references to keep types happy
   collections: [Users, Products, Orders, Media, Categories, Promotions, PCBuilds],
   editor: lexicalEditor({}),
   secret: process.env.PAYLOAD_SECRET || '',
@@ -36,11 +36,11 @@ export default buildConfig({
   }),
   localization: {
     locales: [
+      { label: 'کوردی (Kurdish - Sorani)', code: 'ckb', rtl: true },
       { label: 'English', code: 'en' },
       { label: 'العربية (Arabic)', code: 'ar', rtl: true },
-      { label: 'کوردی (Kurdish - Sorani)', code: 'ckb', rtl: true },
     ],
-    defaultLocale: 'en',
+    defaultLocale: 'ckb',
     fallback: true,
   },
 })
