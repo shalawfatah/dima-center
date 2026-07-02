@@ -7,7 +7,7 @@ import Link from 'next/link'
 export default function SignUpPage() {
   const router = useRouter()
   const params = useParams()
-  const locale = params.locale || 'en'
+  const locale = typeof params?.locale === 'string' ? params.locale : 'en'
 
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')

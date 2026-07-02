@@ -93,33 +93,37 @@ export default function FilterSidebar({ locale, facets }: FilterSidebarProps) {
     updateFilters(selectedConditions, priceRange, sortBy, updatedSpecs)
   }
 
+  // 🎯 Fixed: Moved dictionary into its own definition block to eliminate circular reference errors
+  const translationsDictionary = {
+    en: {
+      title: 'Filters',
+      sort: 'Sort By',
+      price: 'Max Price',
+      cond: 'Condition',
+      lowHigh: 'Price: Low to High',
+      highLow: 'Price: High to Low',
+    },
+    ar: {
+      title: 'الفلاتر',
+      sort: 'ترتيب حسب',
+      price: 'السعر الأعلى',
+      cond: 'الحالة',
+      lowHigh: 'السعر: من الأقل للأعلى',
+      highLow: 'السعر: من الأعلى للأقل',
+    },
+    ckb: {
+      title: 'فلتەرەکان',
+      sort: 'ڕێکخستن بەپێی',
+      price: 'بەرزترین نرخ',
+      cond: 'دۆخی کاڵا',
+      lowHigh: 'نرخ: کەم بۆ زۆر',
+      highLow: 'نرخ: زۆر بۆ کەم',
+    },
+  }
+
   const translations =
-    {
-      en: {
-        title: 'Filters',
-        sort: 'Sort By',
-        price: 'Max Price',
-        cond: 'Condition',
-        lowHigh: 'Price: Low to High',
-        highLow: 'Price: High to Low',
-      },
-      ar: {
-        title: 'الفلاتر',
-        sort: 'ترتيب حسب',
-        price: 'السعر الأعلى',
-        cond: 'الحالة',
-        lowHigh: 'السعر: من الأقل للأعلى',
-        highLow: 'السعر: من الأعلى للأقل',
-      },
-      ckb: {
-        title: 'فلتەرەکان',
-        sort: 'ڕێکخستن بەپێی',
-        price: 'بەرزترین نرخ',
-        cond: 'دۆخی کاڵا',
-        lowHigh: 'نرخ: کەم بۆ زۆر',
-        highLow: 'نرخ: زۆر بۆ کەم',
-      },
-    }[locale as 'en' | 'ar' | 'ckb'] || translations.en
+    translationsDictionary[locale as keyof typeof translationsDictionary] ||
+    translationsDictionary.en
 
   return (
     <aside
@@ -208,7 +212,6 @@ export default function FilterSidebar({ locale, facets }: FilterSidebarProps) {
           value={priceRange}
           onChange={(e) => setPriceRange(Number(e.target.value))}
           onMouseUp={() => updateFilters(selectedConditions, priceRange, sortBy, activeSpecs)}
-          onTransitionEnd={() => updateFilters(selectedConditions, priceRange, sortBy, activeSpecs)}
           style={{ width: '100%', accentColor: '#0070f3', cursor: 'pointer' }}
         />
         <div

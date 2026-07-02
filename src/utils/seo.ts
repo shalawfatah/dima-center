@@ -31,11 +31,12 @@ export async function getStorefrontMetadata(params: SeoParams): Promise<Metadata
     title: currentSeo.title,
     description: currentSeo.description,
     alternates: {
+      // 🎯 Fixed: Cast the languages object to allow string indexing for non-standard ISO macro-tags
       languages: {
         en: '/en',
         ar: '/ar',
         ckb: '/ckb',
-      },
+      } as Record<string, string>,
     },
     icons: {
       icon: '/dima.ico',

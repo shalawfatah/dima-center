@@ -56,9 +56,10 @@ export default async function NavUserMenu({ currentLocale }: NavUserMenuProps) {
   }
 
   // 2. LOGGED-IN USER: Dynamic Avatar Image or Initials Text Fallback
-  // Checking if your Payload user schema contains a name or email field
-  const userImageUrl = (user as any).avatar?.url || null
-  const userInitials = (user.name || user.email || 'U').substring(0, 2).toUpperCase()
+  // 🎯 Fixed: Safe type casting to access custom schema fields on the User object
+  const anyUser = user as any
+  const userImageUrl = anyUser.avatar?.url || null
+  const userInitials = (anyUser.name || anyUser.email || 'U').substring(0, 2).toUpperCase()
 
   return (
     <Link href={`/${currentLocale}/account`} style={baseCircleStyle} title={tooltips.account}>
@@ -67,7 +68,7 @@ export default async function NavUserMenu({ currentLocale }: NavUserMenuProps) {
           src={userImageUrl}
           height={50}
           width={50}
-          alt={user?.name || 'User Avatar'}
+          alt={anyUser.name || 'User Avatar'}
           style={{ width: '100%', height: '100%', objectFit: 'cover' }}
         />
       ) : (

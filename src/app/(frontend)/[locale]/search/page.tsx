@@ -53,10 +53,13 @@ export default async function SearchResultsPage({ params, searchParams }: Search
     matchedProducts = [...searchData.docs].sort((a, b) => {
       const q = query.toLowerCase()
 
-      // Extract the correct string for the active locale or fall back to English
-      const aTitle = String(a.title?.[currentLocale] || a.title?.en || '').toLowerCase()
-      const bTitle = String(b.title?.[currentLocale] || b.title?.en || '').toLowerCase()
+      // 🎯 Force cast through 'unknown' to bypass the type overlap check safely
+      const aTitleObj = a.title as unknown as Record<string, any> | undefined
+      const bTitleObj = b.title as unknown as Record<string, any> | undefined
 
+      // Extract the correct string for the active locale or fall back to English
+      const aTitle = String(aTitleObj?.[currentLocale] || aTitleObj?.en || '').toLowerCase()
+      const bTitle = String(bTitleObj?.[currentLocale] || bTitleObj?.en || '').toLowerCase()
       const getCategoryString = (product: any): string => {
         if (!product.category) return ''
         if (typeof product.category === 'object') {

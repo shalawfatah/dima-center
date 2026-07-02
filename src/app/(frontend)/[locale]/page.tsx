@@ -197,7 +197,9 @@ export default async function StorefrontHome({ params, searchParams }: PageProps
       locale: currentLocale as any,
       limit: 50,
     })
-    productsWithDiscount = fallbackData.docs.filter((p) => calculateProductPrice(p).isDiscounted)
+    productsWithDiscount = fallbackData.docs.filter(
+      (p: any) => calculateProductPrice(p).isDiscounted,
+    )
   }
 
   const categoriesWithProducts = await Promise.all(
@@ -229,6 +231,18 @@ export default async function StorefrontHome({ params, searchParams }: PageProps
     console.error('Failed fetching other categories:', e)
   }
 
+  // Helper utility function to cleanly match ProductItem signature requirements
+  const formatProductForCarousel = (p: any) => {
+    const isImageObj = p.featuredImage && typeof p.featuredImage === 'object' && p.featuredImage.url
+    return {
+      ...p,
+      id: String(p.id),
+      featuredImage: isImageObj
+        ? { url: p.featuredImage.url, alt: p.featuredImage.alt || '' }
+        : null,
+    }
+  }
+
   return (
     <div
       style={{
@@ -254,7 +268,7 @@ export default async function StorefrontHome({ params, searchParams }: PageProps
             <ProductCarousel
               isRtl={isRtl}
               currentLocale={currentLocale}
-              products={productsWithDiscount}
+              products={productsWithDiscount.map(formatProductForCarousel)}
             />
           </section>
         )}
@@ -276,7 +290,7 @@ export default async function StorefrontHome({ params, searchParams }: PageProps
               <ProductCarousel
                 isRtl={isRtl}
                 currentLocale={currentLocale}
-                products={cat.products}
+                products={cat.products.map(formatProductForCarousel)}
               />
             </section>
           )
@@ -291,7 +305,11 @@ export default async function StorefrontHome({ params, searchParams }: PageProps
               ckb="کاڵاکانی تر"
               style={{ fontSize: '1.4rem', marginBottom: '0.5rem' }}
             />
-            <ProductCarousel isRtl={isRtl} currentLocale={currentLocale} products={otherProducts} />
+            <ProductCarousel
+              isRtl={isRtl}
+              currentLocale={currentLocale}
+              products={otherProducts.map(formatProductForCarousel)}
+            />
           </section>
         )}
       </main>

@@ -68,7 +68,11 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
       ? (product.featuredImage as any).url
       : null
 
-  const mainPriceSpecs = calculateProductPrice(product)
+  // 🎯 FIX: Sanitize hasDiscount type to get rid of 'null' conflict
+  const mainPriceSpecs = calculateProductPrice({
+    ...product,
+    hasDiscount: product.hasDiscount ?? false,
+  } as any)
 
   const productCategoryName =
     product.category && typeof product.category === 'object'
@@ -402,6 +406,7 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
 
         {/* RELATED RECOMMENDATIONS FOOTER */}
         <div style={{ marginTop: '6rem', borderTop: '1px solid #eee', paddingTop: '3rem' }}>
+          {/* ... related header section ... */}
           <h3
             style={{
               fontFamily: '"Rudaw", sans-serif',
@@ -425,7 +430,12 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
               {relatedData.docs.map((item) => {
                 const itemImgObj = item.featuredImage && typeof item.featuredImage === 'object'
                 const itemImgUrl = itemImgObj ? (item.featuredImage as any).url : null
-                const relatedPriceSpecs = calculateProductPrice(item)
+
+                // 🎯 FIX: Sanitize here too to ensure related list doesn't trigger the same build error
+                const relatedPriceSpecs = calculateProductPrice({
+                  ...item,
+                  hasDiscount: item.hasDiscount ?? false,
+                } as any)
 
                 return (
                   <Link

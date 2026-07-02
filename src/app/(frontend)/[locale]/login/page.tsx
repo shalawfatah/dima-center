@@ -7,7 +7,10 @@ import Link from 'next/link'
 export default function LoginPage() {
   const router = useRouter()
   const params = useParams()
-  const locale = params.locale || 'en'
+
+  // 🎯 FIX: Force it to be a plain string (extracting first item if it's an array)
+  const rawLocale = params?.locale
+  const locale = (Array.isArray(rawLocale) ? rawLocale[0] : rawLocale) || 'en'
 
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -15,7 +18,7 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false)
 
   const isRtl = locale === 'ar' || locale === 'ckb' || locale === 'ku'
-  const isRegionalLocale = ['ar', 'ku', 'ckb'].includes(String(locale))
+  const isRegionalLocale = ['ar', 'ku', 'ckb'].includes(locale)
 
   const fontFamily = isRegionalLocale
     ? '"Rudaw", "Inter", "Noto Sans Arabic", -apple-system, sans-serif'
@@ -128,7 +131,6 @@ export default function LoginPage() {
           border-color: #df8026;
           box-shadow: 0 0 0 4px rgba(223, 128, 38, 0.12);
         }
-        /* 🎯 Primary brand configuration color updated */
         .login-submit-btn {
           width: 100%;
           padding: 0.75rem;
@@ -205,7 +207,6 @@ export default function LoginPage() {
         </button>
       </form>
 
-      {/* 🎯 Sign Up Option Redirect Link Block */}
       <div style={{ marginTop: '1.5rem', textAlign: 'center', fontSize: '14px', color: '#64748b' }}>
         {t.noAccount}{' '}
         <Link

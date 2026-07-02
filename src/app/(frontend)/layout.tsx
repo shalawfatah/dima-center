@@ -10,10 +10,10 @@ export default async function LocalizedLayout({
   params,
 }: {
   children: React.ReactNode
-  params: Promise<{ locale: string }>
+  params: Promise<{ locale?: string }> // 👈 Changed to optional to satisfy Next.js static routing
 }) {
-  // 1. Await and extract the locale from route params
-  const { locale } = await params
+  // 1. Await and extract the locale from route params, fallback to 'en' if undefined
+  const { locale = 'en' } = await params
 
   const payload = await getPayload({ config })
   const { user } = await payload.auth({ headers: await headers() })
