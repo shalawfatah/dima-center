@@ -3,6 +3,19 @@ import config from '@/payload.config'
 import { headers } from 'next/headers'
 import PcBuilderClient from '@/components/PcBuilderClient'
 
+import type { Metadata } from 'next'
+import { getStorefrontMetadata } from '@/utils/seo'
+
+interface PageProps {
+  params: Promise<{ locale: string }>
+  searchParams: Promise<{ category?: string; [key: string]: any }>
+}
+
+export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+  const resolvedParams = await params
+  return getStorefrontMetadata({ locale: resolvedParams.locale })
+}
+
 interface PcBuilderPageProps {
   params: Promise<{ locale: string }>
 }

@@ -3,6 +3,18 @@ import config from '@/payload.config'
 import Link from 'next/link'
 import Image from 'next/image'
 
+import type { Metadata } from 'next'
+import { getStorefrontMetadata } from '@/utils/seo'
+
+interface PageProps {
+  params: Promise<{ locale: string }>
+  searchParams: Promise<{ category?: string; [key: string]: any }>
+}
+
+export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+  const resolvedParams = await params
+  return getStorefrontMetadata({ locale: resolvedParams.locale })
+}
 interface SearchPageProps {
   params: Promise<{ locale: string }>
   searchParams: Promise<{ q?: string }>
