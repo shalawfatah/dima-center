@@ -25,11 +25,13 @@ export default function Navbar({ currentLocale: initialLocale, activeCategory }:
       <style dangerouslySetInnerHTML={{ __html: getNavbarStyles(isRtl) }} />
 
       <div className="nav-container">
+        {/* Toggle controls placed first to bind state seamlessly across items */}
         <input type="checkbox" id="menu-toggle" />
         <label htmlFor="menu-toggle" className="burger-menu">
           ☰
         </label>
 
+        {/* Categories Drawer Menu Wrapper */}
         <div className="nav-links">
           {navTree.map((group, index) => {
             const parentLabel =
@@ -72,22 +74,9 @@ export default function Navbar({ currentLocale: initialLocale, activeCategory }:
           })}
         </div>
 
+        {/* Call-to-action Button Container */}
         <div className="pc-builder-wrapper">
-          <Link
-            href={`/${currentLocale}/pc-builder`}
-            className="pc-builder-btn"
-            style={{
-              background: '#df8026',
-              color: '#fff',
-              padding: '0.2rem 1rem',
-              borderRadius: '6px',
-              textDecoration: 'none',
-              fontSize: '14px',
-              fontWeight: '500',
-              display: 'inline-block',
-              whiteSpace: 'nowrap',
-            }}
-          >
+          <Link href={`/${currentLocale}/pc-builder`} className="pc-builder-btn">
             {currentLocale === 'ar'
               ? 'تجميع جهازك'
               : currentLocale === 'ckb'

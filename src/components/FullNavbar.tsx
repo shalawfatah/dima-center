@@ -15,25 +15,25 @@ export default function FullNavbar({ currentLocale }: FullNavbarProps) {
   const isRtl = currentLocale === 'ar' || currentLocale === 'ckb'
 
   return (
-    // 🎯 Setting dir structure once globally across your layout blocks handles 90% of structural mirroring
     <header style={{ width: '100%' }} dir={isRtl ? 'rtl' : 'ltr'}>
-      <style>{search_styles()}</style>
+      <style dangerouslySetInnerHTML={{ __html: search_styles() }} />
+
       <div className="top-nav-bar">
         <Link
           href={`/${currentLocale}`}
-          style={{ textDecoration: 'none', display: 'flex', alignItems: 'center' }}
+          style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', flexShrink: 0 }}
         >
           <Image
             src={logoImg}
             alt="Dima Logo"
-            width={100}
-            height={60}
-            style={{ height: 'auto' }}
+            width={95}
+            height={55}
+            style={{ height: 'auto', maxWidth: '100%' }}
             priority
           />
         </Link>
 
-        {/* 🎯 Fix: Replaced raw duplicate HTML code with your comprehensive SearchBar component */}
+        {/* Search Icon component behaves dynamically based on viewport sizing context variables */}
         <SearchBar locale={currentLocale} />
 
         <div className="actions-cluster">

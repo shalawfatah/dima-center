@@ -35,24 +35,46 @@ export default function SearchBar({ locale: initialLocale }: { locale: string })
   }
 
   return (
-    /* 🎯 FIX: Restored original clean layout positioning wrapper */
-    <div className="search-component-root" style={{ position: 'relative' }}>
+    <div className="search-component-root">
       <style>{`
-        /* 🚀 Expanded desktop container bounds without overriding your outer alignment */
         .search-form-desktop { 
           display: flex; 
-          width: 100%; 
-          width: 550px; /* Forces a wider comfortable width on desktop viewports */
+          width: 550px;
           max-width: 100%;
           position: relative; 
         }
-        .search-mobile-toggle-btn { display: none; background: none; border: none; font-size: 20px; cursor: pointer; padding: 8px; color: #94a3b8; }
-        .search-mobile-overlay { display: none; position: absolute; top: calc(100% + 12px); left: 0; right: 0; width: 100%; background: #1e293b; padding: 10px 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); z-index: 99; border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.1); }
+        .search-mobile-toggle-btn { 
+          display: none; 
+          background: none; 
+          border: none; 
+          font-size: 22px; 
+          cursor: pointer; 
+          padding: 6px; 
+          color: #475569; 
+        }
+        
+        /* 🎯 MULTI-LANGUAGE STABLE LAYOUT */
+        .search-mobile-overlay { 
+          display: none; 
+          position: absolute; 
+          top: 100%; 
+          /* Stretching left and right to 0 anchors the width perfectly in both LTR & RTL */
+          left: 0; 
+          right: 0; 
+          background: #ffffff; 
+          padding: 0.75rem 1rem; 
+          box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); 
+          z-index: 9999; 
+          border-bottom: 1px solid #e2e8f0;
+          box-sizing: border-box;
+        }
         
         @media (max-width: 768px) {
           .search-form-desktop { display: none !important; }
           .search-mobile-toggle-btn { display: block !important; }
-          .search-mobile-overlay.is-active { display: block !important; }
+          .search-mobile-overlay.is-active { 
+            display: block !important; 
+          }
         }
       `}</style>
 
