@@ -1,5 +1,7 @@
 :root {
   --font-mono: 'Roboto Mono', monospace;
+  --font-rudaw: 'Rudaw', monospace;
+  --brand-primary: '#ffcb6b';
 }
 
 * {

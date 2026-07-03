@@ -382,7 +382,7 @@ export default function ProductCarousel({
                         left: isRtl ? '0px' : 'auto',
                         right: isRtl ? 'auto' : '0px',
                         zIndex: 5,
-                        backgroundColor: '#FFBF00',
+                        backgroundColor: '#ffcb6b',
                         color: '#000',
                         padding: '0px 12px',
                         borderRadius: isRtl ? '16px 0 12px 0' : '0 16px 0 12px',

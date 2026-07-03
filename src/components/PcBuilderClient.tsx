@@ -100,6 +100,45 @@ export default function PcBuilderClient({
     }
   }
 
+  // 📝 Dynamic UI Client Translation Parser Helper
+  const getLocalizedTitle = (product: any): string => {
+    if (!product) return ''
+
+    const fallbackCatalog: Record<string, Record<'en' | 'ar' | 'ckb', string>> = {
+      'ئێم ئێس ئای پرۆ B760M-E DDR5': {
+        en: 'MSI Pro B760M-E DDR5 Motherboard',
+        ar: 'لوحة أم ام اس اي برو B760M-E DDR5',
+        ckb: 'ئێم ئێس ئای پرۆ B760M-E DDR5',
+      },
+      'ئەی ئێم دی ڕادیۆن RX 7900 XTX': {
+        en: 'AMD Radeon RX 7900 XTX Graphics Card',
+        ar: 'کارت شاشة اي ام دي راديون RX 7900 XTX',
+        ckb: 'ئەی ئێم دی ڕادیۆن RX 7900 XTX',
+      },
+      'پرۆسێسەری یاری RX 7800X3D': {
+        en: 'AMD Ryzen 7 7800X3D Gaming Processor',
+        ar: 'معالج الألعاب اي ام دي رايزن 7 7800X3D',
+        ckb: 'پرۆسێسەری یاری RX 7800X3D',
+      },
+      'ئینتێل کۆر i9-14900K': {
+        en: 'Intel Core i9-14900K Processor',
+        ar: 'معالج إنتل كور i9-14900K',
+        ckb: 'ئینتێل کۆر i9-14900K',
+      },
+      'ماکبوک پرۆ ١٦ ئینچ': {
+        en: 'Apple MacBook Pro 16-inch (M4 Pro)',
+        ar: 'ماكبوك برو ١٦ إنش',
+        ckb: 'ماکبوک پرۆ ١٦ ئینچ',
+      },
+    }
+
+    const rawTitle = product.title || ''
+    if (fallbackCatalog[rawTitle]) {
+      return fallbackCatalog[rawTitle][currentLocale as 'en' | 'ar' | 'ckb'] || rawTitle
+    }
+    return rawTitle
+  }
+
   const isRegionalLocale =
     currentLocale === 'ar' || currentLocale === 'ku' || currentLocale === 'ckb'
 
@@ -124,7 +163,6 @@ export default function PcBuilderClient({
         fontFamily: generalFontFamily,
       }}
     >
-      {/* 🚀 INJECT RESPONSIVE MEDIA QUERIES FOR LAYOUT FLEXIBILITY */}
       <style>{`
         .pc-builder-layout-grid {
           display: grid;
@@ -152,18 +190,15 @@ export default function PcBuilderClient({
         }
 
         @media (max-width: 992px) {
-          /* Drops layout columns into unified stacked structures */
           .pc-builder-layout-grid {
             grid-template-columns: 1fr !important;
             gap: 1.5rem !important;
           }
-          /* Removes layout pin logic so the context summary container settles on the bottom */
           .pc-builder-sidebar {
             position: relative !important;
             top: 0 !important;
             width: 100% !important;
           }
-          /* Adjusts row card items on micro mobile viewports safely */
           .pc-builder-component-card {
             flex-direction: column;
             align-items: flex-start;
@@ -211,12 +246,14 @@ export default function PcBuilderClient({
         </div>
       )}
 
-      {/* MASTER RESPONSIVE GRID ELEMENT */}
       <div className="pc-builder-layout-grid">
         {/* LEFT COLUMN: COMPONENTS LIST */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
           {COMPONENT_SLOTS.map((slot) => {
             const chosenItem = selections[slot.key]
+
+            // Safe payload fallback handler mapping check
+            const itemImageUrl = chosenItem?.featuredImage?.url || chosenItem?.meta?.image?.url
 
             return (
               <div
@@ -227,7 +264,7 @@ export default function PcBuilderClient({
                 onMouseLeave={(e) => (e.currentTarget.style.borderColor = '#e2e8f0')}
               >
                 <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', flex: 1 }}>
-                  {/* Thumbnail */}
+                  {/* Thumbnail container */}
                   <div
                     style={{
                       width: '50px',
@@ -241,25 +278,23 @@ export default function PcBuilderClient({
                       flexShrink: 0,
                     }}
                   >
-                    {chosenItem?.meta?.image?.url ? (
+                    {itemImageUrl ? (
                       <Image
                         height={100}
                         width={100}
-                        src={chosenItem.meta.image.url}
-                        alt={chosenItem.title}
+                        src={itemImageUrl}
+                        alt={getLocalizedTitle(chosenItem)}
                         style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                       />
                     ) : (
-                      <span
-                        style={{
-                          fontSize: '10px',
-                          color: '#94a3b8',
-                          fontWeight: 'bold',
-                          fontFamily: generalFontFamily,
-                        }}
-                      >
-                        {t.partLabel}
-                      </span>
+                      // Renders your default categories image path vector assets safely
+                      <Image
+                        height={50}
+                        width={50}
+                        src={(slot as any).defaultImage || `/categories/${slot.key}.png`}
+                        alt={slot.label}
+                        style={{ width: '80%', height: '80%', objectFit: 'contain', opacity: 0.6 }}
+                      />
                     )}
                   </div>
 
@@ -286,7 +321,7 @@ export default function PcBuilderClient({
                           fontFamily: generalFontFamily,
                         }}
                       >
-                        {chosenItem.title}{' '}
+                        {getLocalizedTitle(chosenItem)}{' '}
                         <span
                           style={{
                             color: '#10b981',
@@ -443,8 +478,8 @@ export default function PcBuilderClient({
                 style={{
                   width: '100%',
                   padding: '12px',
-                  background: '#3b82f6',
-                  color: '#fff',
+                  background: '#ffcb6b',
+                  color: '#000',
                   border: 'none',
                   borderRadius: '6px',
                   fontWeight: '600',
@@ -579,88 +614,94 @@ export default function PcBuilderClient({
                   {t.noItems} "{currentSlotConfig.categorySlug}".
                 </p>
               ) : (
-                filteredProducts.map((prod) => (
-                  <div
-                    key={prod.id}
-                    onClick={() => selectComponent(activeModalSlot, prod)}
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'space-between',
-                      padding: '12px',
-                      background: '#f8fafc',
-                      border: '1px solid #e2e8f0',
-                      borderRadius: '8px',
-                      cursor: 'pointer',
-                      transition: 'all 0.15s ease',
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.backgroundColor = '#f1f5f9'
-                      e.currentTarget.style.borderColor = '#cbd5e1'
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.backgroundColor = '#f8fafc'
-                      e.currentTarget.style.borderColor = '#e2e8f0'
-                    }}
-                  >
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                      <div
-                        style={{
-                          width: '45px',
-                          height: '45px',
-                          borderRadius: '6px',
-                          background: '#fff',
-                          border: '1px solid #e2e8f0',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          overflow: 'hidden',
-                          flexShrink: 0,
-                        }}
-                      >
-                        {prod.meta?.image?.url ? (
-                          <Image
-                            src={prod.meta.image.url}
-                            height={100}
-                            width={100}
-                            alt={prod.title}
-                            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                          />
-                        ) : (
-                          <span
-                            style={{
-                              fontSize: '10px',
-                              color: '#cbd5e1',
-                              fontFamily: generalFontFamily,
-                            }}
-                          >
-                            IMG
-                          </span>
-                        )}
+                filteredProducts.map((prod) => {
+                  const modalProductImg = prod?.featuredImage?.url || prod?.meta?.image?.url
+                  return (
+                    <div
+                      key={prod.id}
+                      onClick={() => selectComponent(activeModalSlot, prod)}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        padding: '12px',
+                        background: '#f8fafc',
+                        border: '1px solid #e2e8f0',
+                        borderRadius: '8px',
+                        cursor: 'pointer',
+                        transition: 'all 0.15s ease',
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.backgroundColor = '#f1f5f9'
+                        e.currentTarget.style.borderColor = '#cbd5e1'
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.backgroundColor = '#f8fafc'
+                        e.currentTarget.style.borderColor = '#e2e8f0'
+                      }}
+                    >
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                        <div
+                          style={{
+                            width: '45px',
+                            height: '45px',
+                            borderRadius: '6px',
+                            background: '#fff',
+                            border: '1px solid #e2e8f0',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            overflow: 'hidden',
+                            flexShrink: 0,
+                          }}
+                        >
+                          {modalProductImg ? (
+                            <Image
+                              src={modalProductImg}
+                              height={100}
+                              width={100}
+                              alt={getLocalizedTitle(prod)}
+                              style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                            />
+                          ) : (
+                            <Image
+                              height={45}
+                              width={45}
+                              src={`/categories/${currentSlotConfig.key}.png`}
+                              alt={currentSlotConfig.label}
+                              style={{
+                                width: '80%',
+                                height: '80%',
+                                objectFit: 'contain',
+                                opacity: 0.5,
+                              }}
+                            />
+                          )}
+                        </div>
+                        <span
+                          style={{
+                            fontWeight: '600',
+                            color: '#1e293b',
+                            fontSize: '14px',
+                            fontFamily: generalFontFamily,
+                          }}
+                        >
+                          {getLocalizedTitle(prod)}
+                        </span>
                       </div>
                       <span
                         style={{
-                          fontWeight: '600',
-                          color: '#1e293b',
-                          fontSize: '14px',
+                          fontWeight: '700',
+                          color: '#10b981',
+                          fontSize: '15px',
                           fontFamily: generalFontFamily,
                         }}
                       >
-                        {prod.title}
+                        {prod.price} IQD
                       </span>
                     </div>
-                    <span
-                      style={{
-                        fontWeight: '700',
-                        color: '#10b981',
-                        fontSize: '15px',
-                        fontFamily: generalFontFamily,
-                      }}
-                    >
-                      {prod.price} IQD
-                    </span>
-                  </div>
-                ))
+                  )
+                })
               )}
             </div>
           </div>

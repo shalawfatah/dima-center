@@ -1,12 +1,47 @@
 export const COMPONENT_SLOTS = [
-  { key: 'cpu', label: 'Processor (CPU)', categorySlug: 'cpu' },
-  { key: 'gpu', label: 'Graphics Card (GPU)', categorySlug: 'gpu' },
-  { key: 'motherboard', label: 'Motherboard', categorySlug: 'motherboard' },
-  { key: 'ram', label: 'Memory (RAM)', categorySlug: 'ram' },
-  { key: 'storage', label: 'Storage (SSD/HDD)', categorySlug: 'storage' },
-  { key: 'psu', label: 'Power Supply (PSU)', categorySlug: 'power-supply' },
-  { key: 'case', label: 'Chassis / Case', categorySlug: 'case' },
-  { key: 'cooler', label: 'CPU Cooler', categorySlug: 'cooler' },
+  {
+    key: 'cpu',
+    label: 'Processor (CPU)',
+    categorySlug: 'cpu',
+    defaultImage: '/categories/cpu.png',
+  },
+  {
+    key: 'gpu',
+    label: 'Graphics Card (GPU)',
+    categorySlug: 'gpu',
+    defaultImage: '/categories/gpu.png',
+  },
+  {
+    key: 'motherboard',
+    label: 'Motherboard',
+    categorySlug: 'motherboard',
+    defaultImage: '/categories/motherboard.png',
+  },
+  { key: 'ram', label: 'Memory (RAM)', categorySlug: 'ram', defaultImage: '/categories/ram.png' },
+  {
+    key: 'storage',
+    label: 'Storage (SSD/HDD)',
+    categorySlug: 'storage',
+    defaultImage: '/categories/storage.png',
+  },
+  {
+    key: 'psu',
+    label: 'Power Supply (PSU)',
+    categorySlug: 'power-supply',
+    defaultImage: '/categories/psu.png',
+  },
+  {
+    key: 'case',
+    label: 'Chassis / Case',
+    categorySlug: 'case',
+    defaultImage: '/categories/case.png',
+  },
+  {
+    key: 'cooler',
+    label: 'CPU Cooler',
+    categorySlug: 'cooler',
+    defaultImage: '/categories/fan.png',
+  },
 ]
 
 export const dict: Record<string, Record<string, string>> = {

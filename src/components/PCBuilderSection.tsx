@@ -31,7 +31,7 @@ const COPY: Record<string, { eyebrow: string; heading: string; cta: string; chip
 export default function PCBuilderSection({ currentLocale, isRtl }: PCBuilderSectionProps) {
   const isRegionalLocale = currentLocale === 'ar' || currentLocale === 'ckb'
   const titleFont = isRegionalLocale ? '"Rudaw", sans-serif' : 'inherit'
-  const textFont = isRegionalLocale ? '"Sarchia", sans-serif' : 'inherit'
+  const textFont = isRegionalLocale ? '"Rudaw", sans-serif' : 'inherit'
   const copy = COPY[currentLocale] || COPY.en
 
   return (

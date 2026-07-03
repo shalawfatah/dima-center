@@ -34,8 +34,8 @@ export default function ProductBuyActions({
       }
       style={{
         width: '100%',
-        background: product.stock > 0 ? '#0070f3' : '#ccc',
-        color: '#fff',
+        background: product.stock > 0 ? '#ffcb6b' : '#ccc',
+        color: '#000',
         border: 'none',
         padding: '1rem',
         borderRadius: '8px',
