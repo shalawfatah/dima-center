@@ -201,7 +201,6 @@ export default async function StorefrontHome({ params, searchParams }: PageProps
     )
   }
 
-  // 🎯 Remapped this accurately to explicitly forward the string keys
   const categoriesWithProducts = await Promise.all(
     MAIN_CATEGORIES.map(async (cat: any) => {
       const res = await payload.find({
