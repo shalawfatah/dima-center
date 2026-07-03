@@ -29,7 +29,6 @@ export default async function StorefrontHome({ params, searchParams }: PageProps
   const resolvedSearchParams = await searchParams
 
   const rawLocale = resolvedParams.locale || 'en'
-  // Safely ensure we fall back to 'en' arrays if the current locale string isn't standard
   const currentLocale =
     rawLocale === 'en' || rawLocale === 'ar' || rawLocale === 'ckb' ? rawLocale : 'en'
 
