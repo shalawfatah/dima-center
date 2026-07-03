@@ -16,6 +16,7 @@ import { MAIN_CATEGORIES } from '@/utils/categories'
 import { getStorefrontMetadata } from '@/utils/seo'
 import Image from 'next/image'
 import PCBuilderSection from '@/components/PCBuilderSection'
+import CategoryCarousel from '@/components/CategoryCarousel'
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const resolvedParams = await params
@@ -248,6 +249,7 @@ export default async function StorefrontHome({ params, searchParams }: PageProps
         backgroundColor: '#fff',
       }}
     >
+      <CategoryCarousel currentLocale={currentLocale} />
       <PromoCarousel currentLocale={currentLocale} />
 
       <PCBuilderSection currentLocale={currentLocale} isRtl={isRtl} />
