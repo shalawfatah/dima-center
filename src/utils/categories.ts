@@ -4,25 +4,6 @@ export interface MainCategoryItem {
   url: string
 }
 
-export const MAIN_CATEGORIES: MainCategoryItem[] = [
-  { title: 'Case', slug: 'case', url: '/categories/case.png' },
-  { title: 'Chair', slug: 'chair', url: '/categories/chair.png' },
-  { title: 'CPU', slug: 'cpu', url: '/categories/cpu.png' },
-  { title: 'Desktop', slug: 'desktop', url: '/categories/desktop.png' },
-  { title: 'Fan', slug: 'fan', url: '/categories/fan.png' },
-  { title: 'GPU', slug: 'gpu', url: '/categories/gpu.png' },
-  { title: 'Keyboard', slug: 'keyboard', url: '/categories/keyboard.png' },
-  { title: 'Laptop', slug: 'laptop', url: '/categories/laptop.png' },
-  { title: 'Monitor', slug: 'monitor', url: '/categories/monitor.png' },
-  { title: 'Motherboard', slug: 'motherboard', url: '/categories/motherboard.png' },
-  { title: 'Mouse', slug: 'mouse', url: '/categories/mouse.png' },
-  { title: 'PSU', slug: 'puse', url: '/categories/puse.png' },
-  { title: 'RAM', slug: 'ram', url: '/categories/RAM.png' },
-  { title: 'Speaker', slug: 'speaker', url: '/categories/speaker.png' },
-  { title: 'Storage', slug: 'storage', url: '/categories/storage.png' },
-  { title: 'Accessories', slug: 'accessories', url: '/categories/accessories.png' },
-]
-
 export const CATEGORY_MAP: Record<'en' | 'ar' | 'ckb', MainCategoryItem[]> = {
   en: [
     { title: 'Case', slug: 'case', url: '/categories/case.png' },

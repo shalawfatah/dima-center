@@ -13,7 +13,7 @@ interface PageProps {
 }
 
 import type { Metadata } from 'next'
-import { MAIN_CATEGORIES } from '@/utils/categories'
+import { CATEGORY_MAP } from '@/utils/categories' // Removed MAIN_CATEGORIES completely
 import { getStorefrontMetadata } from '@/utils/seo'
 import Image from 'next/image'
 import PCBuilderSection from '@/components/PCBuilderSection'
@@ -28,17 +28,27 @@ export default async function StorefrontHome({ params, searchParams }: PageProps
   const resolvedParams = await params
   const resolvedSearchParams = await searchParams
 
-  const currentLocale = resolvedParams.locale || 'en'
+  const rawLocale = resolvedParams.locale || 'en'
+  // Safely ensure we fall back to 'en' arrays if the current locale string isn't standard
+  const currentLocale =
+    rawLocale === 'en' || rawLocale === 'ar' || rawLocale === 'ckb' ? rawLocale : 'en'
+
   const activeCategory = resolvedSearchParams.category || ''
   const isRtl = currentLocale === 'ar' || currentLocale === 'ckb'
 
   const payload = await getPayload({ config })
 
+  // Extract master locale reference arrays for looking up names vs slugs
+  const localCategoriesList = CATEGORY_MAP[currentLocale]
+  const englishCategoriesList = CATEGORY_MAP['en']
+
   // -----------------------------------------------------------------
   // CONDITION A: IF A CATEGORY IS CLICKED (Show clean filtered Grid list)
   // -----------------------------------------------------------------
   if (activeCategory) {
-    const matchedCat = MAIN_CATEGORIES.find((c) => c.slug === activeCategory) as any
+    const matchedCatEn = CATEGORY_MAP.en.find((c) => c.slug === activeCategory)
+    const matchedCatAr = CATEGORY_MAP.ar.find((c) => c.slug === activeCategory)
+    const matchedCatCkb = CATEGORY_MAP.ckb.find((c) => c.slug === activeCategory)
 
     const res = await payload.find({
       collection: 'products',
@@ -67,12 +77,11 @@ export default async function StorefrontHome({ params, searchParams }: PageProps
           >
             <LocalizedHeading
               currentLocale={currentLocale}
-              en={matchedCat?.en || 'Products'}
-              ar={matchedCat?.ar || 'المنتجات'}
-              ckb={matchedCat?.ckb || 'کاڵاکان'}
+              en={matchedCatEn?.title || 'Products'}
+              ar={matchedCatAr?.title || 'المنتجات'}
+              ckb={matchedCatCkb?.title || 'کاڵاکان'}
               style={{ fontSize: '1.75rem', fontWeight: '700' }}
             />
-            {/* Clear Filters back button */}
             <Link
               href={`/${currentLocale}`}
               style={{ fontSize: '14px', color: '#0070f3', textDecoration: 'none' }}
@@ -202,18 +211,25 @@ export default async function StorefrontHome({ params, searchParams }: PageProps
     )
   }
 
+  // Fetch products maps sequentially using the dynamic locale strings mapped across standard slugs
   const categoriesWithProducts = await Promise.all(
-    MAIN_CATEGORIES.map(async (cat: any) => {
+    englishCategoriesList.map(async (cat: any) => {
       const res = await payload.find({
         collection: 'products',
         where: { 'category.slug': { equals: cat.slug } },
         limit: 20,
       })
+
+      // Fetch distinct language string variations for the current unique slug loop iteration
+      const enTitle = CATEGORY_MAP.en.find((c) => c.slug === cat.slug)?.title || ''
+      const arTitle = CATEGORY_MAP.ar.find((c) => c.slug === cat.slug)?.title || ''
+      const ckbTitle = CATEGORY_MAP.ckb.find((c) => c.slug === cat.slug)?.title || ''
+
       return {
         slug: cat.slug,
-        en: cat.en || '',
-        ar: cat.ar || '',
-        ckb: cat.ckb || '',
+        en: enTitle,
+        ar: arTitle,
+        ckb: ckbTitle,
         products: res.docs,
       }
     }),
@@ -224,7 +240,7 @@ export default async function StorefrontHome({ params, searchParams }: PageProps
     const otherRes = await payload.find({
       collection: 'products',
       where: {
-        and: MAIN_CATEGORIES.map((cat) => ({
+        and: englishCategoriesList.map((cat) => ({
           'category.slug': { not_equals: cat.slug },
         })),
       },
@@ -257,7 +273,6 @@ export default async function StorefrontHome({ params, searchParams }: PageProps
       }}
     >
       <CategoryCarousel currentLocale={currentLocale} />
-      {/* two thirds promo, one third PC builder, gap 1 rem */}
       <div className={styles.promoWrapper}>
         <PromoCarousel currentLocale={currentLocale} />
         <PCBuilderSection currentLocale={currentLocale} isRtl={isRtl} />
