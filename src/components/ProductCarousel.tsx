@@ -11,6 +11,9 @@ interface ProductItem {
   title: string
   price: number | string
   condition?: string
+  hasDiscount?: boolean
+  discountType?: 'fixed' | 'percentage'
+  discountValue?: number
   featuredImage?: {
     url: string
     alt?: string
@@ -90,6 +93,25 @@ export default function ProductCarousel({
   const titleFont = isRegionalLocale ? '"Rudaw", sans-serif' : 'inherit'
   const textFont = isRegionalLocale ? '"Rudaw", sans-serif' : 'inherit'
 
+  // Helper to parse safe price values
+  const getNumericalPrice = (price: number | string): number => {
+    if (typeof price === 'string') {
+      return parseFloat(price.replace(/,/g, '')) || 0
+    }
+    return price || 0
+  }
+
+  // Helper to calculate sale pricing
+  const getDiscountedPrice = (product: ProductItem): number => {
+    const originalPrice = getNumericalPrice(product.price)
+    if (!product.hasDiscount || !product.discountValue) return originalPrice
+
+    if (product.discountType === 'percentage') {
+      return Math.max(0, originalPrice - (originalPrice * product.discountValue) / 100)
+    }
+    return Math.max(0, originalPrice - product.discountValue)
+  }
+
   const handleAddToCart = (e: React.MouseEvent, product: ProductItem) => {
     e.preventDefault()
 
@@ -101,11 +123,7 @@ export default function ProductCarousel({
     try {
       const storedCart = localStorage.getItem('cart')
       const cart = storedCart ? JSON.parse(storedCart) : []
-
-      const sanitizedPrice =
-        typeof product.price === 'string'
-          ? parseFloat(product.price.replace(/,/g, ''))
-          : product.price
+      const finalPrice = getDiscountedPrice(product)
 
       const existingIndex = cart.findIndex((item: any) => item.id === product.id)
 
@@ -115,7 +133,7 @@ export default function ProductCarousel({
         cart.push({
           id: product.id,
           title: product.title,
-          price: sanitizedPrice || 0,
+          price: finalPrice,
           quantity: 1,
           imageUrl: product.featuredImage?.url || null,
         })
@@ -170,7 +188,7 @@ export default function ProductCarousel({
       quickViewDesc: 'Simple quick details overlay regarding your selected product item.',
       toastSuccess: 'Added to cart successfully!',
       viewCart: 'View Cart ➡️',
-      currency: 'IQD',
+      currency: '$',
       shareTitle: 'Share',
     },
     ar: {
@@ -180,7 +198,7 @@ export default function ProductCarousel({
       quickViewDesc: 'تفاصيل سريعة مبسطة حول المنتج المحدد.',
       toastSuccess: 'تمت الإضافة إلى السلة بنجاح!',
       viewCart: 'عرض السلة ➡️',
-      currency: 'د.ع',
+      currency: '$',
       shareTitle: 'مشاركة',
     },
     ckb: {
@@ -190,7 +208,7 @@ export default function ProductCarousel({
       quickViewDesc: 'زانیاری خێرای سادە دەربارەی کاڵای دەستنیشانکراو.',
       toastSuccess: 'بە سەرکەوتوویی زیادکرا بۆ سەبەتە!',
       viewCart: 'بینینی سەبەتە ➡️',
-      currency: 'د.ع',
+      currency: '$',
       shareTitle: 'شێکردنەوە',
     },
   }
@@ -207,11 +225,10 @@ export default function ProductCarousel({
           display: flex;
           touch-action: pan-y;
         }
-        /* Increased width parameters by showing fewer cards per screen view */
         .product-carousel-slide {
           flex: 0 0 calc(100% / 1.5 - 12px); 
           min-width: 0;
-          padding-bottom: 24px; /* Room for half-outside button */
+          padding-bottom: 24px;
         }
         @media (min-width: 480px) {
           .product-carousel-slide { flex: 0 0 calc(100% / 2.2 - 12px); }
@@ -269,6 +286,10 @@ export default function ProductCarousel({
             const imageAlt =
               typeof product.featuredImage === 'object' ? product.featuredImage?.alt : product.title
 
+            const hasDiscount = !!product.hasDiscount
+            const originalPrice = getNumericalPrice(product.price)
+            const finalPrice = getDiscountedPrice(product)
+
             return (
               <Link
                 key={product.id}
@@ -283,13 +304,38 @@ export default function ProductCarousel({
                   style={{
                     position: 'relative',
                     width: '100%',
-                    aspectRatio: '3 / 4' /* Taller context aspect ratio */,
+                    aspectRatio: '3 / 4',
                     borderRadius: '16px',
-                    overflow: 'visible' /* Context allows half-out overflow elements */,
+                    overflow: 'visible',
                     background: '#f3f3f3',
                     boxShadow: '0 4px 12px rgba(0,0,0,0.05)',
                   }}
                 >
+                  {/* Discount Badge Element */}
+                  {hasDiscount && (
+                    <div
+                      style={{
+                        position: 'absolute',
+                        top: '12px',
+                        left: isRtl ? 'auto' : '12px',
+                        right: isRtl ? '12px' : 'auto',
+                        zIndex: 5,
+                        backgroundColor: '#ef4444',
+                        color: '#ffffff',
+                        padding: '4px 10px',
+                        borderRadius: '20px',
+                        fontSize: '12px',
+                        fontWeight: '700',
+                        boxShadow: '0 2px 6px rgba(0,0,0,0.2)',
+                        fontFamily: textFont,
+                      }}
+                    >
+                      {product.discountType === 'percentage'
+                        ? `-${product.discountValue}%`
+                        : `-$${product.discountValue}`}
+                    </div>
+                  )}
+
                   {/* Image Context containment layer */}
                   <div
                     className="product-image-container"
@@ -342,7 +388,7 @@ export default function ProductCarousel({
                     />
                   </div>
 
-                  {/* Right Border Actions Panel (Half Inside / Half Outside) */}
+                  {/* Right Border Actions Panel */}
                   <div
                     style={{
                       position: 'absolute',
@@ -404,6 +450,7 @@ export default function ProductCarousel({
                     </button>
                   </div>
 
+                  {/* Content Panel Area */}
                   <div
                     style={{
                       position: 'absolute',
@@ -433,20 +480,56 @@ export default function ProductCarousel({
                       {product.title}
                     </h3>
 
-                    <span
+                    {/* Unified Price Structure Rendering Over/Under Layout */}
+                    <div
                       style={{
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: isRtl ? 'flex-start' : 'flex-start',
+                        gap: '2px',
                         fontFamily: textFont,
-                        fontSize: '16px',
-                        fontWeight: '700',
-                        color: 'yellow',
-                        textAlign: 'center',
                       }}
                     >
-                      {product.price} {t.currency}
-                    </span>
+                      {hasDiscount ? (
+                        <>
+                          <span
+                            style={{
+                              fontSize: '14px',
+                              fontWeight: '500',
+                              color: '#94a3b8',
+                              textDecoration: 'line-through',
+                            }}
+                          >
+                            {t.currency}
+                            {originalPrice.toLocaleString()}
+                          </span>
+                          <span
+                            style={{
+                              fontSize: '18px',
+                              fontWeight: '700',
+                              color: '#facc15', // bright yellow
+                            }}
+                          >
+                            {t.currency}
+                            {finalPrice.toLocaleString()}
+                          </span>
+                        </>
+                      ) : (
+                        <span
+                          style={{
+                            fontSize: '16px',
+                            fontWeight: '700',
+                            color: '#facc15',
+                          }}
+                        >
+                          {t.currency}
+                          {originalPrice.toLocaleString()}
+                        </span>
+                      )}
+                    </div>
                   </div>
 
-                  {/* Add to Cart Floating Button Framework (Half Inside / Half Outside) */}
+                  {/* Add to Cart Floating Button Framework */}
                   <button
                     onClick={(e) => handleAddToCart(e, product)}
                     style={{
@@ -546,7 +629,9 @@ export default function ProductCarousel({
                 fontFamily: textFont,
               }}
             >
-              {quickViewProduct.price} {t.currency}
+              {hasDiscount
+                ? `${t.currency}${getDiscountedPrice(quickViewProduct).toLocaleString()}`
+                : `${t.currency}${getNumericalPrice(quickViewProduct.price).toLocaleString()}`}
             </div>
 
             {quickViewProduct.condition && (
@@ -588,7 +673,7 @@ export default function ProductCarousel({
         </div>
       )}
 
-      {/* Auto-Disappearing Toast Banner (4s) */}
+      {/* Auto-Disappearing Toast Banner */}
       {toastProduct && (
         <div
           style={{
