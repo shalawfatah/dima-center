@@ -17,7 +17,7 @@ export const CATEGORY_MAP: Record<'en' | 'ar' | 'ckb', MainCategoryItem[]> = {
     { title: 'Monitor', slug: 'monitor', url: '/categories/monitor.png' },
     { title: 'Motherboard', slug: 'motherboard', url: '/categories/motherboard.png' },
     { title: 'Mouse', slug: 'mouse', url: '/categories/mouse.png' },
-    { title: 'PSU', slug: 'puse', url: '/categories/psu.png' },
+    { title: 'PSU', slug: 'psu', url: '/categories/psu.png' },
     { title: 'RAM', slug: 'ram', url: '/categories/RAM.png' },
     { title: 'Speaker', slug: 'speaker', url: '/categories/speaker.png' },
     { title: 'Storage', slug: 'storage', url: '/categories/storage.png' },
