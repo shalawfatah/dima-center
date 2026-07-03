@@ -122,12 +122,10 @@ export default function CategoryCarousel({ currentLocale }: CategoryCarouselProp
           <div className="embla-container">
             {items.map((category, index) => (
               <div className="embla-slide" key={index}>
-                {/* 2. Link Fix: Targets your query string parameters routing scheme /locale?category=slug */}
                 <Link
                   href={`/${activeLocale}?category=${category.slug}`}
                   style={{ textDecoration: 'none' }}
                 >
-                  {/* Circle Graphic Elements */}
                   <div className="circle-container">
                     <Image
                       src={category.url}
@@ -138,8 +136,6 @@ export default function CategoryCarousel({ currentLocale }: CategoryCarouselProp
                       priority={index < 6}
                     />
                   </div>
-
-                  {/* Text Title Elements Underneath */}
                   <div
                     style={{
                       fontFamily: titleFont,
@@ -156,8 +152,6 @@ export default function CategoryCarousel({ currentLocale }: CategoryCarouselProp
             ))}
           </div>
         </div>
-
-        {/* Action Arrows Navigation Controllers */}
         <button
           className="arrow-button arrow-left"
           onClick={isRtl ? scrollNext : scrollPrev}
