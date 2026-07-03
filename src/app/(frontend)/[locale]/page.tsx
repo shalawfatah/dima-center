@@ -4,7 +4,7 @@ import { calculateProductPrice } from '@/utils/price'
 import PromoCarousel from '@/components/PromoCarousel'
 import ProductCarousel from '@/components/ProductCarousel'
 import LocalizedHeading from '@/components/LocalizedHeading'
-import Link from 'next/link' // Added for grid item layout links
+import Link from 'next/link'
 
 interface PageProps {
   params: Promise<{ locale: string }>
@@ -25,10 +25,10 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
 export default async function StorefrontHome({ params, searchParams }: PageProps) {
   const resolvedParams = await params
-  const resolvedSearchParams = await searchParams // 🎯 Await search params securely
+  const resolvedSearchParams = await searchParams
 
   const currentLocale = resolvedParams.locale || 'en'
-  const activeCategory = resolvedSearchParams.category || '' // 🎯 Grab target filter slug
+  const activeCategory = resolvedSearchParams.category || ''
   const isRtl = currentLocale === 'ar' || currentLocale === 'ckb'
 
   const payload = await getPayload({ config })
@@ -37,7 +37,7 @@ export default async function StorefrontHome({ params, searchParams }: PageProps
   // CONDITION A: IF A CATEGORY IS CLICKED (Show clean filtered Grid list)
   // -----------------------------------------------------------------
   if (activeCategory) {
-    const matchedCat = MAIN_CATEGORIES.find((c) => c.slug === activeCategory)
+    const matchedCat = MAIN_CATEGORIES.find((c) => c.slug === activeCategory) as any
 
     const res = await payload.find({
       collection: 'products',
@@ -201,14 +201,21 @@ export default async function StorefrontHome({ params, searchParams }: PageProps
     )
   }
 
+  // 🎯 Remapped this accurately to explicitly forward the string keys
   const categoriesWithProducts = await Promise.all(
-    MAIN_CATEGORIES.map(async (cat) => {
+    MAIN_CATEGORIES.map(async (cat: any) => {
       const res = await payload.find({
         collection: 'products',
         where: { 'category.slug': { equals: cat.slug } },
         limit: 20,
       })
-      return { ...cat, products: res.docs }
+      return {
+        slug: cat.slug,
+        en: cat.en || '',
+        ar: cat.ar || '',
+        ckb: cat.ckb || '',
+        products: res.docs,
+      }
     }),
   )
 
