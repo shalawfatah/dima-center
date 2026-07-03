@@ -629,7 +629,7 @@ export default function ProductCarousel({
             backdropFilter: 'blur(4px)',
             display: 'flex',
             alignItems: 'center',
-            justifycontent: 'center',
+            justifyContent: 'center',
             padding: '20px',
           }}
           onClick={() => setQuickViewProduct(null)}
