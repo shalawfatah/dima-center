@@ -48,7 +48,7 @@ export default buildConfig({
       collections: {
         [Media.slug]: {
           disablePayloadAccessControl: true, // ⚡ Directly stream assets from Supabase CDN bypasses function overload
-          generateFileURL: ({ filename }) => {
+          generateFileURL: ({ filename }: { filename: string }) => {
             // ⚡ Tells Payload exactly how to read the public URL from Supabase
             const projectRef = 'crqqyejtyxqbehfechcg'
             const bucketName = process.env.S3_BUCKET || 'media'

@@ -629,7 +629,7 @@ export default function ProductCarousel({
                 fontFamily: textFont,
               }}
             >
-              {hasDiscount
+              {quickViewProduct.hasDiscount
                 ? `${t.currency}${getDiscountedPrice(quickViewProduct).toLocaleString()}`
                 : `${t.currency}${getNumericalPrice(quickViewProduct.price).toLocaleString()}`}
             </div>
