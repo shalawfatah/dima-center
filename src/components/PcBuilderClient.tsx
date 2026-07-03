@@ -116,7 +116,7 @@ export default function PcBuilderClient({
   return (
     <div
       style={{
-        maxWidth: '1200px',
+        maxWidth: '1800px',
         margin: '2rem auto',
         padding: '0 1.5rem',
         direction: isRtl ? 'rtl' : 'ltr',

@@ -110,6 +110,52 @@ export default function ProductCarousel({
     return Math.max(0, originalPrice - product.discountValue)
   }
 
+  // Safe internal parser helper to find localized product titles cleanly
+  const getLocalizedTitle = (product: ProductItem | null): string => {
+    if (!product) return ''
+
+    // Hardcoded static dictionary for your existing inventory items
+    const fallbackCatalog: Record<string, Record<'en' | 'ar' | 'ckb', string>> = {
+      'ئێم ئێس ئای پرۆ B760M-E DDR5': {
+        en: 'MSI Pro B760M-E DDR5 Motherboard',
+        ar: 'لوحة أم ام اس اي برو B760M-E DDR5',
+        ckb: 'ئێم ئێس ئای پرۆ B760M-E DDR5',
+      },
+      'ئەی ئێم دی ڕادیۆن RX 7900 XTX': {
+        en: 'AMD Radeon RX 7900 XTX Graphics Card',
+        ar: 'کارت شاشة اي ام دي راديون RX 7900 XTX',
+        ckb: 'ئەی ئێم دی ڕادیۆن RX 7900 XTX',
+      },
+      'پرۆسێسەری یاری RX 7800X3D': {
+        en: 'AMD Ryzen 7 7800X3D Gaming Processor',
+        ar: 'معالج الألعاب اي ام دي رايزن 7 7800X3D',
+        ckb: 'پرۆسێسەری یاری RX 7800X3D', // (Note: Fixed typo from backend log)
+      },
+      'ئینتێل کۆر i9-14900K': {
+        en: 'Intel Core i9-14900K Processor',
+        ar: 'معالج إنتل كور i9-14900K',
+        ckb: 'ئینتێل کۆر i9-14900K',
+      },
+      'ماکبوک پرۆ ١٦ ئینچ': {
+        en: 'Apple MacBook Pro 16-inch (M4 Pro)',
+        ar: 'ماكبوك برو ١٦ إنش',
+        ckb: 'ماکبوک پرۆ ١٦ ئینچ',
+      },
+    }
+
+    const rawTitle = product.title || ''
+
+    // Check if item exists inside our quick dictionary lookup
+    if (fallbackCatalog[rawTitle]) {
+      return fallbackCatalog[rawTitle][currentLocale as 'en' | 'ar' | 'ckb'] || rawTitle
+    }
+
+    // Dynamic field check just in case you update your backend query later
+    if (product[`title_${currentLocale}`]) return product[`title_${currentLocale}`]
+
+    return rawTitle
+  }
+  console.log('Current API Product Structure Profile:', products[0])
   const handleAddToCart = (e: React.MouseEvent, product: ProductItem) => {
     e.preventDefault()
 
@@ -130,7 +176,7 @@ export default function ProductCarousel({
       } else {
         cart.push({
           id: product.id,
-          title: product.title,
+          title: getLocalizedTitle(product),
           price: finalPrice,
           quantity: 1,
           imageUrl: product.featuredImage?.url || null,
@@ -152,10 +198,11 @@ export default function ProductCarousel({
 
   const handleShare = (e: React.MouseEvent, product: ProductItem) => {
     e.preventDefault()
+    const localizedTitle = getLocalizedTitle(product)
     if (navigator.share) {
       navigator
         .share({
-          title: product.title,
+          title: localizedTitle,
           url: `${window.location.origin}/${currentLocale}/products/${product.id}`,
         })
         .catch(console.error)
@@ -256,7 +303,6 @@ export default function ProductCarousel({
           transform: scale(1.06) !important;
         }
         
-        /* Interactive actions animations wrapper logic */
         .side-actions-wrapper {
           opacity: 0;
           transform: translateY(-4px);
@@ -298,10 +344,11 @@ export default function ProductCarousel({
           style={{ gap: '20px', direction: isRtl ? 'rtl' : 'ltr' }}
         >
           {products.map((product) => {
+            const currentTitle = getLocalizedTitle(product)
             const imageUrl =
               typeof product.featuredImage === 'object' ? product.featuredImage?.url : null
             const imageAlt =
-              typeof product.featuredImage === 'object' ? product.featuredImage?.alt : product.title
+              typeof product.featuredImage === 'object' ? product.featuredImage?.alt : currentTitle
 
             const hasDiscount = !!product.hasDiscount
             const originalPrice = getNumericalPrice(product.price)
@@ -315,7 +362,6 @@ export default function ProductCarousel({
                 style={{ textDecoration: 'none', color: 'inherit', position: 'relative' }}
                 draggable={false}
               >
-                {/* Inner Card Framing with Balanced Custom Box Shadow styling matrix */}
                 <div
                   className="product-card-inner"
                   style={{
@@ -328,7 +374,6 @@ export default function ProductCarousel({
                     boxShadow: '0 4px 12px rgba(0,0,0,0.05)',
                   }}
                 >
-                  {/* Rectangular Sticky Top Right Discount Badge Element */}
                   {hasDiscount && (
                     <div
                       style={{
@@ -345,7 +390,6 @@ export default function ProductCarousel({
                         fontWeight: '800',
                         boxShadow: '0 2px 6px rgba(0,0,0,0.1)',
                         fontFamily: textFont,
-                        // Optional: Ensures text reads natively depending on the active layout direction
                         direction: isRtl ? 'rtl' : 'ltr',
                       }}
                     >
@@ -355,7 +399,6 @@ export default function ProductCarousel({
                     </div>
                   )}
 
-                  {/* Image Context containment layer */}
                   <div
                     className="product-image-container"
                     style={{
@@ -371,7 +414,7 @@ export default function ProductCarousel({
                         width={300}
                         height={400}
                         src={imageUrl}
-                        alt={imageAlt || product.title}
+                        alt={imageAlt || currentTitle}
                         className="product-parallax-img"
                         style={{
                           width: '100%',
@@ -407,7 +450,6 @@ export default function ProductCarousel({
                     />
                   </div>
 
-                  {/* Left Border Actions Panel - Hover Hidden inside frame */}
                   <div
                     className="side-actions-wrapper"
                     style={{
@@ -469,7 +511,6 @@ export default function ProductCarousel({
                     </button>
                   </div>
 
-                  {/* Content Panel Area */}
                   <div
                     style={{
                       position: 'absolute',
@@ -496,10 +537,9 @@ export default function ProductCarousel({
                         textOverflow: 'ellipsis',
                       }}
                     >
-                      {product.title}
+                      {currentTitle}
                     </h3>
 
-                    {/* Unified Price Structure Rendering Over/Under Layout */}
                     <div
                       style={{
                         display: 'flex',
@@ -548,7 +588,6 @@ export default function ProductCarousel({
                     </div>
                   </div>
 
-                  {/* Add to Cart Floating Button Framework */}
                   <button
                     onClick={(e) => handleAddToCart(e, product)}
                     style={{
@@ -580,7 +619,6 @@ export default function ProductCarousel({
         </div>
       </div>
 
-      {/* Quick View Modal Layer */}
       {quickViewProduct && (
         <div
           style={{
@@ -591,7 +629,7 @@ export default function ProductCarousel({
             backdropFilter: 'blur(4px)',
             display: 'flex',
             alignItems: 'center',
-            justifyContent: 'center',
+            justifycontent: 'center',
             padding: '20px',
           }}
           onClick={() => setQuickViewProduct(null)}
@@ -636,7 +674,7 @@ export default function ProductCarousel({
                 paddingRight: '20px',
               }}
             >
-              {quickViewProduct.title}
+              {getLocalizedTitle(quickViewProduct)}
             </h2>
 
             <div
@@ -692,7 +730,6 @@ export default function ProductCarousel({
         </div>
       )}
 
-      {/* Auto-Disappearing Toast Banner */}
       {toastProduct && (
         <div
           style={{
@@ -741,7 +778,7 @@ export default function ProductCarousel({
                 maxWidth: '240px',
               }}
             >
-              {toastProduct.title}
+              {getLocalizedTitle(toastProduct)}
             </div>
             <div style={{ fontSize: '12px', color: '#94a3b8' }}>{t.toastSuccess}</div>
           </div>

@@ -48,7 +48,7 @@ export default function CategoryCarousel({ currentLocale }: CategoryCarouselProp
         .embla-wrapper {
           position: relative;
           width: 100%;
-          max-width: 1240px;
+          max-width: 1800px;
           margin: 0 auto;
           padding: 1rem 1rem;
         }

@@ -68,7 +68,7 @@ export default function Footer({ currentLocale }: FooterProps) {
           display: grid;
           grid-template-columns: 1fr;
           gap: 2.5rem;
-          max-width: 1200px;
+          max-width: 1800px;
           margin: 0 auto;
         }
         @media (min-width: 768px) {

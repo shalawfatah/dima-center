@@ -58,7 +58,6 @@ export default function SearchBar({ locale: initialLocale }: { locale: string })
           display: none; 
           position: absolute; 
           top: 100%; 
-          /* Stretching left and right to 0 anchors the width perfectly in both LTR & RTL */
           left: 0; 
           right: 0; 
           background: #ffffff; 

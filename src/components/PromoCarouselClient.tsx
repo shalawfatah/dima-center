@@ -109,7 +109,7 @@ export default function PromoCarouselClient({
                   display: 'flex',
                   flexDirection: 'column',
                   justifyContent: 'flex-end',
-                  padding: '3rem max(1.5rem, calc((100% - 1200px)/2))',
+                  padding: '3rem max(1.5rem, calc((100% - 1800px)/2))',
                   color: '#fff',
                   textAlign: isRtl ? 'right' : 'left',
                   position: 'relative',

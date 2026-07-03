@@ -135,7 +135,7 @@ export default function CartPage() {
       style={{
         minHeight: '100vh',
         backgroundColor: '#f8f9fa',
-        padding: '2rem max(1.5rem, calc((100% - 1200px) / 2))',
+        padding: '2rem max(1.5rem, calc((100% - 1800px) / 2))',
         direction: isRtl ? 'rtl' : 'ltr',
         fontFamily: regularFont,
       }}

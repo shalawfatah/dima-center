@@ -65,7 +65,7 @@ export default async function StorefrontHome({ params, searchParams }: PageProps
           backgroundColor: '#fafafa',
         }}
       >
-        <main style={{ flex: '1', padding: '2rem max(1.5rem, calc((100% - 1200px)/2))' }}>
+        <main style={{ flex: '1', padding: '2rem max(1.5rem, calc((100% - 1800px)/2))' }}>
           <div
             style={{
               display: 'flex',
@@ -279,7 +279,7 @@ export default async function StorefrontHome({ params, searchParams }: PageProps
 
       <main style={{ flex: '1', paddingBottom: '3rem' }}>
         {productsWithDiscount.length > 0 && (
-          <section style={{ padding: '1.5rem max(1.5rem, calc((100% - 1200px)/2)) 0' }}>
+          <section style={{ padding: '1.5rem max(1.5rem, calc((100% - 1800px)/2)) 0' }}>
             <LocalizedHeading
               currentLocale={currentLocale}
               en="Hot Discounts 🔥"
@@ -300,7 +300,7 @@ export default async function StorefrontHome({ params, searchParams }: PageProps
           return (
             <section
               key={cat.slug}
-              style={{ padding: '2rem max(1.5rem, calc((100% - 1200px)/2)) 0' }}
+              style={{ padding: '2rem max(1.5rem, calc((100% - 1800px)/2)) 0' }}
             >
               <LocalizedHeading
                 currentLocale={currentLocale}
@@ -319,7 +319,7 @@ export default async function StorefrontHome({ params, searchParams }: PageProps
         })}
 
         {otherProducts.length > 0 && (
-          <section style={{ padding: '2rem max(1.5rem, calc((100% - 1200px)/2)) 0' }}>
+          <section style={{ padding: '2rem max(1.5rem, calc((100% - 1800px)/2)) 0' }}>
             <LocalizedHeading
               currentLocale={currentLocale}
               en="Other Products"

@@ -95,7 +95,7 @@ export default async function SearchResultsPage({ params, searchParams }: Search
         backgroundColor: '#fafafa',
       }}
     >
-      <main style={{ flex: '1', padding: '3rem max(1.5rem, calc((100% - 1200px)/2))' }}>
+      <main style={{ flex: '1', padding: '3rem max(1.5rem, calc((100% - 1800px)/2))' }}>
         <h1 style={{ fontSize: '1.75rem', fontWeight: '700', marginBottom: '1.5rem' }}>
           {currentLocale === 'ar'
             ? 'نتائج البحث عن:'

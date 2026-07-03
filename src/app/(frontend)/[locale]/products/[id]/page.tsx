@@ -109,7 +109,7 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
         }
       `}</style>
 
-      <main style={{ flex: '1', padding: '2rem max(1.5rem, calc((100% - 1200px)/2))' }}>
+      <main style={{ flex: '1', padding: '2rem max(1.5rem, calc((100% - 1800px)/2))' }}>
         <div style={{ marginBottom: '1.5rem', fontSize: '13px', color: '#666' }}>
           <Link href={`/${currentLocale}`} style={{ color: 'inherit', textDecoration: 'none' }}>
             {currentLocale === 'ar' ? 'الرئيسية' : currentLocale === 'ckb' ? 'سەرەکی' : 'Home'}
