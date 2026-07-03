@@ -88,7 +88,7 @@ export default function ProductCarousel({
 
   const isRegionalLocale = currentLocale === 'ar' || currentLocale === 'ckb'
   const titleFont = isRegionalLocale ? '"Rudaw", sans-serif' : 'inherit'
-  const textFont = isRegionalLocale ? '"Sarchia", sans-serif' : 'inherit'
+  const textFont = isRegionalLocale ? '"Rudaw", sans-serif' : 'inherit'
 
   const handleAddToCart = (e: React.MouseEvent, product: ProductItem) => {
     e.preventDefault()
@@ -134,7 +134,23 @@ export default function ProductCarousel({
     setQuickViewProduct(product)
   }
 
-  // 🌍 Complete Multilingual Map Definition
+  const handleShare = (e: React.MouseEvent, product: ProductItem) => {
+    e.preventDefault()
+    if (navigator.share) {
+      navigator
+        .share({
+          title: product.title,
+          url: `${window.location.origin}/${currentLocale}/products/${product.id}`,
+        })
+        .catch(console.error)
+    } else {
+      navigator.clipboard.writeText(
+        `${window.location.origin}/${currentLocale}/products/${product.id}`,
+      )
+      alert('Link copied to clipboard!')
+    }
+  }
+
   interface CarouselTranslations {
     quickViewTitle: string
     addToCart: string
@@ -143,6 +159,7 @@ export default function ProductCarousel({
     toastSuccess: string
     viewCart: string
     currency: string
+    shareTitle: string
   }
 
   const carouselDictionary: Record<'en' | 'ar' | 'ckb', CarouselTranslations> = {
@@ -154,6 +171,7 @@ export default function ProductCarousel({
       toastSuccess: 'Added to cart successfully!',
       viewCart: 'View Cart ➡️',
       currency: 'IQD',
+      shareTitle: 'Share',
     },
     ar: {
       quickViewTitle: 'معاينة سريعة',
@@ -163,6 +181,7 @@ export default function ProductCarousel({
       toastSuccess: 'تمت الإضافة إلى السلة بنجاح!',
       viewCart: 'عرض السلة ➡️',
       currency: 'د.ع',
+      shareTitle: 'مشاركة',
     },
     ckb: {
       quickViewTitle: 'بینینی خێرا',
@@ -172,82 +191,77 @@ export default function ProductCarousel({
       toastSuccess: 'بە سەرکەوتوویی زیادکرا بۆ سەبەتە!',
       viewCart: 'بینینی سەبەتە ➡️',
       currency: 'د.ع',
+      shareTitle: 'شێکردنەوە',
     },
   }
 
-  // Safely fallback to 'en' if route locale mismatch occurs
   const activeLocale = (
     carouselDictionary[currentLocale as 'en' | 'ar' | 'ckb'] ? currentLocale : 'en'
   ) as 'en' | 'ar' | 'ckb'
   const t = carouselDictionary[activeLocale]
 
   return (
-    <div style={{ width: '100%', overflow: 'hidden', padding: '1rem 0' }}>
+    <div style={{ width: '100%', overflow: 'hidden', padding: '2rem 0' }}>
       <style>{`
         .product-carousel-track {
           display: flex;
           touch-action: pan-y;
         }
+        /* Increased width parameters by showing fewer cards per screen view */
         .product-carousel-slide {
-          flex: 0 0 calc(100% / 2 - 12px); 
+          flex: 0 0 calc(100% / 1.5 - 12px); 
           min-width: 0;
+          padding-bottom: 24px; /* Room for half-outside button */
         }
         @media (min-width: 480px) {
-          .product-carousel-slide { flex: 0 0 calc(100% / 3 - 12px); }
+          .product-carousel-slide { flex: 0 0 calc(100% / 2.2 - 12px); }
         }
         @media (min-width: 768px) {
-          .product-carousel-slide { flex: 0 0 calc(100% / 4 - 14px); }
+          .product-carousel-slide { flex: 0 0 calc(100% / 3.2 - 14px); }
         }
         @media (min-width: 1024px) {
-          .product-carousel-slide { flex: 0 0 calc(100% / 5 - 14px); }
+          .product-carousel-slide { flex: 0 0 calc(100% / 4.2 - 14px); }
         }
         @media (min-width: 1280px) {
-          .product-carousel-slide { flex: 0 0 calc(100% / 6 - 16px); }
-        }
-        @media (min-width: 1440px) {
-          .product-carousel-slide { flex: 0 0 calc(100% / 7 - 16px); }
+          .product-carousel-slide { flex: 0 0 calc(100% / 5.2 - 16px); }
         }
 
         .product-card-inner {
-          transition: border-color 0.3s ease;
+          transition: border-color 0.3s ease, box-shadow 0.3s ease;
         }
         .product-carousel-slide:hover .product-image-container img {
-          transform: scale(1.1) !important;
-        }
-        .product-carousel-slide:hover .product-action-overlay {
-          opacity: 1 !important;
+          transform: scale(1.06) !important;
         }
         
-        /* 🛠️ Fixed Flex Alignment Layout Target */
-        .action-btn {
-          background: rgba(255, 255, 255, 0.95);
+        .side-action-btn {
+          background: #ffffff;
           border: none;
           border-radius: 50%;
-          width: 40px;
-          height: 40px;
+          width: 36px;
+          height: 36px;
           display: inline-flex !important;
           align-items: center !important;
           justify-content: center !important;
           padding: 0 !important;
           cursor: pointer;
-          transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), background 0.2s, color 0.2s;
+          transition: transform 0.2s ease, box-shadow 0.2s ease;
+          color: #64748b;
+          box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+        }
+        .side-action-btn:hover {
+          transform: scale(1.08);
           color: #0f172a;
         }
-        .action-btn:hover {
-          transform: scale(1.1);
-          background: #ffffff;
-          color: #ffb83c;
-        }
-        .action-btn svg {
+        .side-action-btn svg {
           display: block;
           flex-shrink: 0;
         }
       `}</style>
 
-      <div ref={emblaRef} style={{ overflow: 'hidden', width: '100%', cursor: 'grab' }}>
+      <div ref={emblaRef} style={{ overflow: 'visible', width: '100%', cursor: 'grab' }}>
         <div
           className="product-carousel-track"
-          style={{ gap: '16px', direction: isRtl ? 'rtl' : 'ltr' }}
+          style={{ gap: '20px', direction: isRtl ? 'rtl' : 'ltr' }}
         >
           {products.map((product) => {
             const imageUrl =
@@ -260,37 +274,44 @@ export default function ProductCarousel({
                 key={product.id}
                 href={`/${currentLocale}/products/${product.id}`}
                 className="product-carousel-slide"
-                style={{ textDecoration: 'none', color: 'inherit' }}
+                style={{ textDecoration: 'none', color: 'inherit', position: 'relative' }}
                 draggable={false}
               >
+                {/* Inner Card Framing */}
                 <div
                   className="product-card-inner"
                   style={{
                     position: 'relative',
                     width: '100%',
-                    aspectRatio: '1 / 1',
-                    borderRadius: '12px',
-                    overflow: 'hidden',
-                    background: '#1e293b',
-                    boxShadow: '0 4px 6px -1px rgba(0,0,0,0.03)',
-                    border: '2px solid #ffb83c',
+                    aspectRatio: '3 / 4' /* Taller context aspect ratio */,
+                    borderRadius: '16px',
+                    overflow: 'visible' /* Context allows half-out overflow elements */,
+                    background: '#f3f3f3',
+                    boxShadow: '0 4px 12px rgba(0,0,0,0.05)',
                   }}
                 >
+                  {/* Image Context containment layer */}
                   <div
                     className="product-image-container"
-                    style={{ position: 'absolute', inset: 0, overflow: 'hidden', zIndex: 1 }}
+                    style={{
+                      position: 'absolute',
+                      inset: 0,
+                      overflow: 'hidden',
+                      zIndex: 1,
+                      borderRadius: '16px',
+                    }}
                   >
                     {imageUrl ? (
                       <Image
-                        width={250}
-                        height={250}
+                        width={300}
+                        height={400}
                         src={imageUrl}
                         alt={imageAlt || product.title}
                         className="product-parallax-img"
                         style={{
                           width: '100%',
-                          height: 'auto',
-                          objectFit: 'scale-down',
+                          height: '100%',
+                          objectFit: 'cover',
                           position: 'absolute',
                           willChange: 'transform',
                           transition: 'transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
@@ -316,35 +337,33 @@ export default function ProductCarousel({
                         position: 'absolute',
                         inset: 0,
                         background:
-                          'linear-gradient(to top, rgba(15,23,42,0.95) 0%, rgba(15,23,42,0.4) 45%, rgba(0,0,0,0) 100%)',
+                          'linear-gradient(to top, rgba(15,23,42,0.95) 0%, rgba(15,23,42,0.3) 50%, rgba(0,0,0,0) 100%)',
                       }}
                     />
                   </div>
 
-                  {/* Hover Actions Bar */}
+                  {/* Right Border Actions Panel (Half Inside / Half Outside) */}
                   <div
-                    className="product-action-overlay"
                     style={{
                       position: 'absolute',
-                      inset: 0,
+                      top: '25%',
+                      right: isRtl ? 'auto' : '0px',
+                      left: isRtl ? '0px' : 'auto',
+                      transform: isRtl ? 'translateX(-50%)' : 'translateX(50%)',
                       zIndex: 3,
                       display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      gap: '12px',
-                      background: 'rgba(15, 23, 42, 0.3)',
-                      opacity: 0,
-                      transition: 'opacity 0.25s ease',
+                      flexDirection: 'column',
+                      gap: '8px',
                     }}
                   >
                     <button
-                      className="action-btn"
+                      className="side-action-btn"
                       onClick={(e) => handleQuickView(e, product)}
                       title={t.quickViewTitle}
                     >
                       <svg
-                        width="20"
-                        height="20"
+                        width="18"
+                        height="18"
                         fill="none"
                         stroke="currentColor"
                         strokeWidth="2"
@@ -364,13 +383,13 @@ export default function ProductCarousel({
                     </button>
 
                     <button
-                      className="action-btn"
-                      onClick={(e) => handleAddToCart(e, product)}
-                      title={t.addToCart}
+                      className="side-action-btn"
+                      onClick={(e) => handleShare(e, product)}
+                      title={t.shareTitle}
                     >
                       <svg
-                        width="20"
-                        height="20"
+                        width="18"
+                        height="18"
                         fill="none"
                         stroke="currentColor"
                         strokeWidth="2"
@@ -379,7 +398,7 @@ export default function ProductCarousel({
                         <path
                           strokeLinecap="round"
                           strokeLinejoin="round"
-                          d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 0a2 2 0 100 4 2 2 0 000-4z"
+                          d="M15 15l6-6m0 0l-6-6m6 6H9a6 6 0 00-6 6v3"
                         />
                       </svg>
                     </button>
@@ -388,11 +407,11 @@ export default function ProductCarousel({
                   <div
                     style={{
                       position: 'absolute',
-                      bottom: 0,
+                      bottom: '24px',
                       left: 0,
                       right: 0,
                       zIndex: 2,
-                      padding: '1rem',
+                      padding: '0 1.25rem',
                       display: 'flex',
                       flexDirection: 'column',
                       gap: '4px',
@@ -402,7 +421,7 @@ export default function ProductCarousel({
                     <h3
                       style={{
                         fontFamily: titleFont,
-                        fontSize: '15px',
+                        fontSize: '18px',
                         fontWeight: '600',
                         color: '#fff',
                         margin: 0,
@@ -419,12 +438,39 @@ export default function ProductCarousel({
                         fontFamily: textFont,
                         fontSize: '16px',
                         fontWeight: '700',
-                        color: '#10b981',
+                        color: 'yellow',
+                        textAlign: 'center',
                       }}
                     >
                       {product.price} {t.currency}
                     </span>
                   </div>
+
+                  {/* Add to Cart Floating Button Framework (Half Inside / Half Outside) */}
+                  <button
+                    onClick={(e) => handleAddToCart(e, product)}
+                    style={{
+                      position: 'absolute',
+                      bottom: '0px',
+                      left: '50%',
+                      transform: 'translate(-50%, 50%)',
+                      zIndex: 4,
+                      backgroundColor: '#000000',
+                      color: '#ffffff',
+                      border: 'none',
+                      padding: '10px 20px',
+                      borderRadius: '30px',
+                      fontSize: '16px',
+                      fontWeight: '600',
+                      whiteSpace: 'nowrap',
+                      cursor: 'pointer',
+                      boxShadow: '0 4px 14px rgba(0,0,0,0.25)',
+                      fontFamily: textFont,
+                      transition: 'background-color 0.2s',
+                    }}
+                  >
+                    {t.addToCart}
+                  </button>
                 </div>
               </Link>
             )
@@ -582,7 +628,7 @@ export default function ProductCarousel({
           <div style={{ flex: 1 }}>
             <div
               style={{
-                fontSize: '14px',
+                fontSize: '16px',
                 fontWeight: '600',
                 marginBottom: '2px',
                 whiteSpace: 'nowrap',

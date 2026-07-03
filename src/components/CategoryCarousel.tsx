@@ -70,8 +70,8 @@ export default function CategoryCarousel({ currentLocale }: CategoryCarouselProp
           text-align: center;
         }
         .circle-container {
-          width: 150px;
-          height: 150px;
+          width: 120px;
+          height: 120px;
           border-radius: 50%;
           background-color: #F3F3F3;
           display: flex;
