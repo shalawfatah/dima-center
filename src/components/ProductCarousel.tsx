@@ -93,7 +93,6 @@ export default function ProductCarousel({
   const titleFont = isRegionalLocale ? '"Rudaw", sans-serif' : 'inherit'
   const textFont = isRegionalLocale ? '"Rudaw", sans-serif' : 'inherit'
 
-  // Helper to parse safe price values
   const getNumericalPrice = (price: number | string): number => {
     if (typeof price === 'string') {
       return parseFloat(price.replace(/,/g, '')) || 0
@@ -101,7 +100,6 @@ export default function ProductCarousel({
     return price || 0
   }
 
-  // Helper to calculate sale pricing
   const getDiscountedPrice = (product: ProductItem): number => {
     const originalPrice = getNumericalPrice(product.price)
     if (!product.hasDiscount || !product.discountValue) return originalPrice
@@ -178,6 +176,7 @@ export default function ProductCarousel({
     viewCart: string
     currency: string
     shareTitle: string
+    discountLabel: string
   }
 
   const carouselDictionary: Record<'en' | 'ar' | 'ckb', CarouselTranslations> = {
@@ -190,6 +189,7 @@ export default function ProductCarousel({
       viewCart: 'View Cart ➡️',
       currency: '$',
       shareTitle: 'Share',
+      discountLabel: 'discount',
     },
     ar: {
       quickViewTitle: 'معاينة سريعة',
@@ -200,6 +200,7 @@ export default function ProductCarousel({
       viewCart: 'عرض السلة ➡️',
       currency: '$',
       shareTitle: 'مشاركة',
+      discountLabel: 'خصم',
     },
     ckb: {
       quickViewTitle: 'بینینی خێرا',
@@ -210,6 +211,7 @@ export default function ProductCarousel({
       viewCart: 'بینینی سەبەتە ➡️',
       currency: '$',
       shareTitle: 'شێکردنەوە',
+      discountLabel: 'داشکاندن',
     },
   }
 
@@ -244,18 +246,33 @@ export default function ProductCarousel({
         }
 
         .product-card-inner {
-          transition: border-color 0.3s ease, box-shadow 0.3s ease;
+          transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .product-carousel-slide:hover .product-card-inner {
+          transform: translateY(-4px);
+          box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04) !important;
         }
         .product-carousel-slide:hover .product-image-container img {
           transform: scale(1.06) !important;
         }
         
+        /* Interactive actions animations wrapper logic */
+        .side-actions-wrapper {
+          opacity: 0;
+          transform: translateY(-4px);
+          transition: opacity 0.25s ease, transform 0.25s ease;
+        }
+        .product-carousel-slide:hover .side-actions-wrapper {
+          opacity: 1;
+          transform: translateY(0);
+        }
+
         .side-action-btn {
           background: #ffffff;
           border: none;
           border-radius: 50%;
-          width: 36px;
-          height: 36px;
+          width: 32px;
+          height: 32px;
           display: inline-flex !important;
           align-items: center !important;
           justify-content: center !important;
@@ -298,7 +315,7 @@ export default function ProductCarousel({
                 style={{ textDecoration: 'none', color: 'inherit', position: 'relative' }}
                 draggable={false}
               >
-                {/* Inner Card Framing */}
+                {/* Inner Card Framing with Balanced Custom Box Shadow styling matrix */}
                 <div
                   className="product-card-inner"
                   style={{
@@ -311,28 +328,30 @@ export default function ProductCarousel({
                     boxShadow: '0 4px 12px rgba(0,0,0,0.05)',
                   }}
                 >
-                  {/* Discount Badge Element */}
+                  {/* Rectangular Sticky Top Right Discount Badge Element */}
                   {hasDiscount && (
                     <div
                       style={{
                         position: 'absolute',
-                        top: '12px',
-                        left: isRtl ? 'auto' : '12px',
-                        right: isRtl ? '12px' : 'auto',
+                        top: '0px',
+                        left: isRtl ? '0px' : 'auto',
+                        right: isRtl ? 'auto' : '0px',
                         zIndex: 5,
-                        backgroundColor: '#ef4444',
-                        color: '#ffffff',
-                        padding: '4px 10px',
-                        borderRadius: '20px',
-                        fontSize: '12px',
-                        fontWeight: '700',
-                        boxShadow: '0 2px 6px rgba(0,0,0,0.2)',
+                        backgroundColor: '#FFBF00',
+                        color: '#000',
+                        padding: '0px 12px',
+                        borderRadius: isRtl ? '16px 0 12px 0' : '0 16px 0 12px',
+                        fontSize: '14px',
+                        fontWeight: '800',
+                        boxShadow: '0 2px 6px rgba(0,0,0,0.1)',
                         fontFamily: textFont,
+                        // Optional: Ensures text reads natively depending on the active layout direction
+                        direction: isRtl ? 'rtl' : 'ltr',
                       }}
                     >
                       {product.discountType === 'percentage'
-                        ? `-${product.discountValue}%`
-                        : `-$${product.discountValue}`}
+                        ? `-${product.discountValue}%\u00A0${t.discountLabel}`
+                        : `-$${product.discountValue}\u00A0${t.discountLabel}`}
                     </div>
                   )}
 
@@ -388,18 +407,18 @@ export default function ProductCarousel({
                     />
                   </div>
 
-                  {/* Right Border Actions Panel */}
+                  {/* Left Border Actions Panel - Hover Hidden inside frame */}
                   <div
+                    className="side-actions-wrapper"
                     style={{
                       position: 'absolute',
-                      top: '25%',
-                      right: isRtl ? 'auto' : '0px',
-                      left: isRtl ? '0px' : 'auto',
-                      transform: isRtl ? 'translateX(-50%)' : 'translateX(50%)',
+                      top: '12px',
+                      left: isRtl ? 'auto' : '12px',
+                      right: isRtl ? '12px' : 'auto',
                       zIndex: 3,
                       display: 'flex',
-                      flexDirection: 'column',
-                      gap: '8px',
+                      flexDirection: 'row',
+                      gap: '6px',
                     }}
                   >
                     <button
@@ -408,11 +427,11 @@ export default function ProductCarousel({
                       title={t.quickViewTitle}
                     >
                       <svg
-                        width="18"
-                        height="18"
+                        width="15"
+                        height="15"
                         fill="none"
                         stroke="currentColor"
-                        strokeWidth="2"
+                        strokeWidth="2.5"
                         viewBox="0 0 24 24"
                       >
                         <path
@@ -434,11 +453,11 @@ export default function ProductCarousel({
                       title={t.shareTitle}
                     >
                       <svg
-                        width="18"
-                        height="18"
+                        width="14"
+                        height="14"
                         fill="none"
                         stroke="currentColor"
-                        strokeWidth="2"
+                        strokeWidth="2.5"
                         viewBox="0 0 24 24"
                       >
                         <path
@@ -507,7 +526,7 @@ export default function ProductCarousel({
                             style={{
                               fontSize: '18px',
                               fontWeight: '700',
-                              color: '#facc15', // bright yellow
+                              color: '#facc15',
                             }}
                           >
                             {t.currency}
