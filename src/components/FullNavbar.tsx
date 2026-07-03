@@ -32,18 +32,13 @@ export default function FullNavbar({ currentLocale }: FullNavbarProps) {
             priority
           />
         </Link>
-
-        {/* Search Icon component behaves dynamically based on viewport sizing context variables */}
         <SearchBar locale={currentLocale} />
 
         <div className="actions-cluster">
+          <Navbar currentLocale={currentLocale} />
           <NavUserMenu currentLocale={currentLocale} />
           <Languages currentLocale={currentLocale} />
         </div>
-      </div>
-
-      <div className="independent-nav-row">
-        <Navbar currentLocale={currentLocale} />
       </div>
     </header>
   )

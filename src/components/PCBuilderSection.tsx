@@ -36,10 +36,12 @@ export default function PCBuilderSection({ currentLocale, isRtl }: PCBuilderSect
 
   return (
     <section
+      className="pcb-section"
       style={{
         position: 'relative',
-        width: '100%',
-        borderRadius: '0', // Sharp box edges
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
         overflow: 'hidden',
         background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 60%, #14213d 100%)',
         border: '1px solid rgba(255,184,60,0.25)',
@@ -48,6 +50,15 @@ export default function PCBuilderSection({ currentLocale, isRtl }: PCBuilderSect
       dir={isRtl ? 'rtl' : 'ltr'}
     >
       <style>{`
+  .pcb-section {
+    width: 40%;
+  }
+
+  @media (max-width: 1000px) {
+    .pcb-section {
+      width: 100%;
+    }
+  }
         @keyframes pcb-pulse {
           0%, 100% { opacity: 0.35; r: 2.5; }
           50% { opacity: 1; r: 4.5; }
@@ -156,7 +167,7 @@ export default function PCBuilderSection({ currentLocale, isRtl }: PCBuilderSect
             <h2
               style={{
                 fontFamily: titleFont,
-                fontSize: 'clamp(18px, 2.5vw, 24px)',
+                fontSize: 'clamp(18px, 2.5vw, 32px)',
                 fontWeight: 800,
                 color: '#fff',
                 margin: 0,

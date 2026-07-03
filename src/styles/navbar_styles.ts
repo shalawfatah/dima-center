@@ -5,7 +5,6 @@ export const getNavbarStyles = (isRtl: boolean) => `
     align-items: center;
     padding: 1rem 2rem;
     background: #ffffff;
-    border-bottom: 1px solid #eaeaea;
     position: relative;
     z-index: 100;
     font-family: "Rudaw", sans-serif;

@@ -50,7 +50,7 @@ export default function CategoryCarousel({ currentLocale }: CategoryCarouselProp
           width: 100%;
           max-width: 1240px;
           margin: 0 auto;
-          padding: 2rem 1rem;
+          padding: 1rem 1rem;
         }
         .embla-viewport {
           overflow: hidden;

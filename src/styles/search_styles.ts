@@ -10,8 +10,7 @@ export const search_styles = () => `
     display: flex; 
     align-items: center; 
     justify-content: space-between; 
-    border-bottom: 1px solid #f1f5f9;
-    padding: 0.75rem 2rem; 
+    padding: 0.50rem 2rem; 
     gap: 1.5rem;
     background: #ffffff;
     position: relative;
@@ -20,11 +19,10 @@ export const search_styles = () => `
   .actions-cluster { 
     display: flex; 
     align-items: center; 
-    gap: 1.25rem; 
+    gap: .25rem; 
   }
   
   .independent-nav-row { 
-    width: 100%; 
     background: #ffffff; 
   }
 

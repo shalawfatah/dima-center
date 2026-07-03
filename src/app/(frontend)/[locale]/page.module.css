@@ -1,0 +1,12 @@
+.promoWrapper {
+  display: flex;
+  gap: 1rem;
+}
+
+@media (max-width: 1000px) {
+  .promoWrapper {
+    flex-wrap: 'wrap';
+    flex-direction: column;
+    gap: 0px;
+  }
+}

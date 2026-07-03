@@ -5,6 +5,7 @@ import PromoCarousel from '@/components/PromoCarousel'
 import ProductCarousel from '@/components/ProductCarousel'
 import LocalizedHeading from '@/components/LocalizedHeading'
 import Link from 'next/link'
+import styles from './page.module.css'
 
 interface PageProps {
   params: Promise<{ locale: string }>
@@ -256,9 +257,12 @@ export default async function StorefrontHome({ params, searchParams }: PageProps
       }}
     >
       <CategoryCarousel currentLocale={currentLocale} />
-      <PromoCarousel currentLocale={currentLocale} />
+      {/* two thirds promo, one third PC builder, gap 1 rem */}
+      <div className={styles.promoWrapper}>
+        <PromoCarousel currentLocale={currentLocale} />
+        <PCBuilderSection currentLocale={currentLocale} isRtl={isRtl} />
+      </div>
 
-      <PCBuilderSection currentLocale={currentLocale} isRtl={isRtl} />
       <main style={{ flex: '1', paddingBottom: '3rem' }}>
         {productsWithDiscount.length > 0 && (
           <section style={{ padding: '1.5rem max(1.5rem, calc((100% - 1200px)/2)) 0' }}>

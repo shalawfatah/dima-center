@@ -61,7 +61,7 @@ export default function PromoCarouselClient({
         .carousel-slide {
           flex: 0 0 100%;
           width: 100%;
-          height: 350px;
+          height: 400px;
           position: relative;
           overflow: hidden;
           display: block;
