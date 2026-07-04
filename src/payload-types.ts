@@ -165,12 +165,7 @@ export interface Product {
   code?: string | null;
   brand?: string | null;
   price: number;
-  costPriceUsd?: number | null;
-  costPriceIqd?: number | null;
   stock: number;
-  zone?: string | null;
-  aisle?: string | null;
-  shelf?: string | null;
   condition: 'new' | 'used' | 'refurbished' | 'open_box' | 'used_like_new' | 'used_no_box';
   category: number | Category;
   hasDiscount?: boolean | null;
@@ -411,12 +406,7 @@ export interface ProductsSelect<T extends boolean = true> {
   code?: T;
   brand?: T;
   price?: T;
-  costPriceUsd?: T;
-  costPriceIqd?: T;
   stock?: T;
-  zone?: T;
-  aisle?: T;
-  shelf?: T;
   condition?: T;
   category?: T;
   hasDiscount?: T;

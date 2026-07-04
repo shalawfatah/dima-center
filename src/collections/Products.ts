@@ -4,7 +4,7 @@ export const Products: CollectionConfig = {
   slug: 'products',
   admin: {
     useAsTitle: 'title',
-    // Added barcode and brand to default columns for easier inventory lookups
+    // 'stock' is back in the main dashboard table view
     defaultColumns: ['title', 'brand', 'barcode', 'category', 'price', 'stock'],
   },
   fields: [
@@ -20,7 +20,7 @@ export const Products: CollectionConfig = {
       localized: true,
     },
 
-    // === 📊 CORE INVENTORY & RETAIL FIELDS (Mapped from your raw dump) ===
+    // === 📊 CORE INVENTORY & RETAIL FIELDS ===
     {
       type: 'row',
       fields: [
@@ -41,7 +41,7 @@ export const Products: CollectionConfig = {
     {
       name: 'brand',
       type: 'text',
-      label: 'Brand', // Maps to your raw 'brand' field
+      label: 'Brand',
     },
     {
       name: 'price',
@@ -50,46 +50,12 @@ export const Products: CollectionConfig = {
       required: true,
     },
     {
-      type: 'row',
-      fields: [
-        {
-          name: 'costPriceUsd',
-          type: 'number',
-          label: 'Cost Price (USD)', // Maps to 'costPriceUsd'
-          admin: { width: '50%' },
-        },
-        {
-          name: 'costPriceIqd',
-          type: 'number',
-          label: 'Cost Price (IQD)', // Maps to 'costPriceIqd'
-          admin: { width: '50%' },
-        },
-      ],
-    },
-    {
       name: 'stock',
       type: 'number',
-      label: 'Current Stock (Quantity)', // Maps to your raw 'quantity'
+      label: 'Current Stock (Quantity)',
       defaultValue: 0,
       required: true,
     },
-
-    // === 📍 WAREHOUSE LOCATION BLOCK (Mapped from zone, aisle, shelf) ===
-    {
-      type: 'collapsible',
-      label: 'Warehouse / Stock Location',
-      fields: [
-        {
-          type: 'row',
-          fields: [
-            { name: 'zone', type: 'text', label: 'Zone', admin: { width: '33%' } },
-            { name: 'aisle', type: 'text', label: 'Aisle', admin: { width: '33%' } },
-            { name: 'shelf', type: 'text', label: 'Shelf', admin: { width: '33%' } },
-          ],
-        },
-      ],
-    },
-
     {
       name: 'condition',
       type: 'select',
