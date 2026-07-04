@@ -4,7 +4,8 @@ export const Products: CollectionConfig = {
   slug: 'products',
   admin: {
     useAsTitle: 'title',
-    defaultColumns: ['title', 'category', 'price', 'condition'],
+    // Added barcode and brand to default columns for easier inventory lookups
+    defaultColumns: ['title', 'brand', 'barcode', 'category', 'price', 'stock'],
   },
   fields: [
     {
@@ -18,17 +19,77 @@ export const Products: CollectionConfig = {
       type: 'textarea',
       localized: true,
     },
+
+    // === 📊 CORE INVENTORY & RETAIL FIELDS (Mapped from your raw dump) ===
+    {
+      type: 'row',
+      fields: [
+        {
+          name: 'barcode',
+          type: 'text',
+          label: 'Barcode / UPC',
+          admin: { width: '50%' },
+        },
+        {
+          name: 'code',
+          type: 'text',
+          label: 'SKU / Internal Product Code',
+          admin: { width: '50%' },
+        },
+      ],
+    },
+    {
+      name: 'brand',
+      type: 'text',
+      label: 'Brand', // Maps to your raw 'brand' field
+    },
     {
       name: 'price',
       type: 'number',
+      label: 'Selling Price (Base)',
       required: true,
+    },
+    {
+      type: 'row',
+      fields: [
+        {
+          name: 'costPriceUsd',
+          type: 'number',
+          label: 'Cost Price (USD)', // Maps to 'costPriceUsd'
+          admin: { width: '50%' },
+        },
+        {
+          name: 'costPriceIqd',
+          type: 'number',
+          label: 'Cost Price (IQD)', // Maps to 'costPriceIqd'
+          admin: { width: '50%' },
+        },
+      ],
     },
     {
       name: 'stock',
       type: 'number',
+      label: 'Current Stock (Quantity)', // Maps to your raw 'quantity'
       defaultValue: 0,
       required: true,
     },
+
+    // === 📍 WAREHOUSE LOCATION BLOCK (Mapped from zone, aisle, shelf) ===
+    {
+      type: 'collapsible',
+      label: 'Warehouse / Stock Location',
+      fields: [
+        {
+          type: 'row',
+          fields: [
+            { name: 'zone', type: 'text', label: 'Zone', admin: { width: '33%' } },
+            { name: 'aisle', type: 'text', label: 'Aisle', admin: { width: '33%' } },
+            { name: 'shelf', type: 'text', label: 'Shelf', admin: { width: '33%' } },
+          ],
+        },
+      ],
+    },
+
     {
       name: 'condition',
       type: 'select',
@@ -47,10 +108,6 @@ export const Products: CollectionConfig = {
       type: 'relationship',
       relationTo: 'categories',
       required: true,
-      admin: {
-        description: 'Select the specific child category (e.g., CPU, Mouse)',
-        condition: () => true,
-      },
     },
 
     // === 🏷️ DISCOUNT CONFIGURATION BLOCK ===
@@ -90,40 +147,29 @@ export const Products: CollectionConfig = {
       ],
     },
 
-    // === TECHNICAL SPECS ARRAY CLOSES CLEANLY HERE ===
+    // === TECHNICAL SPECS ARRAY ===
     {
       name: 'technicalSpecs',
       type: 'array',
-      label: 'Technical Specifications (JSON Fields)',
+      label: 'Technical Specifications',
       fields: [
-        {
-          name: 'key',
-          type: 'text',
-          required: true,
-        },
-        {
-          name: 'value',
-          type: 'text',
-          required: true,
-          localized: true,
-        },
+        { name: 'key', type: 'text', required: true },
+        { name: 'value', type: 'text', required: true, localized: true },
       ],
     },
 
-    // === ✅ ROOT LEVEL FIELDS ===
+    // === ✅ ROOT LEVEL MEDIA FIELDS ===
     {
       name: 'featuredImage',
       type: 'relationship',
       relationTo: 'media',
       required: false,
-      admin: {
-        position: 'sidebar',
-      },
+      admin: { position: 'sidebar' },
     },
     {
       name: 'imagesGallery',
       type: 'array',
-      label: 'Product Images Gallery (Carousel)',
+      label: 'Product Images Gallery',
       fields: [
         {
           name: 'image',
