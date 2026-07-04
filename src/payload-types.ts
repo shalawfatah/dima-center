@@ -161,13 +161,18 @@ export interface Product {
   id: number;
   title: string;
   description?: string | null;
+  barcode?: string | null;
+  code?: string | null;
+  brand?: string | null;
   price: number;
+  costPriceUsd?: number | null;
+  costPriceIqd?: number | null;
   stock: number;
+  zone?: string | null;
+  aisle?: string | null;
+  shelf?: string | null;
   condition: 'new' | 'used' | 'refurbished' | 'open_box' | 'used_like_new' | 'used_no_box';
-  /**
-   * Select the specific child category (e.g., CPU, Mouse)
-   */
-  category?: (number | null) | Category;
+  category: number | Category;
   hasDiscount?: boolean | null;
   discountType?: ('fixed' | 'percentage') | null;
   discountValue?: number | null;
@@ -402,8 +407,16 @@ export interface UsersSelect<T extends boolean = true> {
 export interface ProductsSelect<T extends boolean = true> {
   title?: T;
   description?: T;
+  barcode?: T;
+  code?: T;
+  brand?: T;
   price?: T;
+  costPriceUsd?: T;
+  costPriceIqd?: T;
   stock?: T;
+  zone?: T;
+  aisle?: T;
+  shelf?: T;
   condition?: T;
   category?: T;
   hasDiscount?: T;

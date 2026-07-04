@@ -496,11 +496,41 @@
           "primaryKey": true,
           "notNull": true
         },
+        "barcode": {
+          "name": "barcode",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "code": {
+          "name": "code",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "brand": {
+          "name": "brand",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
         "price": {
           "name": "price",
           "type": "numeric",
           "primaryKey": false,
           "notNull": true
+        },
+        "cost_price_usd": {
+          "name": "cost_price_usd",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "cost_price_iqd": {
+          "name": "cost_price_iqd",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
         },
         "stock": {
           "name": "stock",
@@ -508,6 +538,24 @@
           "primaryKey": false,
           "notNull": true,
           "default": 0
+        },
+        "zone": {
+          "name": "zone",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "aisle": {
+          "name": "aisle",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "shelf": {
+          "name": "shelf",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
         },
         "condition": {
           "name": "condition",
@@ -520,7 +568,7 @@
           "name": "category_id",
           "type": "integer",
           "primaryKey": false,
-          "notNull": false
+          "notNull": true
         },
         "has_discount": {
           "name": "has_discount",
@@ -2705,6 +2753,6 @@
     "tables": {},
     "columns": {}
   },
-  "id": "90ae077c-745c-4ccb-b345-4ef9da2b3b9b",
+  "id": "dd82c184-2ecf-413b-9531-938477952ec9",
   "prevId": "00000000-0000-0000-0000-000000000000"
 }

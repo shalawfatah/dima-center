@@ -1,9 +1,9 @@
-import * as migration_20260703_013936_add_category_image from './20260703_013936_add_category_image';
+import * as migration_20260704_205950_add_missing_product_fields from './20260704_205950_add_missing_product_fields';
 
 export const migrations = [
   {
-    up: migration_20260703_013936_add_category_image.up,
-    down: migration_20260703_013936_add_category_image.down,
-    name: '20260703_013936_add_category_image'
+    up: migration_20260704_205950_add_missing_product_fields.up,
+    down: migration_20260704_205950_add_missing_product_fields.down,
+    name: '20260704_205950_add_missing_product_fields'
   },
 ];
