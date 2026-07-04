@@ -557,6 +557,7 @@ export default function ProductCarousel({
                         textOverflow: 'ellipsis',
                         lineHeight: '1.3',
                         height: '2.6em',
+                        textShadow: '0 2px 4px rgba(0, 0, 0, 0.6), 0 1px 2px rgba(0, 0, 0, 0.8)',
                       }}
                     >
                       {currentTitle}
