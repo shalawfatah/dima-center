@@ -110,11 +110,14 @@ export default function ProductCarousel({
     return Math.max(0, originalPrice - product.discountValue)
   }
 
-  // Safe internal parser helper to find localized product titles cleanly
-  const getLocalizedTitle = (product: ProductItem | null): string => {
+  // Fallback Translation Resolver Matrix Engine for Titles and Descriptions
+  const getFallbackText = (
+    product: ProductItem | null,
+    fieldType: 'title' | 'description',
+  ): string => {
     if (!product) return ''
 
-    // Hardcoded static dictionary for your existing inventory items
+    // Static dictionary catalog mappings
     const fallbackCatalog: Record<string, Record<'en' | 'ar' | 'ckb', string>> = {
       'ئێم ئێس ئای پرۆ B760M-E DDR5': {
         en: 'MSI Pro B760M-E DDR5 Motherboard',
@@ -129,7 +132,7 @@ export default function ProductCarousel({
       'پرۆسێسەری یاری RX 7800X3D': {
         en: 'AMD Ryzen 7 7800X3D Gaming Processor',
         ar: 'معالج الألعاب اي ام دي رايزن 7 7800X3D',
-        ckb: 'پرۆسێسەری یاری RX 7800X3D', // (Note: Fixed typo from backend log)
+        ckb: 'پرۆسێسەری یاری RX 7800X3D',
       },
       'ئینتێل کۆر i9-14900K': {
         en: 'Intel Core i9-14900K Processor',
@@ -143,19 +146,37 @@ export default function ProductCarousel({
       },
     }
 
-    const rawTitle = product.title || ''
+    const rawFieldVal = product[fieldType] || ''
 
-    // Check if item exists inside our quick dictionary lookup
-    if (fallbackCatalog[rawTitle]) {
-      return fallbackCatalog[rawTitle][currentLocale as 'en' | 'ar' | 'ckb'] || rawTitle
+    // Inner reader to prioritize custom backend structure object dynamic keys over general standard values
+    const getValueForLang = (lang: 'en' | 'ar' | 'ckb'): string | undefined => {
+      if (product[`${fieldType}_${lang}`]) return product[`${fieldType}_${lang}`]
+      if (fieldType === 'title' && fallbackCatalog[product.title]) {
+        return fallbackCatalog[product.title][lang]
+      }
+      return undefined
     }
 
-    // Dynamic field check just in case you update your backend query later
-    if (product[`title_${currentLocale}`]) return product[`title_${currentLocale}`]
+    const ckbVal = getValueForLang('ckb')
+    const arVal = getValueForLang('ar')
+    const enVal = getValueForLang('en')
 
-    return rawTitle
+    // Resolution priority cascading loops
+    if (currentLocale === 'ckb') {
+      return ckbVal || enVal || arVal || rawFieldVal
+    } else if (currentLocale === 'ar') {
+      return arVal || enVal || ckbVal || rawFieldVal
+    } else {
+      // 'en' locale default tracking cascades
+      return enVal || ckbVal || arVal || rawFieldVal
+    }
   }
-  console.log('Current API Product Structure Profile:', products[0])
+
+  const getLocalizedTitle = (product: ProductItem | null): string =>
+    getFallbackText(product, 'title')
+  const getLocalizedDesc = (product: ProductItem | null): string =>
+    getFallbackText(product, 'description')
+
   const handleAddToCart = (e: React.MouseEvent, product: ProductItem) => {
     e.preventDefault()
 
@@ -218,7 +239,6 @@ export default function ProductCarousel({
     quickViewTitle: string
     addToCart: string
     conditionLabel: string
-    quickViewDesc: string
     toastSuccess: string
     viewCart: string
     currency: string
@@ -231,7 +251,6 @@ export default function ProductCarousel({
       quickViewTitle: 'Quick View',
       addToCart: 'Add To Cart',
       conditionLabel: 'Condition:',
-      quickViewDesc: 'Simple quick details overlay regarding your selected product item.',
       toastSuccess: 'Added to cart successfully!',
       viewCart: 'View Cart ➡️',
       currency: '$',
@@ -242,7 +261,6 @@ export default function ProductCarousel({
       quickViewTitle: 'معاينة سريعة',
       addToCart: 'إضافة إلى السلة',
       conditionLabel: 'الحالة:',
-      quickViewDesc: 'تفاصيل سريعة مبسطة حول المنتج المحدد.',
       toastSuccess: 'تمت الإضافة إلى السلة بنجاح!',
       viewCart: 'عرض السلة ➡️',
       currency: '$',
@@ -253,7 +271,6 @@ export default function ProductCarousel({
       quickViewTitle: 'بینینی خێرا',
       addToCart: 'خستنە نێو سەبەتە',
       conditionLabel: 'بارودۆخ:',
-      quickViewDesc: 'زانیاری خێرای سادە دەربارەی کاڵای دەستنیشانکراو.',
       toastSuccess: 'بە سەرکەوتوویی زیادکرا بۆ سەبەتە!',
       viewCart: 'بینینی سەبەتە ➡️',
       currency: '$',
@@ -514,27 +531,32 @@ export default function ProductCarousel({
                   <div
                     style={{
                       position: 'absolute',
-                      bottom: '24px',
+                      bottom: '36px',
                       left: 0,
                       right: 0,
                       zIndex: 2,
                       padding: '0 1.25rem',
                       display: 'flex',
                       flexDirection: 'column',
-                      gap: '4px',
+                      gap: '6px',
                       textAlign: isRtl ? 'right' : 'left',
                     }}
                   >
+                    {/* Two line clamped header configuration */}
                     <h3
                       style={{
                         fontFamily: titleFont,
-                        fontSize: '18px',
+                        fontSize: '16px',
                         fontWeight: '600',
                         color: '#fff',
                         margin: 0,
-                        whiteSpace: 'nowrap',
+                        display: '-webkit-box',
+                        WebkitLineClamp: 2,
+                        WebkitBoxOrient: 'vertical',
                         overflow: 'hidden',
                         textOverflow: 'ellipsis',
+                        lineHeight: '1.3',
+                        height: '2.6em',
                       }}
                     >
                       {currentTitle}
@@ -544,7 +566,7 @@ export default function ProductCarousel({
                       style={{
                         display: 'flex',
                         flexDirection: 'column',
-                        alignItems: isRtl ? 'flex-start' : 'flex-start',
+                        alignItems: 'flex-start',
                         gap: '2px',
                         fontFamily: textFont,
                       }}
@@ -553,7 +575,7 @@ export default function ProductCarousel({
                         <>
                           <span
                             style={{
-                              fontSize: '14px',
+                              fontSize: '13px',
                               fontWeight: '500',
                               color: '#94a3b8',
                               textDecoration: 'line-through',
@@ -564,7 +586,7 @@ export default function ProductCarousel({
                           </span>
                           <span
                             style={{
-                              fontSize: '18px',
+                              fontSize: '16px',
                               fontWeight: '700',
                               color: '#facc15',
                             }}
@@ -576,7 +598,7 @@ export default function ProductCarousel({
                       ) : (
                         <span
                           style={{
-                            fontSize: '16px',
+                            fontSize: '15px',
                             fontWeight: '700',
                             color: '#facc15',
                           }}
@@ -601,7 +623,7 @@ export default function ProductCarousel({
                       border: 'none',
                       padding: '6px 20px',
                       borderRadius: '25px',
-                      fontSize: '16px',
+                      fontSize: '15px',
                       fontWeight: '600',
                       whiteSpace: 'nowrap',
                       cursor: 'pointer',
@@ -705,7 +727,8 @@ export default function ProductCarousel({
                 marginBottom: '20px',
               }}
             >
-              {t.quickViewDesc}
+              {getLocalizedDesc(quickViewProduct) ||
+                'Simple quick details overlay regarding your selected product item.'}
             </div>
 
             <button
