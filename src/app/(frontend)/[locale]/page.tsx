@@ -38,7 +38,6 @@ export default async function StorefrontHome({ params, searchParams }: PageProps
   const payload = await getPayload({ config })
 
   // Extract master locale reference arrays for looking up names vs slugs
-  const localCategoriesList = CATEGORY_MAP[currentLocale]
   const englishCategoriesList = CATEGORY_MAP['en']
 
   // -----------------------------------------------------------------
