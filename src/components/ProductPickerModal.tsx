@@ -36,10 +36,31 @@ export default function ProductPickerModal({
 
   const filteredProducts = products.filter((prod) => {
     const prodCategory = prod.category
-    if (typeof prodCategory === 'object' && prodCategory !== null) {
-      return prodCategory.slug === currentSlotConfig.categorySlug
+    if (!prodCategory) return false
+
+    // Target mapping configuration text safely
+    const targetSlug = currentSlotConfig.categorySlug.toLowerCase()
+
+    // Helper function to accommodate structural singular/plural naming drift
+    const isSlugMatch = (backendSlug: string, frontendSlug: string) => {
+      const cleanB = backendSlug.toLowerCase().trim()
+      const cleanF = frontendSlug.toLowerCase().trim()
+      return (
+        cleanB === cleanF ||
+        `${cleanB}s` === cleanF ||
+        cleanB === `${cleanF}s` ||
+        cleanB.replace(/-/g, '') === cleanF.replace(/-/g, '')
+      )
     }
-    return String(prodCategory).toLowerCase() === currentSlotConfig.categorySlug.toLowerCase()
+
+    // Scenario A: Relation is fully populated as an object
+    if (typeof prodCategory === 'object' && prodCategory !== null) {
+      const bSlug = prodCategory.slug || prodCategory.id || ''
+      return isSlugMatch(String(bSlug), targetSlug)
+    }
+
+    // Scenario B: Relation is an unpopulated string ID or direct literal fallback string
+    return isSlugMatch(String(prodCategory), targetSlug)
   })
 
   return (
@@ -97,7 +118,7 @@ export default function ProductPickerModal({
                     <span className={styles['pc-builder-product-price']}>${prod.price}</span>
 
                     <div className={styles['pc-builder-inline-icons-group']}>
-                      {/* 1. Deep Link Link Component with new tab attributes target & rel */}
+                      {/* Deep Link (New Tab) */}
                       <Link
                         href={`/${currentLocale}/products/${prod.id}`}
                         target="_blank"
@@ -122,7 +143,7 @@ export default function ProductPickerModal({
                         </svg>
                       </Link>
 
-                      {/* 2. Add to Cart Shopping Button */}
+                      {/* Add to Cart */}
                       <button
                         type="button"
                         title="Add to Cart"
