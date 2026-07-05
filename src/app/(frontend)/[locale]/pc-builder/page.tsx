@@ -62,11 +62,17 @@ export default async function PcBuilderPage({ params }: PcBuilderPageProps) {
   // 🔐 Check user session status securely on the server
   const { user } = await payload.auth({ headers: await headers() })
 
-  // Fetch all active products to act as components
+  // 🚀 Fetch all active products to act as components with strict field criteria
   const productsData = await payload.find({
     collection: 'products',
-    limit: 100,
+    limit: 5000, // Force lift the 100-item cap to capture complete component inventory
     locale: locale as 'en' | 'ar' | 'ckb',
+    // ⚡ Select only required attributes to strip heavy timestamps/unneeded data payloads
+    select: {
+      title: true,
+      price: true,
+      cat: true,
+    },
   })
 
   // Group products by categories or simply pass them directly
