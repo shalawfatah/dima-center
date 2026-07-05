@@ -34,16 +34,22 @@ export default function ProductPickerModal({
   const currentSlotConfig = COMPONENT_SLOTS.find((s) => s.key === activeModalSlot)
   if (!currentSlotConfig) return null
 
+  console.log(
+    'ALL RAW PRODUCTS IN BUILDER:',
+    products.map((p) => ({ title: p.title, cat: p.category })),
+  )
+
   const filteredProducts = products.filter((prod) => {
-    const prodCategory = prod.category
+    // 1. Dynamic fallback support for both 'cat' and 'category' property namespaces
+    const prodCategory = prod.cat !== undefined ? prod.cat : prod.category
+
     if (!prodCategory) return false
 
-    // Target mapping configuration text safely
     const targetSlug = currentSlotConfig.categorySlug.toLowerCase()
 
-    // Helper function to accommodate structural singular/plural naming drift
-    const isSlugMatch = (backendSlug: string, frontendSlug: string) => {
-      const cleanB = backendSlug.toLowerCase().trim()
+    // Robust case-insensitive and structural matching helper
+    const isSlugMatch = (backendVal: string, frontendSlug: string) => {
+      const cleanB = backendVal.toLowerCase().trim()
       const cleanF = frontendSlug.toLowerCase().trim()
       return (
         cleanB === cleanF ||
@@ -53,13 +59,13 @@ export default function ProductPickerModal({
       )
     }
 
-    // Scenario A: Relation is fully populated as an object
+    // Handle fully populated Payload category objects
     if (typeof prodCategory === 'object' && prodCategory !== null) {
       const bSlug = prodCategory.slug || prodCategory.id || ''
       return isSlugMatch(String(bSlug), targetSlug)
     }
 
-    // Scenario B: Relation is an unpopulated string ID or direct literal fallback string
+    // Handle plain string identifiers / literal fallback data structures
     return isSlugMatch(String(prodCategory), targetSlug)
   })
 
