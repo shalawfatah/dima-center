@@ -6,12 +6,23 @@ import { useLocalStorageState } from '../utils/pc_build_local_storage'
 import { COMPONENT_SLOTS, dict, PcBuilderClientProps } from '@/utils/pc_build_items'
 import Image from 'next/image'
 
+interface GeneralSettingsData {
+  exchangeRate?: number
+  slogan?: string
+  logo?: any
+  email?: string
+  phone?: string
+  address?: string
+  socials?: Array<{ platform: string; url: string }>
+}
+
 export default function PcBuilderClient({
   products,
   user,
   currentLocale,
   isRtl,
-}: PcBuilderClientProps) {
+  generals,
+}: PcBuilderClientProps & { generals?: GeneralSettingsData }) {
   const router = useRouter()
   const [buildName, setBuildName] = useLocalStorageState<string>(
     'pc_build_name',
@@ -25,6 +36,9 @@ export default function PcBuilderClient({
   const [activeModalSlot, setActiveModalSlot] = useState<string | null>(null)
   const [isSaving, setIsSaving] = useState(false)
   const [message, setMessage] = useState({ type: '', text: '' })
+
+  // Extract dynamic exchange rate from Payload Generals config with a fallback metric
+  const dynamicExchangeRate = generals?.exchangeRate ?? 1500
 
   const openModal = (slotKey: string) => setActiveModalSlot(slotKey)
   const closeModal = () => setActiveModalSlot(null)
@@ -72,6 +86,8 @@ export default function PcBuilderClient({
       }
     })
 
+    const t = dict[currentLocale] || dict['en']
+
     try {
       const res = await fetch('/api/pc-builds', {
         method: 'POST',
@@ -100,7 +116,6 @@ export default function PcBuilderClient({
     }
   }
 
-  // 📝 Dynamic UI Client Translation Parser Helper
   const getLocalizedTitle = (product: any): string => {
     if (!product) return ''
 
@@ -139,43 +154,77 @@ export default function PcBuilderClient({
     return rawTitle
   }
 
-  const isRegionalLocale =
-    currentLocale === 'ar' || currentLocale === 'ku' || currentLocale === 'ckb'
+  // Multi-locale string label routing map for dynamic dynamic rendering layout
+  const getExchangeLabel = (): string => {
+    if (currentLocale === 'ckb') return 'کۆی گشتی نرخ (IQD)'
+    if (currentLocale === 'ar') return 'إجمالي السعر (IQD)'
+    return 'Total Price (IQD)'
+  }
 
-  const titleFontFamily = isRegionalLocale
+  const isRegionalLocale = ['ar', 'ku', 'ckb'].includes(currentLocale)
+  const fontFam = isRegionalLocale
     ? '"Rudaw", "Inter", "Noto Sans Arabic", -apple-system, sans-serif'
     : '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
-
-  const generalFontFamily = isRegionalLocale
-    ? '"Rudaw", "Inter", "Noto Sans Arabic", -apple-system, sans-serif'
-    : '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif'
 
   const t = dict[currentLocale] || dict['en']
 
   return (
     <div
-      style={{
-        maxWidth: '1800px',
-        margin: '2rem auto',
-        padding: '0 1.5rem',
-        direction: isRtl ? 'rtl' : 'ltr',
-        textAlign: isRtl ? 'right' : 'left',
-        fontFamily: generalFontFamily,
-      }}
+      className="pc-builder-container"
+      style={
+        {
+          '--font-family': fontFam,
+          direction: isRtl ? 'rtl' : 'ltr',
+          textAlign: isRtl ? 'right' : 'left',
+        } as React.CSSProperties
+      }
     >
       <style>{`
+        .pc-builder-container {
+          max-width: 1800px;
+          margin: 2rem auto;
+          padding: 0 1.5rem;
+          font-family: var(--font-family);
+        }
+        .pc-builder-header {
+          margin-bottom: 2rem;
+          border-bottom: 1px solid #e2e8f0;
+          padding-bottom: 1.5rem;
+        }
+        .pc-builder-title {
+          font-size: 2.25rem;
+          font-weight: 800;
+          margin: 0;
+          color: #000;
+        }
+        .pc-builder-subtitle {
+          color: #64748b;
+          margin-top: 0.5rem;
+        }
+        .pc-builder-alert {
+          padding: 1rem;
+          margin-bottom: 1.5rem;
+          border-radius: 6px;
+          font-weight: 500;
+        }
+        .pc-builder-alert.success {
+          background-color: #dcfce7;
+          color: #15803d;
+        }
+        .pc-builder-alert.error {
+          background-color: #fee2e2;
+          color: #b91c1c;
+        }
         .pc-builder-layout-grid {
           display: grid;
           grid-template-columns: 1fr 380px;
           gap: 2rem;
           align-items: start;
         }
-        .pc-builder-sidebar {
-          position: sticky;
-          top: 2rem;
+        .pc-builder-slots-list {
           display: flex;
           flex-direction: column;
-          gap: 1.5rem;
+          gap: 1rem;
         }
         .pc-builder-component-card {
           border: 1px solid #e2e8f0;
@@ -187,6 +236,266 @@ export default function PcBuilderClient({
           align-items: center;
           cursor: pointer;
           transition: all 0.15s ease-in-out;
+        }
+        .pc-builder-component-card:hover {
+          border-color: #3b82f6 !important;
+        }
+        .pc-builder-card-meta {
+          display: flex;
+          align-items: center;
+          gap: 1rem;
+          flex: 1;
+        }
+        .pc-builder-thumb-box {
+          width: 50px;
+          height: 50px;
+          border-radius: 6px;
+          background: #f1f5f9;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          overflow: hidden;
+          flex-shrink: 0;
+        }
+        .pc-builder-slot-label {
+          font-size: 11px;
+          font-weight: bold;
+          color: #64748b;
+          text-transform: uppercase;
+          display: block;
+        }
+        .pc-builder-chosen-title {
+          margin-top: 0.15rem;
+          font-weight: 600;
+          font-size: 16px;
+          color: #000;
+          display: flex;
+          align-items: center;
+          gap: 8px;
+        }
+        .pc-builder-chosen-price {
+          color: #10b981;
+        }
+        .pc-builder-empty-slot {
+          margin-top: 0.15rem;
+          color: #cbd5e1;
+          font-style: italic;
+          font-size: 14px;
+        }
+        .pc-builder-actions-group {
+          display: flex;
+          gap: 8px;
+        }
+        .pc-builder-btn {
+          padding: 6px 12px;
+          border: none;
+          border-radius: 6px;
+          cursor: pointer;
+          font-size: 13px;
+          font-weight: 500;
+        }
+        .pc-builder-btn.clear {
+          background: #fee2e2;
+          color: #b91c1c;
+        }
+        .pc-builder-btn.action {
+          background: #f1f5f9;
+          color: #334155;
+        }
+        .pc-builder-sidebar {
+          position: sticky;
+          top: 2rem;
+          display: flex;
+          flex-direction: column;
+          gap: 1.5rem;
+        }
+        .pc-builder-summary-card {
+          border: 1px solid #e2e8f0;
+          border-radius: 8px;
+          padding: 1.5rem;
+          background: #fff;
+        }
+        .pc-builder-summary-heading {
+          margin: 0 0 1rem 0;
+          font-size: 18px;
+          font-weight: 700;
+          color: #000;
+        }
+        .pc-builder-field-group {
+          margin-bottom: 1rem;
+        }
+        .pc-builder-input-label {
+          font-size: 12px;
+          color: #94a3b8;
+          display: block;
+          margin-bottom: 4px;
+        }
+        .pc-builder-text-input {
+          width: 100%;
+          padding: 8px;
+          border-radius: 6px;
+          border: 1px solid #cbd5e1;
+          background: #fff;
+          color: #000;
+          font-size: 14px;
+        }
+        .pc-builder-exchange-container {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          background-color: #f3f3f3;
+          border-radius: 6px;
+          padding: 0.75rem 1rem;
+          margin-top: 1rem;
+          margin-bottom: 0.5rem;
+        }
+        .pc-builder-exchange-label {
+          font-size: 14px;
+          color: #000;
+          font-weight: 600;
+        }
+        .pc-builder-exchange-value {
+          font-size: 16px;
+          font-weight: 800;
+          color: #000;
+        }
+        .pc-builder-price-row {
+          display: flex;
+          justify-content: space-between;
+          align-items: baseline;
+          border-top: 1px solid #e2e8f0;
+          padding-top: 1rem;
+          margin-bottom: 1.5rem;
+        }
+        .pc-builder-price-label {
+          font-size: 14px;
+          color: #64748b;
+        }
+        .pc-builder-price-value {
+          font-size: 24px;
+          font-weight: 800;
+          color: #10b981;
+        }
+        .pc-builder-submit-btn {
+          width: 100%;
+          padding: 12px;
+          background: #ffcb6b;
+          color: #000;
+          border: none;
+          border-radius: 6px;
+          font-weight: 600;
+        }
+        .pc-builder-auth-notice {
+          background: #f8fafc;
+          border: 1px solid #e2e8f0;
+          padding: 10px;
+          border-radius: 6px;
+          text-align: center;
+          font-size: 13px;
+          color: #64748b;
+        }
+        .pc-builder-auth-link {
+          color: #3b82f6;
+          font-weight: 600;
+          text-decoration: underline;
+        }
+        .pc-builder-modal-overlay {
+          position: fixed;
+          top: 0; left: 0; right: 0; bottom: 0;
+          background-color: rgba(0, 0, 0, 0.4);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          z-index: 1000;
+          padding: 1rem;
+        }
+        .pc-builder-modal-window {
+          background-color: #fff;
+          border-radius: 12px;
+          width: 100%;
+          max-width: 650px;
+          max-height: 80vh;
+          display: flex;
+          flex-direction: column;
+          overflow: hidden;
+          box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1);
+        }
+        .pc-builder-modal-header {
+          padding: 1.25rem;
+          border-bottom: 1px solid #e2e8f0;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+        }
+        .pc-builder-modal-title {
+          margin: 0;
+          font-size: 18px;
+          font-weight: 700;
+          color: #000;
+        }
+        .pc-builder-modal-close {
+          border: none;
+          background: none;
+          font-size: 20px;
+          cursor: pointer;
+          color: #64748b;
+          font-weight: bold;
+        }
+        .pc-builder-modal-body {
+          padding: 1.25rem;
+          overflow-y: auto;
+          display: flex;
+          flex-direction: column;
+          gap: 10px;
+        }
+        .pc-builder-modal-empty {
+          color: #94a3b8;
+          font-size: 14px;
+          font-style: italic;
+          text-align: center;
+          padding: 2rem 0;
+        }
+        .pc-builder-product-row {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          padding: 12px;
+          background: #f8fafc;
+          border: 1px solid #e2e8f0;
+          border-radius: 8px;
+          cursor: pointer;
+          transition: all 0.15s ease;
+        }
+        .pc-builder-product-row:hover {
+          background-color: #f1f5f9;
+          border-color: #cbd5e1;
+        }
+        .pc-builder-product-info {
+          display: flex;
+          align-items: center;
+          gap: 1rem;
+        }
+        .pc-builder-product-thumb {
+          width: 45px;
+          height: 45px;
+          border-radius: 6px;
+          background: #fff;
+          border: 1px solid #e2e8f0;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          overflow: hidden;
+          flex-shrink: 0;
+        }
+        .pc-builder-product-title {
+          font-weight: 600;
+          color: #1e293b;
+          font-size: 14px;
+        }
+        .pc-builder-product-price {
+          font-weight: 700;
+          color: #10b981;
+          font-size: 15px;
         }
 
         @media (max-width: 992px) {
@@ -204,55 +513,24 @@ export default function PcBuilderClient({
             align-items: flex-start;
             gap: 1rem;
           }
-          .pc-builder-component-card > div:last-child {
+          .pc-builder-actions-group {
             width: 100%;
             justify-content: flex-end;
           }
         }
       `}</style>
 
-      <header
-        style={{ marginBottom: '2rem', borderBottom: '1px solid #e2e8f0', paddingBottom: '1.5rem' }}
-      >
-        <h1
-          style={{
-            fontSize: '2.25rem',
-            fontWeight: '800',
-            margin: 0,
-            color: '#000',
-            fontFamily: titleFontFamily,
-          }}
-        >
-          {t.title}
-        </h1>
-        <p style={{ color: '#64748b', marginTop: '0.5rem', fontFamily: generalFontFamily }}>
-          {t.subtitle}
-        </p>
+      <header className="pc-builder-header">
+        <h1 className="pc-builder-title">{t.title}</h1>
+        <p className="pc-builder-subtitle">{t.subtitle}</p>
       </header>
 
-      {message.text && (
-        <div
-          style={{
-            padding: '1rem',
-            marginBottom: '1.5rem',
-            borderRadius: '6px',
-            backgroundColor: message.type === 'success' ? '#dcfce7' : '#fee2e2',
-            color: message.type === 'success' ? '#15803d' : '#b91c1c',
-            fontWeight: '500',
-            fontFamily: generalFontFamily,
-          }}
-        >
-          {message.text}
-        </div>
-      )}
+      {message.text && <div className={`pc-builder-alert ${message.type}`}>{message.text}</div>}
 
       <div className="pc-builder-layout-grid">
-        {/* LEFT COLUMN: COMPONENTS LIST */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+        <div className="pc-builder-slots-list">
           {COMPONENT_SLOTS.map((slot) => {
             const chosenItem = selections[slot.key]
-
-            // Safe payload fallback handler mapping check
             const itemImageUrl = chosenItem?.featuredImage?.url || chosenItem?.meta?.image?.url
 
             return (
@@ -260,112 +538,49 @@ export default function PcBuilderClient({
                 key={slot.key}
                 onClick={() => openModal(slot.key)}
                 className="pc-builder-component-card"
-                onMouseEnter={(e) => (e.currentTarget.style.borderColor = '#3b82f6')}
-                onMouseLeave={(e) => (e.currentTarget.style.borderColor = '#e2e8f0')}
               >
-                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', flex: 1 }}>
-                  {/* Thumbnail container */}
-                  <div
-                    style={{
-                      width: '50px',
-                      height: '50px',
-                      borderRadius: '6px',
-                      background: '#f1f5f9',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      overflow: 'hidden',
-                      flexShrink: 0,
-                    }}
-                  >
+                <div className="pc-builder-card-meta">
+                  <div className="pc-builder-thumb-box">
                     {itemImageUrl ? (
                       <Image
                         height={100}
                         width={100}
                         src={itemImageUrl}
                         alt={getLocalizedTitle(chosenItem)}
-                        style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                        className="object-cover w-full h-full"
                       />
                     ) : (
-                      // Renders your default categories image path vector assets safely
                       <Image
                         height={50}
                         width={50}
                         src={(slot as any).defaultImage || `/categories/${slot.key}.png`}
                         alt={slot.label}
-                        style={{ width: '80%', height: '80%', objectFit: 'contain', opacity: 0.6 }}
+                        className="object-contain opacity-60 w-4/5 h-4/5"
                       />
                     )}
                   </div>
 
                   <div>
-                    <span
-                      style={{
-                        fontSize: '11px',
-                        fontWeight: 'bold',
-                        color: '#64748b',
-                        textTransform: 'uppercase',
-                        display: 'block',
-                        fontFamily: generalFontFamily,
-                      }}
-                    >
-                      {slot.label}
-                    </span>
+                    <span className="pc-builder-slot-label">{slot.label}</span>
                     {chosenItem ? (
-                      <div
-                        style={{
-                          marginTop: '0.15rem',
-                          fontWeight: '600',
-                          fontSize: '16px',
-                          color: '#000',
-                          fontFamily: generalFontFamily,
-                        }}
-                      >
-                        {getLocalizedTitle(chosenItem)}{' '}
-                        <span
-                          style={{
-                            color: '#10b981',
-                            marginLeft: isRtl ? '0' : '8px',
-                            marginRight: isRtl ? '8px' : '0',
-                          }}
-                        >
-                          ({chosenItem.price} IQD)
-                        </span>
+                      <div className="pc-builder-chosen-title">
+                        {getLocalizedTitle(chosenItem)}
+                        <span className="pc-builder-chosen-price">(${chosenItem.price})</span>
                       </div>
                     ) : (
-                      <div
-                        style={{
-                          marginTop: '0.15rem',
-                          color: '#cbd5e1',
-                          fontStyle: 'italic',
-                          fontSize: '14px',
-                          fontFamily: generalFontFamily,
-                        }}
-                      >
-                        {t.noPart}
-                      </div>
+                      <div className="pc-builder-empty-slot">{t.noPart}</div>
                     )}
                   </div>
                 </div>
 
-                <div style={{ display: 'flex', gap: '8px' }}>
+                <div className="pc-builder-actions-group">
                   {chosenItem && (
                     <button
                       onClick={(e) => {
                         e.stopPropagation()
                         removeComponent(slot.key)
                       }}
-                      style={{
-                        padding: '6px 12px',
-                        background: '#fee2e2',
-                        color: '#b91c1c',
-                        border: 'none',
-                        borderRadius: '6px',
-                        cursor: 'pointer',
-                        fontSize: '13px',
-                        fontWeight: '500',
-                        fontFamily: generalFontFamily,
-                      }}
+                      className="pc-builder-btn clear"
                     >
                       {t.clear}
                     </button>
@@ -375,17 +590,7 @@ export default function PcBuilderClient({
                       e.stopPropagation()
                       openModal(slot.key)
                     }}
-                    style={{
-                      padding: '6px 12px',
-                      background: '#f1f5f9',
-                      color: '#334155',
-                      border: 'none',
-                      borderRadius: '6px',
-                      cursor: 'pointer',
-                      fontSize: '13px',
-                      fontWeight: '500',
-                      fontFamily: generalFontFamily,
-                    }}
+                    className="pc-builder-btn action"
                   >
                     {chosenItem ? t.change : t.choose}
                   </button>
@@ -395,124 +600,49 @@ export default function PcBuilderClient({
           })}
         </div>
 
-        {/* RIGHT COLUMN: STACKED DYNAMIC SUMMARY CONTAINER */}
         <div className="pc-builder-sidebar">
-          <div
-            style={{
-              border: '1px solid #e2e8f0',
-              borderRadius: '8px',
-              padding: '1.5rem',
-              background: '#fff',
-            }}
-          >
-            <h3
-              style={{
-                margin: '0 0 1rem 0',
-                fontSize: '18px',
-                fontWeight: '700',
-                color: '#000',
-                fontFamily: generalFontFamily,
-              }}
-            >
-              {t.summary}
-            </h3>
+          <div className="pc-builder-summary-card">
+            <h3 className="pc-builder-summary-heading">{t.summary}</h3>
 
-            <div style={{ marginBottom: '1rem' }}>
-              <label
-                style={{
-                  fontSize: '12px',
-                  color: '#94a3b8',
-                  display: 'block',
-                  marginBottom: '4px',
-                  fontFamily: generalFontFamily,
-                }}
-              >
-                {t.configName}
-              </label>
+            <div className="pc-builder-field-group">
+              <label className="pc-builder-input-label">{t.configName}</label>
               <input
                 type="text"
                 value={buildName}
                 onChange={(e) => setBuildName(e.target.value)}
-                style={{
-                  width: '100%',
-                  padding: '8px',
-                  borderRadius: '6px',
-                  border: '1px solid #cbd5e1',
-                  background: '#fff',
-                  color: '#000',
-                  fontSize: '14px',
-                  fontFamily: generalFontFamily,
-                }}
+                className="pc-builder-text-input"
               />
             </div>
 
-            <div
-              style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'baseline',
-                borderTop: '1px solid #e2e8f0',
-                paddingTop: '1rem',
-                marginBottom: '1.5rem',
-              }}
-            >
-              <span style={{ fontSize: '14px', color: '#64748b', fontFamily: generalFontFamily }}>
-                {t.totalPrice}
+            {/* Dynamic IQD Exchange Rate Box Boxed Above Total */}
+            <div className="pc-builder-exchange-container">
+              <span className="pc-builder-exchange-label">{getExchangeLabel()}</span>
+              <span className="pc-builder-exchange-value">
+                {(totalPrice * dynamicExchangeRate).toLocaleString()} د.ع
               </span>
-              <span
-                style={{
-                  fontSize: '24px',
-                  fontWeight: '800',
-                  color: '#10b981',
-                  fontFamily: generalFontFamily,
-                }}
-              >
-                {totalPrice} IQD
-              </span>
+            </div>
+
+            <div className="pc-builder-price-row">
+              <span className="pc-builder-price-label">{t.totalPrice}</span>
+              <span className="pc-builder-price-value">${totalPrice.toLocaleString()}</span>
             </div>
 
             {user ? (
               <button
                 onClick={handleSaveBuild}
                 disabled={isSaving || Object.keys(selections).length === 0}
+                className="pc-builder-submit-btn"
                 style={{
-                  width: '100%',
-                  padding: '12px',
-                  background: '#ffcb6b',
-                  color: '#000',
-                  border: 'none',
-                  borderRadius: '6px',
-                  fontWeight: '600',
                   cursor: Object.keys(selections).length === 0 ? 'not-allowed' : 'pointer',
                   opacity: Object.keys(selections).length === 0 || isSaving ? 0.6 : 1,
-                  fontFamily: generalFontFamily,
                 }}
               >
                 {isSaving ? t.saving : t.saveBtn}
               </button>
             ) : (
-              <div
-                style={{
-                  background: '#f8fafc',
-                  border: '1px solid #e2e8f0',
-                  padding: '10px',
-                  borderRadius: '6px',
-                  textAlign: 'center',
-                  fontSize: '13px',
-                  color: '#64748b',
-                  fontFamily: generalFontFamily,
-                }}
-              >
+              <div className="pc-builder-auth-notice">
                 {t.loginPrompt} <br />
-                <a
-                  href={`/${currentLocale}/login`}
-                  style={{
-                    color: '#3b82f6',
-                    fontWeight: '600',
-                    textDecoration: 'underline',
-                    fontFamily: generalFontFamily,
-                  }}
-                >
+                <a href={`/${currentLocale}/login`} className="pc-builder-auth-link">
                   {t.signIn}
                 </a>{' '}
                 {t.saveSuffix}
@@ -522,95 +652,21 @@ export default function PcBuilderClient({
         </div>
       </div>
 
-      {/* OVERLAY SELECTION MODAL WINDOW */}
       {activeModalSlot && currentSlotConfig && (
-        <div
-          style={{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            backgroundColor: 'rgba(0, 0, 0, 0.4)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            zIndex: 1000,
-            padding: '1rem',
-          }}
-          onClick={closeModal}
-        >
-          <div
-            style={{
-              backgroundColor: '#fff',
-              borderRadius: '12px',
-              width: '100%',
-              maxWidth: '650px',
-              maxHeight: '80vh',
-              display: 'flex',
-              flexDirection: 'column',
-              overflow: 'hidden',
-              boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1)',
-            }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            {/* Modal Header */}
-            <div
-              style={{
-                padding: '1.25rem',
-                borderBottom: '1px solid #e2e8f0',
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-              }}
-            >
-              <h3
-                style={{
-                  margin: 0,
-                  fontSize: '18px',
-                  fontWeight: '700',
-                  color: '#000',
-                  fontFamily: generalFontFamily,
-                }}
-              >
+        <div className="pc-builder-modal-overlay" onClick={closeModal}>
+          <div className="pc-builder-modal-window" onClick={(e) => e.stopPropagation()}>
+            <div className="pc-builder-modal-header">
+              <h3 className="pc-builder-modal-title">
                 {t.modalSelectPrefix} {currentSlotConfig.label}
               </h3>
-              <button
-                onClick={closeModal}
-                style={{
-                  background: 'none',
-                  border: 'none',
-                  fontSize: '20px',
-                  cursor: 'pointer',
-                  color: '#64748b',
-                  fontWeight: 'bold',
-                }}
-              >
+              <button onClick={closeModal} className="pc-builder-modal-close">
                 &times;
               </button>
             </div>
 
-            {/* Modal Body */}
-            <div
-              style={{
-                padding: '1.25rem',
-                overflowY: 'auto',
-                display: 'flex',
-                flexDirection: 'column',
-                gap: '10px',
-              }}
-            >
+            <div className="pc-builder-modal-body">
               {filteredProducts.length === 0 ? (
-                <p
-                  style={{
-                    color: '#94a3b8',
-                    fontSize: '14px',
-                    fontStyle: 'italic',
-                    textAlign: 'center',
-                    padding: '2rem 0',
-                    fontFamily: generalFontFamily,
-                  }}
-                >
+                <p className="pc-builder-modal-empty">
                   {t.noItems} "{currentSlotConfig.categorySlug}".
                 </p>
               ) : (
@@ -620,48 +676,17 @@ export default function PcBuilderClient({
                     <div
                       key={prod.id}
                       onClick={() => selectComponent(activeModalSlot, prod)}
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'space-between',
-                        padding: '12px',
-                        background: '#f8fafc',
-                        border: '1px solid #e2e8f0',
-                        borderRadius: '8px',
-                        cursor: 'pointer',
-                        transition: 'all 0.15s ease',
-                      }}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.backgroundColor = '#f1f5f9'
-                        e.currentTarget.style.borderColor = '#cbd5e1'
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.backgroundColor = '#f8fafc'
-                        e.currentTarget.style.borderColor = '#e2e8f0'
-                      }}
+                      className="pc-builder-product-row"
                     >
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                        <div
-                          style={{
-                            width: '45px',
-                            height: '45px',
-                            borderRadius: '6px',
-                            background: '#fff',
-                            border: '1px solid #e2e8f0',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            overflow: 'hidden',
-                            flexShrink: 0,
-                          }}
-                        >
+                      <div className="pc-builder-product-info">
+                        <div className="pc-builder-product-thumb">
                           {modalProductImg ? (
                             <Image
                               src={modalProductImg}
                               height={100}
                               width={100}
                               alt={getLocalizedTitle(prod)}
-                              style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                              className="object-cover w-full h-full"
                             />
                           ) : (
                             <Image
@@ -669,36 +694,13 @@ export default function PcBuilderClient({
                               width={45}
                               src={`/categories/${currentSlotConfig.key}.png`}
                               alt={currentSlotConfig.label}
-                              style={{
-                                width: '80%',
-                                height: '80%',
-                                objectFit: 'contain',
-                                opacity: 0.5,
-                              }}
+                              className="object-contain opacity-50 w-4/5 h-4/5"
                             />
                           )}
                         </div>
-                        <span
-                          style={{
-                            fontWeight: '600',
-                            color: '#1e293b',
-                            fontSize: '14px',
-                            fontFamily: generalFontFamily,
-                          }}
-                        >
-                          {getLocalizedTitle(prod)}
-                        </span>
+                        <span className="pc-builder-product-title">{getLocalizedTitle(prod)}</span>
                       </div>
-                      <span
-                        style={{
-                          fontWeight: '700',
-                          color: '#10b981',
-                          fontSize: '15px',
-                          fontFamily: generalFontFamily,
-                        }}
-                      >
-                        {prod.price} IQD
-                      </span>
+                      <span className="pc-builder-product-price">${prod.price}</span>
                     </div>
                   )
                 })

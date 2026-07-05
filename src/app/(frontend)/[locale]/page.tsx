@@ -176,7 +176,7 @@ export default async function StorefrontHome({ params, searchParams }: PageProps
                         {product.title}
                       </h3>
                       <div style={{ fontSize: '1.2rem', fontWeight: '800', color: '#000' }}>
-                        {product.price} IQD
+                        ${product.price}
                       </div>
                     </div>
                   </Link>

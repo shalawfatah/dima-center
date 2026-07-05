@@ -22,7 +22,7 @@ export default function Languages({ currentLocale }: LanguagesProps) {
   }, [])
 
   const languages = [
-    { code: 'ckb', label: 'کوردی', flag: '☀️' },
+    { code: 'ckb', label: 'کوردی', flag: '🇹🇯' },
     { code: 'ar', label: 'العربية', flag: '🇮🇶' },
     { code: 'en', label: 'English', flag: '🇬🇧' },
   ]

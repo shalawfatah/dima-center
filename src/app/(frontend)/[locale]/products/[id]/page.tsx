@@ -17,13 +17,87 @@ interface ProductPageProps {
   }>
 }
 
-export async function generateMetadata({
-  params,
-}: {
-  params: Promise<{ locale: string }>
-}): Promise<Metadata> {
+// 🎯 DYNAMIC PRODUCT METADATA
+export async function generateMetadata({ params }: ProductPageProps): Promise<Metadata> {
   const resolvedParams = await params
-  return getStorefrontMetadata({ locale: resolvedParams.locale })
+  const currentLocale = resolvedParams.locale || 'en'
+  const productId = resolvedParams.id
+
+  // 1. Grab baseline SEO settings (site name, canonical structures, etc.)
+  const baseMeta = await getStorefrontMetadata({ locale: currentLocale })
+
+  try {
+    const payload = await getPayload({ config })
+
+    // 2. Fetch the specific product for its localized metadata fields
+    const product = await payload.findByID({
+      collection: 'products',
+      id: productId,
+      locale: currentLocale as 'en' | 'ar' | 'ckb',
+    })
+
+    if (!product) return baseMeta
+
+    const title = product.title || ''
+    const description = typeof product.description === 'string' ? product.description : ''
+
+    // Extract image URL if it's populated cleanly
+    const imageUrl =
+      product.featuredImage && typeof product.featuredImage === 'object'
+        ? (product.featuredImage as any).url
+        : undefined
+
+    // 🎯 FIX: Cast baseMeta.title safely to bypass internal missing type definitions
+    const titleValue = baseMeta?.title as any
+    const baseSiteTitle =
+      titleValue && typeof titleValue === 'object'
+        ? titleValue.absolute || titleValue.default
+        : typeof titleValue === 'string'
+          ? titleValue
+          : 'Storefront'
+
+    return {
+      ...baseMeta,
+      title: `${title} | ${baseSiteTitle}`,
+      description: description || baseMeta.description,
+      openGraph: {
+        ...baseMeta?.openGraph,
+        title,
+        description,
+        type: 'video.other', // Standard for product item pages
+        ...(imageUrl && {
+          images: [
+            {
+              url: imageUrl,
+              width: 800,
+              height: 800,
+              alt: title,
+            },
+          ],
+        }),
+      },
+    }
+  } catch (error) {
+    // Graceful fallback to default localization structure if Document lookup errors out
+    return baseMeta
+  }
+}
+
+// 🌐 Formatting Helper for clean currency presentation
+function formatCurrency(amount: number, locale: string, isIqd = false) {
+  if (isIqd) {
+    const formattedNumber = new Intl.NumberFormat('en-US').format(Math.round(amount))
+    const suffix = locale === 'en' ? 'IQD' : 'د.ع'
+    // For RTL layouts, placing suffix explicitly handles font rendering nicely
+    return `${formattedNumber} ${suffix}`
+  }
+
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'USD',
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 2,
+  }).format(amount)
 }
 
 export default async function ProductDetailPage({ params }: ProductPageProps) {
@@ -31,6 +105,17 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
   const currentLocale = resolvedParams.locale || 'en'
   const productId = resolvedParams.id
   const payload = await getPayload({ config })
+
+  // 1. Fetch Global Settings for the Active Exchange Rate
+  let settings
+  try {
+    settings = await payload.findGlobal({
+      slug: 'general-settings',
+    })
+  } catch (err) {
+    console.error('Failed fetching general settings config', err)
+  }
+  const exchangeRate = settings?.exchangeRate || 1500
 
   let product
   try {
@@ -68,7 +153,6 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
       ? (product.featuredImage as any).url
       : null
 
-  // 🎯 FIX: Sanitize hasDiscount type to get rid of 'null' conflict
   const mainPriceSpecs = calculateProductPrice({
     ...product,
     hasDiscount: product.hasDiscount ?? false,
@@ -78,6 +162,10 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
     product.category && typeof product.category === 'object'
       ? (product.category as any).title || (product.category as any).name
       : ''
+
+  // 2. Calculate runtime values based on final pricing nodes
+  const usdPriceNum = Number(mainPriceSpecs.finalPrice)
+  const iqdPriceNum = usdPriceNum * exchangeRate
 
   return (
     <div
@@ -342,7 +430,7 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
                     style={{
                       display: 'flex',
                       justifyContent: 'space-between',
-                      alignItems: 'baseline',
+                      alignItems: 'center',
                       borderTop: '1px solid #f0f0f0',
                       paddingTop: '1.5rem',
                     }}
@@ -363,8 +451,29 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
                     </span>
 
                     <div
-                      style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}
+                      style={{
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'flex-end',
+                        gap: '4px',
+                      }}
                     >
+                      {/* ⚡ NEW: IQD Localized Pricing Container */}
+                      <div
+                        style={{
+                          backgroundColor: '#F3F3F3',
+                          color: '#334155',
+                          padding: '4px 10px',
+                          borderRadius: '6px',
+                          fontSize: '15px',
+                          fontWeight: '700',
+                          fontFamily: isRtl ? '"Rudaw", sans-serif' : 'inherit',
+                        }}
+                      >
+                        {formatCurrency(iqdPriceNum, currentLocale, true)}
+                      </div>
+
+                      {/* USD Normal Pricing Rows */}
                       {mainPriceSpecs.isDiscounted ? (
                         <>
                           <span
@@ -375,17 +484,17 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
                               fontWeight: '500',
                             }}
                           >
-                            ${mainPriceSpecs.originalPrice}
+                            {formatCurrency(Number(mainPriceSpecs.originalPrice), currentLocale)}
                           </span>
                           <span
                             style={{ fontSize: '2.25rem', fontWeight: '800', color: '#ef4444' }}
                           >
-                            ${mainPriceSpecs.finalPrice}
+                            {formatCurrency(usdPriceNum, currentLocale)}
                           </span>
                         </>
                       ) : (
                         <span style={{ fontSize: '2.25rem', fontWeight: '800', color: '#000' }}>
-                          ${mainPriceSpecs.originalPrice}
+                          {formatCurrency(usdPriceNum, currentLocale)}
                         </span>
                       )}
                     </div>
@@ -393,7 +502,7 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
 
                   <ProductBuyActions
                     product={product}
-                    finalPrice={Number(mainPriceSpecs.finalPrice)}
+                    finalPrice={usdPriceNum}
                     originalPrice={Number(mainPriceSpecs.originalPrice)}
                     isDiscounted={mainPriceSpecs.isDiscounted}
                     currentLocale={currentLocale}
@@ -406,7 +515,6 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
 
         {/* RELATED RECOMMENDATIONS FOOTER */}
         <div style={{ marginTop: '6rem', borderTop: '1px solid #eee', paddingTop: '3rem' }}>
-          {/* ... related header section ... */}
           <h3
             style={{
               fontFamily: '"Rudaw", sans-serif',
@@ -431,11 +539,13 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
                 const itemImgObj = item.featuredImage && typeof item.featuredImage === 'object'
                 const itemImgUrl = itemImgObj ? (item.featuredImage as any).url : null
 
-                // 🎯 FIX: Sanitize here too to ensure related list doesn't trigger the same build error
                 const relatedPriceSpecs = calculateProductPrice({
                   ...item,
                   hasDiscount: item.hasDiscount ?? false,
                 } as any)
+
+                const itemUsdPrice = Number(relatedPriceSpecs.finalPrice)
+                const itemIqdPrice = itemUsdPrice * exchangeRate
 
                 return (
                   <Link
@@ -519,29 +629,38 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
                         {item.title}
                       </h4>
 
-                      <div style={{ display: 'flex', gap: '8px', alignItems: 'baseline' }}>
-                        {relatedPriceSpecs.isDiscounted ? (
-                          <>
-                            <span
-                              style={{ fontWeight: 'bold', fontSize: '16px', color: '#ef4444' }}
-                            >
-                              ${relatedPriceSpecs.finalPrice}
+                      {/* Related Items Clean Price Display */}
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                        <span style={{ fontSize: '12px', color: '#64748b', fontWeight: '600' }}>
+                          {formatCurrency(itemIqdPrice, currentLocale, true)}
+                        </span>
+                        <div style={{ display: 'flex', gap: '8px', alignItems: 'baseline' }}>
+                          {relatedPriceSpecs.isDiscounted ? (
+                            <>
+                              <span
+                                style={{ fontWeight: 'bold', fontSize: '15px', color: '#ef4444' }}
+                              >
+                                {formatCurrency(itemUsdPrice, currentLocale)}
+                              </span>
+                              <span
+                                style={{
+                                  fontSize: '11px',
+                                  textDecoration: 'line-through',
+                                  color: '#94a3b8',
+                                }}
+                              >
+                                {formatCurrency(
+                                  Number(relatedPriceSpecs.originalPrice),
+                                  currentLocale,
+                                )}
+                              </span>
+                            </>
+                          ) : (
+                            <span style={{ fontWeight: 'bold', fontSize: '15px' }}>
+                              {formatCurrency(itemUsdPrice, currentLocale)}
                             </span>
-                            <span
-                              style={{
-                                fontSize: '12px',
-                                textDecoration: 'line-through',
-                                color: '#94a3b8',
-                              }}
-                            >
-                              ${relatedPriceSpecs.originalPrice}
-                            </span>
-                          </>
-                        ) : (
-                          <span style={{ fontWeight: 'bold', fontSize: '16px' }}>
-                            ${relatedPriceSpecs.originalPrice}
-                          </span>
-                        )}
+                          )}
+                        </div>
                       </div>
                     </div>
                   </Link>

@@ -3,25 +3,66 @@ import config from '@/payload.config'
 import { headers } from 'next/headers'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
-import LogoutButton from '@/components/LogoutButton' // Import our client logout button
+import type { Metadata } from 'next'
+import { getStorefrontMetadata } from '@/utils/seo'
+import LogoutButton from '@/components/LogoutButton'
 import { translations } from '@/utils/translations'
 
 interface AccountPageProps {
   params: Promise<{ locale: string }>
 }
 
+// 🎯 DYNAMIC LOCALIZED ACCOUNT DASHBOARD METADATA
+export async function generateMetadata({ params }: AccountPageProps): Promise<Metadata> {
+  const resolvedParams = await params
+  const locale = resolvedParams.locale || 'en'
+
+  // 1. Fetch default base storefront metadata configuration
+  const baseMeta = await getStorefrontMetadata({ locale })
+
+  // 2. Type-safe extraction of the absolute site title string fallback
+  const baseSiteTitle =
+    baseMeta?.title && typeof baseMeta.title === 'object' && 'absolute' in baseMeta.title
+      ? baseMeta.title.absolute
+      : typeof baseMeta?.title === 'string'
+        ? baseMeta.title
+        : 'Storefront'
+
+  // 3. Localized titles matching user workspace dashboard headers
+  const titles: Record<string, string> = {
+    en: 'My Account Dashboard',
+    ar: 'لوحة التحكم بحسابي',
+    ckb: 'داشبۆردی ئەکاونتەکەم',
+  }
+
+  const finalTitle = titles[locale] || titles.en
+
+  return {
+    ...baseMeta,
+    title: `${finalTitle} | ${baseSiteTitle}`,
+    robots: {
+      index: false, // Security Guardrail: Explicitly prevent user profile layouts from entering public indexing matrix
+      follow: false,
+    },
+    openGraph: {
+      ...baseMeta?.openGraph,
+      title: finalTitle,
+    },
+  }
+}
+
 export default async function AccountPage({ params }: AccountPageProps) {
   const { locale } = await params
   const payload = await getPayload({ config })
 
-  // Secure server-side identity check
+  // Secure server-side identity check execution
   const { user } = await payload.auth({ headers: await headers() })
 
   if (!user) {
     redirect(`/${locale}/login`)
   }
 
-  // Parallel fetch orders & builds matching the specific user's ID
+  // Parallel fetch orders & builds matching the specific user's verified identity ID
   const [ordersData, buildsData] = await Promise.all([
     payload.find({
       collection: 'orders',
@@ -40,6 +81,13 @@ export default async function AccountPage({ params }: AccountPageProps) {
   const isRtl = locale === 'ar' || locale === 'ckb'
 
   const t = translations[locale as 'en' | 'ar' | 'ckb'] || translations.en
+
+  // Local region font typography sets matching the UI stack
+  const isRegionalLocale = locale === 'ar' || locale === 'ckb'
+  const appFont = isRegionalLocale
+    ? '"Rudaw", "Inter", "Noto Sans Arabic", sans-serif'
+    : 'system-ui, -apple-system, sans-serif'
+
   return (
     <div
       style={{
@@ -48,6 +96,7 @@ export default async function AccountPage({ params }: AccountPageProps) {
         padding: '0 1.5rem',
         textAlign: isRtl ? 'right' : 'left',
         direction: isRtl ? 'rtl' : 'ltr',
+        fontFamily: appFont,
       }}
     >
       <header
@@ -69,7 +118,7 @@ export default async function AccountPage({ params }: AccountPageProps) {
           </p>
         </div>
 
-        {/* Client-Side Safe Logout button avoids standard form NaN exception */}
+        {/* Client-Side Safe Logout button avoids standard form structural exception anomalies */}
         <LogoutButton label={t.logout} locale={locale} />
       </header>
 
@@ -111,7 +160,6 @@ export default async function AccountPage({ params }: AccountPageProps) {
                   <tr key={order.id} style={{ borderBottom: '1px solid #e2e8f0' }}>
                     <td style={{ padding: '14px 16px', fontWeight: '600' }}>
                       <span style={{ color: '#334155' }}>#{String(order.id).slice(-6)}</span>
-                      {/* Sub-item display row directly below ID to keep things working out-of-the-box */}
                       {order.items && order.items.length > 0 && (
                         <div
                           style={{
@@ -134,7 +182,7 @@ export default async function AccountPage({ params }: AccountPageProps) {
                         locale === 'en' ? 'en-US' : 'en-GB',
                       )}
                     </td>
-                    <td style={{ padding: '14px 16px', fontWeight: '600' }}>{order.total} IQD</td>
+                    <td style={{ padding: '14px 16px', fontWeight: '600' }}>${order.total}</td>
                     <td style={{ padding: '14px 16px' }}>
                       <span
                         style={{
@@ -197,7 +245,6 @@ export default async function AccountPage({ params }: AccountPageProps) {
                     Configured on: {new Date(build.createdAt).toLocaleDateString()}
                   </p>
                 </div>
-                {/* Redirects directly to pc-builder workspace route */}
                 <Link
                   href={`/${locale}/pc-builder?load=${build.id}`}
                   style={{

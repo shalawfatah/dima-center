@@ -216,15 +216,15 @@ export function CartProvider({
                               fontWeight: '500',
                             }}
                           >
-                            {activeCheckoutItem.originalPrice} IQD
+                            ${activeCheckoutItem.originalPrice}
                           </span>
                           <span style={{ fontWeight: '800', color: '#ef4444', fontSize: '16px' }}>
-                            {activeCheckoutItem.price} IQD
+                            ${activeCheckoutItem.price}
                           </span>
                         </>
                       ) : (
                         <span style={{ fontWeight: '700', color: '#0f172a', fontSize: '16px' }}>
-                          {activeCheckoutItem.price} IQD
+                          ${activeCheckoutItem.price}
                         </span>
                       )}
                     </div>
@@ -331,7 +331,7 @@ export function CartProvider({
                 >
                   {isSubmitting
                     ? 'Processing Ledger Records...'
-                    : `Confirm & Submit Order (${activeCheckoutItem.price} IQD)`}
+                    : `Confirm & Submit Order (${activeCheckoutItem.price})`}
                 </button>
               </div>
             )}

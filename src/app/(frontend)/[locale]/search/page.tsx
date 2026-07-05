@@ -6,18 +6,55 @@ import Image from 'next/image'
 import type { Metadata } from 'next'
 import { getStorefrontMetadata } from '@/utils/seo'
 
-interface PageProps {
-  params: Promise<{ locale: string }>
-  searchParams: Promise<{ category?: string; [key: string]: any }>
-}
-
-export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
-  const resolvedParams = await params
-  return getStorefrontMetadata({ locale: resolvedParams.locale })
-}
 interface SearchPageProps {
   params: Promise<{ locale: string }>
-  searchParams: Promise<{ q?: string }>
+  searchParams: Promise<{ q?: string; [key: string]: any }>
+}
+
+// 🎯 DYNAMIC SEARCH METADATA
+export async function generateMetadata({
+  params,
+  searchParams,
+}: SearchPageProps): Promise<Metadata> {
+  const [resolvedParams, resolvedSearchParams] = await Promise.all([params, searchParams])
+
+  const locale = resolvedParams.locale || 'en'
+  const query = resolvedSearchParams.q?.trim() || ''
+
+  // 1. Fetch fallback baseline defaults (e.g., site name, openGraph configuration base)
+  const baseMeta = await getStorefrontMetadata({ locale })
+
+  // 2. Localized templates for search titles/descriptions
+  const titles: Record<string, string> = {
+    en: query ? `Search results for "${query}"` : 'Search Products',
+    ar: query ? `نتائج البحث عن "${query}"` : 'البحث عن المنتجات',
+    ckb: query ? `ئەنجامەکانی گەڕان بۆ "${query}"` : 'گەڕان بۆ بەرهەمەکان',
+  }
+
+  const descriptions: Record<string, string> = {
+    en: `Browse results matching "${query}" on our marketplace.`,
+    ar: `تصفح النتائج المطابقة لـ "${query}" في متجرنا.`,
+    ckb: `سەیری ئەو ئەنجامانە بکە کە دەطابن لەگەڵ "${query}" لە کۆگاکەماندا.`,
+  }
+
+  const finalTitle = titles[locale] || titles.en
+  const finalDescription = descriptions[locale] || descriptions.en
+
+  return {
+    ...baseMeta,
+    title: finalTitle,
+    description: finalDescription,
+    // Ensure search results don't clutter public Google index pipelines
+    robots: {
+      index: false,
+      follow: true,
+    },
+    openGraph: {
+      ...baseMeta?.openGraph,
+      title: finalTitle,
+      description: finalDescription,
+    },
+  }
 }
 
 export default async function SearchResultsPage({ params, searchParams }: SearchPageProps) {
@@ -250,7 +287,7 @@ export default async function SearchResultsPage({ params, searchParams }: Search
 
                     <div style={{ textAlign: isRtl ? 'left' : 'right', flexShrink: 0 }}>
                       <div style={{ fontSize: '1.4rem', fontWeight: '800', color: '#000' }}>
-                        {product.price} IQD
+                        ${product.price}
                       </div>
                       <span
                         style={{
