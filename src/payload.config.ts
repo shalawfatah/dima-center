@@ -9,9 +9,9 @@ import { lexicalEditor } from '@payloadcms/richtext-lexical'
 import path from 'path'
 import { buildConfig } from 'payload'
 import { fileURLToPath } from 'url'
-
 import { Products } from './collections/Products'
 import { Users } from './collections/Users'
+import { GeneralSettings } from './globals/GeneralSettings'
 
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
@@ -22,6 +22,7 @@ export default buildConfig({
     disable: false,
   },
   collections: [Users, Products, Orders, Media, Categories, Promotions, PCBuilds],
+  globals: [GeneralSettings],
   editor: lexicalEditor({}),
   secret: process.env.PAYLOAD_SECRET || 'fallback-secret-for-vercel-build-phase',
   typescript: {

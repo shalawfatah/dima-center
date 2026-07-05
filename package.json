@@ -6,6 +6,7 @@
   "type": "module",
   "scripts": {
     "build": "cross-env NODE_OPTIONS=\"--no-deprecation --max-old-space-size=8000\" next build",
+    "postbuild": "payload migrate",
     "dev": "cross-env NODE_OPTIONS=--no-deprecation next dev",
     "devsafe": "rm -rf .next && cross-env NODE_OPTIONS=--no-deprecation next dev",
     "generate:importmap": "cross-env NODE_OPTIONS=--no-deprecation payload generate:importmap",
@@ -25,6 +26,7 @@
     "@payloadcms/storage-s3": "^3.85.1",
     "@payloadcms/ui": "3.85.1",
     "cross-env": "^7.0.3",
+    "csv-parser": "^3.2.1",
     "dotenv": "16.4.7",
     "embla-carousel-autoplay": "^8.6.0",
     "embla-carousel-class-names": "^8.6.0",

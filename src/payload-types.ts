@@ -97,8 +97,12 @@ export interface Config {
     defaultIDType: number;
   };
   fallbackLocale: ('false' | 'none' | 'null') | false | null | ('ckb' | 'en' | 'ar') | ('ckb' | 'en' | 'ar')[];
-  globals: {};
-  globalsSelect: {};
+  globals: {
+    'general-settings': GeneralSetting;
+  };
+  globalsSelect: {
+    'general-settings': GeneralSettingsSelect<false> | GeneralSettingsSelect<true>;
+  };
   locale: 'ckb' | 'en' | 'ar';
   widgets: {
     collections: CollectionsWidget;
@@ -546,6 +550,53 @@ export interface PayloadMigrationsSelect<T extends boolean = true> {
   batch?: T;
   updatedAt?: T;
   createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "general-settings".
+ */
+export interface GeneralSetting {
+  id: number;
+  slogan?: string | null;
+  logo?: (number | null) | Media;
+  /**
+   * Used across the system to calculate IQD pricing dynamically.
+   */
+  exchangeRate: number;
+  email?: string | null;
+  phone?: string | null;
+  address?: string | null;
+  socials?:
+    | {
+        platform: 'facebook' | 'instagram' | 'tiktok' | 'whatsapp' | 'linkedin';
+        url: string;
+        id?: string | null;
+      }[]
+    | null;
+  updatedAt?: string | null;
+  createdAt?: string | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "general-settings_select".
+ */
+export interface GeneralSettingsSelect<T extends boolean = true> {
+  slogan?: T;
+  logo?: T;
+  exchangeRate?: T;
+  email?: T;
+  phone?: T;
+  address?: T;
+  socials?:
+    | T
+    | {
+        platform?: T;
+        url?: T;
+        id?: T;
+      };
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
