@@ -3,7 +3,7 @@
 import Image from 'next/image'
 import Link from 'next/link'
 import { COMPONENT_SLOTS } from '@/utils/pc_build_items'
-import styles from './PcBuilder.module.css'
+import styles from '@/styles/pc_builder.module.css'
 
 interface ModalLabels {
   modalSelectPrefix: string

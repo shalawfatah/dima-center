@@ -19,15 +19,15 @@ export const COMPONENT_SLOTS = [
   },
   { key: 'ram', label: 'Memory (RAM)', categorySlug: 'ram', defaultImage: '/categories/ram.png' },
   {
-    key: 'storage',
+    key: 'm-2',
     label: 'Storage (SSD/HDD)',
-    categorySlug: 'storage',
-    defaultImage: '/categories/storage.png',
+    categorySlug: 'm-2',
+    defaultImage: '/categories/m2.png',
   },
   {
     key: 'psu',
     label: 'Power Supply (PSU)',
-    categorySlug: 'power-supply',
+    categorySlug: 'psu',
     defaultImage: '/categories/psu.png',
   },
   {
@@ -40,6 +40,12 @@ export const COMPONENT_SLOTS = [
     key: 'cooler',
     label: 'CPU Cooler',
     categorySlug: 'cooler',
+    defaultImage: '/categories/cooler.png',
+  },
+  {
+    key: 'fan',
+    label: 'Case Fan',
+    categorySlug: 'fan',
     defaultImage: '/categories/fan.png',
   },
 ]

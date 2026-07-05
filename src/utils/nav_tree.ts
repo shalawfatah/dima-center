@@ -9,7 +9,8 @@ export const navTree = [
       { slug: 'case', en: 'Case', ar: 'الكيسات', ckb: 'کەیس' },
       { slug: 'psu', en: 'PSU / Power Supply', ar: 'مزود الطاقة', ckb: 'پاوەر سەپڵای' },
       { slug: 'motherboard', en: 'Motherboard', ar: 'اللوحات الأم', ckb: 'مەزەربۆرد' },
-      { slug: 'case-fan', en: 'Case Fan', ar: 'مراوح التبريد', ckb: 'پان' },
+      { slug: 'fan', en: 'Case Fan', ar: 'مراوح التبريد', ckb: 'پانکەی کەیس' },
+      { slug: 'cooler', en: 'CPU Cooler', ar: 'مبرد المعالج', ckb: 'پانکەی پرۆسێسەر' },
     ],
   },
   {

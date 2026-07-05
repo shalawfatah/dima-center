@@ -6,9 +6,9 @@ import { useLocalStorageState } from '../utils/pc_build_local_storage'
 import { COMPONENT_SLOTS, dict, PcBuilderClientProps } from '@/utils/pc_build_items'
 import Image from 'next/image'
 import { fallbackCatalog } from '@/utils/fallback_catalog'
-import styles from './PcBuilder.module.css'
 import { GeneralSettingsData } from '@/types/types'
 import ProductPickerModal from './ProductPickerModal'
+import styles from '@/styles/pc_builder.module.css'
 
 export default function PcBuilderClient({
   products,
