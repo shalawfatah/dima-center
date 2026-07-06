@@ -3,15 +3,26 @@
 import React, { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { navTree } from '@/utils/nav_tree'
 import { getNavbarStyles } from '@/styles/navbar_styles'
+
+// Shape definition representing Payload database collection structure
+interface CategoryItem {
+  id: string | number
+  title: string
+  slug: string
+}
 
 interface NavbarProps {
   currentLocale?: string
   activeCategory?: string | null
+  categories?: CategoryItem[] // 🔥 Swapped out navTree for dynamic database categories array
 }
 
-export default function Navbar({ currentLocale: initialLocale, activeCategory }: NavbarProps) {
+export default function Navbar({
+  currentLocale: initialLocale,
+  activeCategory,
+  categories = [],
+}: NavbarProps) {
   const pathname = usePathname()
   const [cartCount, setCartCount] = useState<number>(0)
   const [isOpen, setIsOpen] = useState<boolean>(false)
@@ -73,14 +84,18 @@ export default function Navbar({ currentLocale: initialLocale, activeCategory }:
         .cart-wrapper {
           order: 2 !important;
         }
+        /* 🎯 FIXED DROPDOWN HEIGHT & BOX OVERFLOW SCREEN BOUNDS */
         .nav-links {
           display: ${isOpen ? 'flex !important' : 'none !important'};
           flex-direction: column !important;
           position: absolute !important;
           top: 100% !important;
-          left: 0 !important;
+          left: ${isRtl ? 'auto !important' : '0 !important'};
+          right: ${isRtl ? '0 !important' : 'auto !important'};
           background: #fff !important;
           width: 260px !important;
+          max-height: 80vh !important; /* Forces dropdown bounds onto limited vertical screens */
+          overflow-y: auto !important; /* Generates fluid vertical browsing matrix */
           border: 1px solid #eaeaea !important;
           box-shadow: 0 8px 16px rgba(0,0,0,0.1) !important;
           padding: 1rem !important;
@@ -176,50 +191,40 @@ export default function Navbar({ currentLocale: initialLocale, activeCategory }:
           </Link>
         </div>
 
-        {/* Dropdown Items Navigation Menu Links */}
+        {/* Dynamic DB Category Listing Mapping */}
         <div className="nav-links">
-          {navTree.map((group, index) => {
-            const parentLabel =
-              currentLocale === 'ar'
-                ? group.parent.ar
+          <div className="nav-dropdown">
+            <button className="dropdown-trigger">
+              {currentLocale === 'ar'
+                ? 'الأقسام'
                 : currentLocale === 'ckb'
-                  ? group.parent.ckb
-                  : group.parent.en
+                  ? 'هاوپۆلەکان'
+                  : 'Categories'}{' '}
+              ▾
+            </button>
+            <div className="dropdown-content">
+              {categories.map((category) => {
+                const isActive = activeCategory === category.slug
 
-            return (
-              <div key={index} className="nav-dropdown">
-                <button className="dropdown-trigger">{parentLabel} ▾</button>
-                <div className="dropdown-content">
-                  {group.children.map((child) => {
-                    const childLabel =
-                      currentLocale === 'ar'
-                        ? child.ar
-                        : currentLocale === 'ckb'
-                          ? child.ckb
-                          : child.en
-
-                    const isActive = activeCategory === child.slug
-
-                    return (
-                      <Link
-                        key={child.slug}
-                        href={`/${currentLocale}?category=${child.slug}`}
-                        onClick={() => setIsOpen(false)}
-                        style={{
-                          color: isActive ? '#0070f3' : '#555',
-                          fontWeight: isActive ? '700' : undefined,
-                          textDecoration: 'none',
-                          fontSize: '14px',
-                        }}
-                      >
-                        {childLabel}
-                      </Link>
-                    )
-                  })}
-                </div>
-              </div>
-            )
-          })}
+                return (
+                  <Link
+                    key={category.id || category.slug}
+                    href={`/${currentLocale}?category=${category.slug}`}
+                    onClick={() => setIsOpen(false)}
+                    style={{
+                      color: isActive ? '#0070f3' : '#555',
+                      fontWeight: isActive ? '700' : undefined,
+                      textDecoration: 'none',
+                      fontSize: '14px',
+                      padding: '4px 0',
+                    }}
+                  >
+                    {category.title}
+                  </Link>
+                )
+              })}
+            </div>
+          </div>
         </div>
       </div>
     </>
