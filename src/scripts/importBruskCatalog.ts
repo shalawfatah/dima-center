@@ -21,6 +21,19 @@ interface ExternalItem {
   description?: string
 }
 
+interface ExternalInventory {
+  _id: string
+  name: string
+}
+
+interface ExternalStock {
+  _id: string
+  name: string
+  code?: string
+  barcode?: string
+  totalQuantity: number
+}
+
 function slugify(text: string): string {
   return text
     .toString()
@@ -102,6 +115,57 @@ export async function executeDifferentialSync() {
   }
 
   // =================================================================
+  // 1b. FETCH REAL STOCK LEVELS (the /items endpoint's "quantity" field
+  // is unreliable/often absent — actual stock lives in the Stocks system,
+  // scoped by inventoryId. We fetch every inventory for this branch and
+  // sum totalQuantity per barcode across all of them.)
+  // =================================================================
+  payload.logger.info('📦 Fetching inventories and real stock levels...')
+  const stockByBarcode: Record<string, number> = {}
+
+  try {
+    const invRes = await fetch(
+      `${BASE_URL}${PREFIX}/inventories?branchId=${BRANCH_ID}&t=${timestamp}`,
+      { method: 'GET', headers: requestHeaders, cache: 'no-store' },
+    )
+
+    if (invRes.ok) {
+      const invData = await invRes.json()
+      const inventories: ExternalInventory[] = invData.inventories || []
+      payload.logger.info(`Found ${inventories.length} inventories to pull stock from.`)
+
+      for (const inv of inventories) {
+        const stockRes = await fetch(
+          `${BASE_URL}${PREFIX}/stocks?inventoryId=${inv._id}&t=${timestamp}`,
+          { method: 'GET', headers: requestHeaders, cache: 'no-store' },
+        )
+
+        if (!stockRes.ok) {
+          payload.logger.info(`⚠️ Could not fetch stocks for inventory ${inv.name} (${inv._id})`)
+          continue
+        }
+
+        const stockData = await stockRes.json()
+        const stocks: ExternalStock[] = stockData.stocks || []
+
+        for (const s of stocks) {
+          const barcode = (s.barcode || s.code || '').trim()
+          if (!barcode) continue
+          stockByBarcode[barcode] = (stockByBarcode[barcode] || 0) + (s.totalQuantity || 0)
+        }
+      }
+
+      payload.logger.info(
+        `Aggregated stock for ${Object.keys(stockByBarcode).length} distinct barcodes.`,
+      )
+    } else {
+      payload.logger.info('⚠️ Could not fetch inventories — falling back to items[].quantity.')
+    }
+  } catch (stockErr) {
+    console.error('⚠️ Stock fetch failed, falling back to items[].quantity:', stockErr)
+  }
+
+  // =================================================================
   // 2. FETCH & SYNC PRODUCTS (Cache Busted)
   // =================================================================
   payload.logger.info('📡 Fetching active Bruska catalog snapshot...')
@@ -157,7 +221,12 @@ export async function executeDifferentialSync() {
         barcode: item.barcode || '',
         code: item._id,
         price: item.price || 0,
-        stock: item.quantity !== undefined ? item.quantity : 0,
+        stock:
+          (item.barcode && stockByBarcode[item.barcode.trim()] !== undefined
+            ? stockByBarcode[item.barcode.trim()]
+            : undefined) ??
+          item.quantity ??
+          0,
         description: item.description || '',
         brand: item.brand || '',
         condition: 'new' as const,
