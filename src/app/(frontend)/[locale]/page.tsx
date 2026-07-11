@@ -13,7 +13,7 @@ interface PageProps {
 }
 
 import type { Metadata } from 'next'
-import { CATEGORY_MAP } from '@/utils/categories' // Removed MAIN_CATEGORIES completely
+import { CATEGORY_MAP } from '@/utils/categories'
 import { getStorefrontMetadata } from '@/utils/seo'
 import Image from 'next/image'
 import PCBuilderSection from '@/components/PCBuilderSection'
@@ -34,15 +34,12 @@ export default async function StorefrontHome({ params, searchParams }: PageProps
 
   const activeCategory = resolvedSearchParams.category || ''
   const isRtl = currentLocale === 'ar' || currentLocale === 'ckb'
+  const dirClass = isRtl ? styles.rtl : styles.ltr
 
   const payload = await getPayload({ config })
 
-  // Extract master locale reference arrays for looking up names vs slugs
   const englishCategoriesList = CATEGORY_MAP['en']
 
-  // -----------------------------------------------------------------
-  // CONDITION A: IF A CATEGORY IS CLICKED (Show clean filtered Grid list)
-  // -----------------------------------------------------------------
   if (activeCategory) {
     const matchedCatEn = CATEGORY_MAP.en.find((c) => c.slug === activeCategory)
     const matchedCatAr = CATEGORY_MAP.ar.find((c) => c.slug === activeCategory)
@@ -55,24 +52,9 @@ export default async function StorefrontHome({ params, searchParams }: PageProps
     })
 
     return (
-      <div
-        style={{
-          display: 'flex',
-          flexDirection: 'column',
-          minHeight: '100vh',
-          direction: isRtl ? 'rtl' : 'ltr',
-          backgroundColor: '#fafafa',
-        }}
-      >
-        <main style={{ flex: '1', padding: '2rem max(1.5rem, calc((100% - 1800px)/2))' }}>
-          <div
-            style={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              marginBottom: '1.5rem',
-            }}
-          >
+      <div className={`${styles.pageWrapper} ${styles.pageWrapperFiltered} ${dirClass}`}>
+        <main className={styles.filteredMain}>
+          <div className={styles.filteredHeader}>
             <LocalizedHeading
               currentLocale={currentLocale}
               en={matchedCatEn?.title || 'Products'}
@@ -80,10 +62,7 @@ export default async function StorefrontHome({ params, searchParams }: PageProps
               ckb={matchedCatCkb?.title || 'کاڵاکان'}
               style={{ fontSize: '1.75rem', fontWeight: '700' }}
             />
-            <Link
-              href={`/${currentLocale}`}
-              style={{ fontSize: '14px', color: '#0070f3', textDecoration: 'none' }}
-            >
+            <Link href={`/${currentLocale}`} className={styles.showAllLink}>
               {currentLocale === 'ar'
                 ? '← عرض الكل'
                 : currentLocale === 'ckb'
@@ -93,16 +72,7 @@ export default async function StorefrontHome({ params, searchParams }: PageProps
           </div>
 
           {res.docs.length === 0 ? (
-            <div
-              style={{
-                background: '#fff',
-                padding: '4rem',
-                textAlign: 'center',
-                color: '#666',
-                borderRadius: '12px',
-                border: '1px solid #eef0f2',
-              }}
-            >
+            <div className={styles.emptyState}>
               📦{' '}
               {currentLocale === 'ar'
                 ? 'لا توجد منتجات في هذه الفئة حالياً.'
@@ -111,13 +81,7 @@ export default async function StorefrontHome({ params, searchParams }: PageProps
                   : 'No products found in this category.'}
             </div>
           ) : (
-            <div
-              style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))',
-                gap: '1.5rem',
-              }}
-            >
+            <div className={styles.productGrid}>
               {res.docs.map((product: any) => {
                 const hasImage = product.featuredImage && typeof product.featuredImage === 'object'
                 const imageUrl = hasImage ? (product.featuredImage as any).url : null
@@ -125,58 +89,24 @@ export default async function StorefrontHome({ params, searchParams }: PageProps
                   <Link
                     key={product.id}
                     href={`/${currentLocale}/products/${product.id}`}
-                    style={{ textDecoration: 'none', color: 'inherit' }}
+                    className={styles.productCardLink}
                   >
-                    <div
-                      style={{
-                        background: '#fff',
-                        border: '1px solid #eef0f2',
-                        borderRadius: '12px',
-                        padding: '1rem',
-                        height: '100%',
-                        display: 'flex',
-                        flexDirection: 'column',
-                      }}
-                    >
-                      <div
-                        style={{
-                          width: '100%',
-                          height: '180px',
-                          background: '#f4f6f8',
-                          borderRadius: '8px',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          overflow: 'hidden',
-                          marginBottom: '1rem',
-                        }}
-                      >
+                    <div className={styles.productCard}>
+                      <div className={styles.productImageWrapper}>
                         {imageUrl ? (
                           <Image
                             src={imageUrl}
                             width={200}
                             height={200}
                             alt={product.title}
-                            style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+                            className={styles.productImage}
                           />
                         ) : (
-                          <span style={{ fontSize: '2rem' }}>📦</span>
+                          <span className={styles.productImagePlaceholder}>📦</span>
                         )}
                       </div>
-                      <h3
-                        style={{
-                          fontSize: '1rem',
-                          fontWeight: '600',
-                          margin: '0 0 0.5rem 0',
-                          color: '#000',
-                          flex: 1,
-                        }}
-                      >
-                        {product.title}
-                      </h3>
-                      <div style={{ fontSize: '1.2rem', fontWeight: '800', color: '#000' }}>
-                        ${product.price}
-                      </div>
+                      <h3 className={styles.productTitle}>{product.title}</h3>
+                      <div className={styles.productPrice}>${product.price}</div>
                     </div>
                   </Link>
                 )
@@ -188,9 +118,6 @@ export default async function StorefrontHome({ params, searchParams }: PageProps
     )
   }
 
-  // -----------------------------------------------------------------
-  // CONDITION B: NO FILTERS ACTIVE (Default Storefront Carousels Layout)
-  // -----------------------------------------------------------------
   let productsWithDiscount: any[] = []
   try {
     const fetchedDiscounts = await payload.find({
@@ -261,24 +188,16 @@ export default async function StorefrontHome({ params, searchParams }: PageProps
   }
 
   return (
-    <div
-      style={{
-        display: 'flex',
-        flexDirection: 'column',
-        minHeight: '100vh',
-        direction: isRtl ? 'rtl' : 'ltr',
-        backgroundColor: '#fff',
-      }}
-    >
+    <div className={`${styles.pageWrapper} ${styles.pageWrapperDefault} ${dirClass}`}>
       <CategoryCarousel currentLocale={currentLocale} />
       <div className={styles.promoWrapper}>
         <PromoCarousel currentLocale={currentLocale} />
         <PCBuilderSection currentLocale={currentLocale} isRtl={isRtl} />
       </div>
 
-      <main style={{ flex: '1', paddingBottom: '3rem' }}>
+      <main className={styles.defaultMain}>
         {productsWithDiscount.length > 0 && (
-          <section style={{ padding: '1.5rem max(1.5rem, calc((100% - 1800px)/2)) 0' }}>
+          <section className={styles.sectionFirst}>
             <LocalizedHeading
               currentLocale={currentLocale}
               en="Hot Discounts 🔥"
@@ -297,10 +216,7 @@ export default async function StorefrontHome({ params, searchParams }: PageProps
         {categoriesWithProducts.map((cat) => {
           if (cat.products.length === 0) return null
           return (
-            <section
-              key={cat.slug}
-              style={{ padding: '2rem max(1.5rem, calc((100% - 1800px)/2)) 0' }}
-            >
+            <section key={cat.slug} className={styles.section}>
               <LocalizedHeading
                 currentLocale={currentLocale}
                 en={cat.en}
@@ -318,7 +234,7 @@ export default async function StorefrontHome({ params, searchParams }: PageProps
         })}
 
         {otherProducts.length > 0 && (
-          <section style={{ padding: '2rem max(1.5rem, calc((100% - 1800px)/2)) 0' }}>
+          <section className={styles.section}>
             <LocalizedHeading
               currentLocale={currentLocale}
               en="Other Products"

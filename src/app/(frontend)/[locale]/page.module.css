@@ -3,6 +3,135 @@
   gap: 1rem;
 }
 
+/* Layout wrappers */
+.pageWrapper {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.pageWrapperFiltered {
+  background-color: #fafafa;
+}
+
+.pageWrapperDefault {
+  background-color: #fff;
+}
+
+.ltr {
+  direction: ltr;
+}
+
+.rtl {
+  direction: rtl;
+}
+
+/* Filtered (category) view */
+.filteredMain {
+  flex: 1;
+  padding: 2rem max(1.5rem, calc((100% - 1800px) / 2));
+}
+
+.filteredHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.showAllLink {
+  font-size: 14px;
+  color: #0070f3;
+  text-decoration: none;
+}
+
+.emptyState {
+  background: #fff;
+  padding: 4rem;
+  text-align: center;
+  color: #666;
+  border-radius: 12px;
+  border: 1px solid #eef0f2;
+}
+
+.productGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 1.5rem;
+}
+
+.productCardLink {
+  text-decoration: none;
+  color: inherit;
+}
+
+.productCard {
+  background: #fff;
+  border: 1px solid #eef0f2;
+  border-radius: 12px;
+  padding: 1rem;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.productImageWrapper {
+  width: 100%;
+  height: 180px;
+  background: #f4f6f8;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  margin-bottom: 1rem;
+}
+
+.productImage {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.productImagePlaceholder {
+  font-size: 2rem;
+}
+
+.productTitle {
+  font-size: 1rem;
+  font-weight: 600;
+  margin: 0 0 0.5rem 0;
+  color: #000;
+  flex: 1;
+}
+
+.productPrice {
+  font-size: 1.2rem;
+  font-weight: 800;
+  color: #000;
+}
+
+/* Default (carousel) view */
+/* NOTE: .promoWrapper already exists in your current page.module.css — left untouched */
+
+.defaultMain {
+  flex: 1;
+  padding-bottom: 3rem;
+}
+
+.section {
+  padding: 2rem max(1.5rem, calc((100% - 1800px) / 2)) 0;
+}
+
+.sectionFirst {
+  padding: 1.5rem max(1.5rem, calc((100% - 1800px) / 2)) 0;
+}
+
+.sectionHeading {
+  font-size: 1.4rem;
+  margin-bottom: 0.5rem;
+}
+
 @media (max-width: 1000px) {
   .promoWrapper {
     flex-wrap: 'wrap';
