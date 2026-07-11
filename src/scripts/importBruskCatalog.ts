@@ -135,13 +135,19 @@ export async function executeDifferentialSync() {
       payload.logger.info(`Found ${inventories.length} inventories to pull stock from.`)
 
       for (const inv of inventories) {
-        const stockRes = await fetch(
-          `${BASE_URL}${PREFIX}/stocks?inventoryId=${inv._id}&t=${timestamp}`,
-          { method: 'GET', headers: requestHeaders, cache: 'no-store' },
-        )
+        const stockUrl = `${BASE_URL}${PREFIX}/stocks?inventoryId=${inv._id}&branchId=${BRANCH_ID}&t=${timestamp}`
+        payload.logger.info(`   -> requesting: ${stockUrl}`)
+        const stockRes = await fetch(stockUrl, {
+          method: 'GET',
+          headers: requestHeaders,
+          cache: 'no-store',
+        })
 
         if (!stockRes.ok) {
-          payload.logger.info(`⚠️ Could not fetch stocks for inventory ${inv.name} (${inv._id})`)
+          const bodyText = await stockRes.text().catch(() => '<unreadable>')
+          payload.logger.info(
+            `⚠️ Could not fetch stocks for inventory ${inv.name} (${inv._id}) — status ${stockRes.status}: ${bodyText}`,
+          )
           continue
         }
 
@@ -178,21 +184,9 @@ export async function executeDifferentialSync() {
   if (!itemRes.ok) throw new Error('Failed to retrieve items from endpoint.')
 
   const itemData = await itemRes.json()
-  const items: ExternalItem[] = itemData.items || []
+  const allItems: ExternalItem[] = itemData.items || []
 
-  // 🚨 THE TRUTH DETECTOR LOG — keep this until price-freshness is confirmed, then remove
-  const targetItem = items.find((i) => i.name?.toLowerCase().includes('t-force 2x16'))
-  if (targetItem) {
-    payload.logger.info(
-      `🚨 [CRITICAL API CHECK] The raw network response from Bruska API for T-Force 2x16 contains:`,
-    )
-    payload.logger.info(`   -> Price: ${targetItem.price}`)
-    payload.logger.info(`   -> _id:   ${targetItem._id}`)
-  } else {
-    payload.logger.info(
-      `🚨 [CRITICAL API CHECK] Could not even find T-Force 2x16 in the raw incoming API array!`,
-    )
-  }
+  const items: ExternalItem[] = allItems
 
   const externalActiveIds = new Set<string>()
   let createCount = 0
@@ -237,35 +231,33 @@ export async function executeDifferentialSync() {
       if (existingItem.docs.length > 0) {
         const current = existingItem.docs[0] as any
 
-        const dbTitleCkb = String(current.title?.ckb || '').trim()
-        const dbTitleEn = String(current.title?.en || current.title || '').trim()
-        const apiTitle = String(productPayloadData.title || '').trim()
-
         const dbPrice = parseFloat(current.price) || 0
         const apiPrice = parseFloat(productPayloadData.price as any) || 0
 
         const dbStock = parseInt(current.stock, 10) || 0
         const apiStock = parseInt(productPayloadData.stock as any, 10) || 0
 
-        const dbBarcode = String(current.barcode || '').trim()
-        const apiBarcode = String(productPayloadData.barcode || '').trim()
-
         const needsCodeLinkUpdate = !current.code || current.code !== item._id
 
-        if (
-          (dbTitleCkb !== apiTitle && dbTitleEn !== apiTitle) ||
-          dbPrice !== apiPrice ||
-          dbStock !== apiStock ||
-          dbBarcode !== apiBarcode ||
-          needsCodeLinkUpdate
-        ) {
+        if (dbPrice !== apiPrice || dbStock !== apiStock || needsCodeLinkUpdate) {
+          // Only touch price + stock on existing products. Title, barcode,
+          // description, brand, category, etc. are left exactly as they are
+          // in the DB — this update never overwrites them.
+          const updateData: any = {
+            price: productPayloadData.price,
+            stock: productPayloadData.stock,
+          }
+          if (needsCodeLinkUpdate) {
+            updateData.code = item._id
+          }
+
           payload.logger.info(
-            `🔄 Aligning and Updating record states: ${item.name} (ID: ${current.id})`,
+            `🔄 Updating price/stock only: ${item.name} (ID: ${current.id}) — price ${dbPrice}→${apiPrice}, stock ${dbStock}→${apiStock}`,
           )
           await payload.update({
             collection: 'products',
             id: current.id,
-            data: productPayloadData,
+            data: updateData,
             req: { transactionID: null } as any,
           })
           updateCount++
