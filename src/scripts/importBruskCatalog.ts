@@ -70,7 +70,7 @@ export async function executeDifferentialSync() {
 
   const catData = await catRes.json()
   const externalCategories: ExternalCategory[] = catData.categories || []
-  const categoryIdMap: Record<string, string> = {}
+  const categoryIdMap: Record<string, string | number> = {}
 
   for (const cat of externalCategories) {
     const computedSlug = slugify(cat.name || 'category')
@@ -81,7 +81,7 @@ export async function executeDifferentialSync() {
       locale: 'all',
     })
 
-    let localCatId: string
+    let localCatId: string | number
     if (existingCat.docs.length > 0) {
       localCatId = existingCat.docs[0].id
       await payload.update({
@@ -152,7 +152,7 @@ export async function executeDifferentialSync() {
         linkedCategoryId = Object.values(categoryIdMap)[0]
       }
 
-      const productPayloadData = {
+      const productPayloadData: any = {
         title: item.name,
         barcode: item.barcode || '',
         code: item._id,
