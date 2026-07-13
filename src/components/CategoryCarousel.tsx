@@ -2,7 +2,6 @@
 
 import { useCallback, useMemo } from 'react'
 import Link from 'next/link'
-import Image from 'next/image'
 import useEmblaCarousel from 'embla-carousel-react'
 import { CATEGORY_MAP } from '@/utils/categories'
 
@@ -16,7 +15,7 @@ export default function CategoryCarousel({ currentLocale }: CategoryCarouselProp
     CATEGORY_MAP[currentLocale as 'en' | 'ar' | 'ckb'] ? currentLocale : 'en'
   ) as 'en' | 'ar' | 'ckb'
 
-  // 1. Sort reverse: Safely shallow copy array and invert the item sequence
+  // Sort reverse: Safely shallow copy array and invert the item sequence
   const items = useMemo(() => {
     const rawItems = CATEGORY_MAP[activeLocale] || []
     return [...rawItems].reverse()
@@ -49,6 +48,7 @@ export default function CategoryCarousel({ currentLocale }: CategoryCarouselProp
           position: relative;
           width: 100%;
           max-width: 1800px;
+          background-color: #ffffff;
           margin: 0 auto;
           padding: 1rem 1rem;
         }
@@ -58,7 +58,7 @@ export default function CategoryCarousel({ currentLocale }: CategoryCarouselProp
         }
         .embla-container {
           display: flex;
-          gap: 1.5rem;
+          gap: 1rem;
           user-select: none;
           -webkit-touch-callout: none;
         }
@@ -69,26 +69,27 @@ export default function CategoryCarousel({ currentLocale }: CategoryCarouselProp
           align-items: center;
           text-align: center;
         }
-        .circle-container {
-          width: 120px;
-          height: 120px;
-          border-radius: 50%;
+        .text-badge-container {
+          min-width: 130px;
+          padding: 12px 20px;
+          border-radius: 30px;
           background-color: #F3F3F3;
           display: flex;
           align-items: center;
           justify-content: center;
-          transition: transform 0.2s ease, box-shadow 0.2s ease;
+          transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
           position: relative;
           overflow: hidden;
-          padding: 2rem;
+          border: 1px solid #e5e7eb;
         }
-        .circle-container:hover {
-          transform: scale(1.04);
-          box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05);
+        .text-badge-container:hover {
+          transform: translateY(-2px);
+          background-color: #e2e8f0;
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
         }
         .arrow-button {
           position: absolute;
-          top: 45%;
+          top: 50%;
           transform: translateY(-50%);
           background: white;
           border: 1px solid #eaeaea;
@@ -126,32 +127,25 @@ export default function CategoryCarousel({ currentLocale }: CategoryCarouselProp
                   href={`/${activeLocale}?category=${category.slug}`}
                   style={{ textDecoration: 'none' }}
                 >
-                  <div className="circle-container">
-                    <Image
-                      src={category.url}
-                      alt={category.title}
-                      width={120}
-                      height={120}
-                      style={{ objectFit: 'contain' }}
-                      priority={index < 6}
-                    />
-                  </div>
-                  <div
-                    style={{
-                      fontFamily: titleFont,
-                      marginTop: '0.85rem',
-                      fontSize: '15px',
-                      fontWeight: '500',
-                      color: '#1e293b',
-                    }}
-                  >
-                    {category.title}
+                  <div className="text-badge-container">
+                    <span
+                      style={{
+                        fontFamily: titleFont,
+                        fontSize: '14px',
+                        fontWeight: '600',
+                        color: '#1e293b',
+                        whiteSpace: 'nowrap',
+                      }}
+                    >
+                      {category.title}
+                    </span>
                   </div>
                 </Link>
               </div>
             ))}
           </div>
         </div>
+
         <button
           className="arrow-button arrow-left"
           onClick={isRtl ? scrollNext : scrollPrev}

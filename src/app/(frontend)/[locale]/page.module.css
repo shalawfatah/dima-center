@@ -1,6 +1,6 @@
 .promoWrapper {
   display: flex;
-  gap: 1rem;
+  flex-direction: column;
 }
 
 /* Layout wrappers */
@@ -15,7 +15,7 @@
 }
 
 .pageWrapperDefault {
-  background-color: #fff;
+  background-color: #f3f3f3;
 }
 
 .ltr {

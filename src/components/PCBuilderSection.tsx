@@ -50,15 +50,11 @@ export default function PCBuilderSection({ currentLocale, isRtl }: PCBuilderSect
       dir={isRtl ? 'rtl' : 'ltr'}
     >
       <style>{`
-  .pcb-section {
-    width: 40%;
-  }
+        /* 🚀 Maximized Width & Slim Profile Layout Configuration */
+        .pcb-section {
+          width: 100%;
+        }
 
-  @media (max-width: 1000px) {
-    .pcb-section {
-      width: 100%;
-    }
-  }
         @keyframes pcb-pulse {
           0%, 100% { opacity: 0.35; r: 2.5; }
           50% { opacity: 1; r: 4.5; }
@@ -80,10 +76,11 @@ export default function PCBuilderSection({ currentLocale, isRtl }: PCBuilderSect
           display: flex;
           align-items: center;
           flex-direction: row;
+          width: 100%;
         }
         @media (max-width: 768px) {
           .pcb-wrapper { flex-direction: column; align-items: stretch; }
-          .pcb-visual { width: 100% !important; min-height: 80px !important; max-height: 80px !important; }
+          .pcb-visual { width: 100% !important; min-height: 60px !important; max-height: 60px !important; }
         }
       `}</style>
 
@@ -106,8 +103,8 @@ export default function PCBuilderSection({ currentLocale, isRtl }: PCBuilderSect
         {/* Content Side */}
         <div
           style={{
-            flex: '1 1 65%',
-            padding: '1rem 1.5rem',
+            flex: '1 1 75%',
+            padding: '0.75rem 1.5rem',
             display: 'flex',
             flexDirection: 'column',
             justifyContent: 'center',
@@ -119,7 +116,7 @@ export default function PCBuilderSection({ currentLocale, isRtl }: PCBuilderSect
               display: 'flex',
               alignItems: 'center',
               gap: '10px',
-              marginBottom: '6px',
+              marginBottom: '4px',
               flexWrap: 'wrap',
             }}
           >
@@ -167,7 +164,7 @@ export default function PCBuilderSection({ currentLocale, isRtl }: PCBuilderSect
             <h2
               style={{
                 fontFamily: titleFont,
-                fontSize: 'clamp(18px, 2.5vw, 32px)',
+                fontSize: 'clamp(18px, 2vw, 26px)',
                 fontWeight: 800,
                 color: '#fff',
                 margin: 0,
@@ -189,8 +186,8 @@ export default function PCBuilderSection({ currentLocale, isRtl }: PCBuilderSect
                 fontWeight: 700,
                 color: '#0f172a',
                 background: '#ffb83c',
-                borderRadius: '8px', // 💎 Beautiful rounded edges button restored
-                padding: '8px 18px',
+                borderRadius: '8px',
+                padding: '6px 16px',
                 textDecoration: 'none',
                 whiteSpace: 'nowrap',
                 boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
@@ -215,13 +212,13 @@ export default function PCBuilderSection({ currentLocale, isRtl }: PCBuilderSect
           </div>
         </div>
 
-        {/* Micro Visual Side */}
+        {/* Ultra-Slim Micro Visual Side */}
         <div
           className="pcb-visual"
           style={{
-            flex: '1 1 35%',
-            minHeight: '100px',
-            maxHeight: '110px',
+            flex: '1 1 25%',
+            minHeight: '65px',
+            maxHeight: '75px',
             position: 'relative',
             overflow: 'hidden',
           }}

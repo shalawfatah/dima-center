@@ -110,14 +110,12 @@ export default function ProductCarousel({
     return Math.max(0, originalPrice - product.discountValue)
   }
 
-  // Fallback Translation Resolver Matrix Engine for Titles and Descriptions
   const getFallbackText = (
     product: ProductItem | null,
     fieldType: 'title' | 'description',
   ): string => {
     if (!product) return ''
 
-    // Static dictionary catalog mappings
     const fallbackCatalog: Record<string, Record<'en' | 'ar' | 'ckb', string>> = {
       'ئێم ئێس ئای پرۆ B760M-E DDR5': {
         en: 'MSI Pro B760M-E DDR5 Motherboard',
@@ -148,7 +146,6 @@ export default function ProductCarousel({
 
     const rawFieldVal = product[fieldType] || ''
 
-    // Inner reader to prioritize custom backend structure object dynamic keys over general standard values
     const getValueForLang = (lang: 'en' | 'ar' | 'ckb'): string | undefined => {
       if (product[`${fieldType}_${lang}`]) return product[`${fieldType}_${lang}`]
       if (fieldType === 'title' && fallbackCatalog[product.title]) {
@@ -161,13 +158,11 @@ export default function ProductCarousel({
     const arVal = getValueForLang('ar')
     const enVal = getValueForLang('en')
 
-    // Resolution priority cascading loops
     if (currentLocale === 'ckb') {
       return ckbVal || enVal || arVal || rawFieldVal
     } else if (currentLocale === 'ar') {
       return arVal || enVal || ckbVal || rawFieldVal
     } else {
-      // 'en' locale default tracking cascades
       return enVal || ckbVal || arVal || rawFieldVal
     }
   }
@@ -285,7 +280,7 @@ export default function ProductCarousel({
   const t = carouselDictionary[activeLocale]
 
   return (
-    <div style={{ width: '100%', overflow: 'hidden', padding: '2rem 0' }}>
+    <div style={{ width: '100%', overflow: 'hidden', padding: '1rem 0' }}>
       <style>{`
         .product-carousel-track {
           display: flex;
@@ -294,7 +289,7 @@ export default function ProductCarousel({
         .product-carousel-slide {
           flex: 0 0 calc(100% / 1.5 - 12px); 
           min-width: 0;
-          padding-bottom: 24px;
+          padding-bottom: 0px;
         }
         @media (min-width: 480px) {
           .product-carousel-slide { flex: 0 0 calc(100% / 2.2 - 12px); }
@@ -316,9 +311,6 @@ export default function ProductCarousel({
           transform: translateY(-4px);
           box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04) !important;
         }
-        .product-carousel-slide:hover .product-image-container img {
-          transform: scale(1.06) !important;
-        }
         
         .side-actions-wrapper {
           opacity: 0;
@@ -331,7 +323,7 @@ export default function ProductCarousel({
         }
 
         .side-action-btn {
-          background: #ffffff;
+          background: #ffb83c;
           border: none;
           border-radius: 50%;
           width: 32px;
@@ -349,9 +341,40 @@ export default function ProductCarousel({
           transform: scale(1.08);
           color: #0f172a;
         }
-        .side-action-btn svg {
-          display: block;
-          flex-shrink: 0;
+        
+        /* Full-Width Hover Slide-In Overlay Configuration */
+        .hover-cart-overlay {
+          position: absolute;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          height: 0;
+          background-color: #000000;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          overflow: hidden;
+          z-index: 10;
+          transition: height 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+          border-bottom-left-radius: 8px;
+          border-bottom-right-radius: 8px;
+        }
+        .product-carousel-slide:hover .hover-cart-overlay {
+          height: 54px;
+        }
+        .hover-cart-btn {
+          width: 100%;
+          height: 100%;
+          background: #ffb83c;
+          color: #000;
+          border: none;
+          font-size: 15px;
+          font-weight: 700;
+          cursor: pointer;
+          transition: background-color 0.2s;
+        }
+        .hover-cart-btn:hover {
+          background-color: #ff8c00;
         }
       `}</style>
 
@@ -385,10 +408,10 @@ export default function ProductCarousel({
                     position: 'relative',
                     width: '100%',
                     aspectRatio: '3 / 4',
-                    borderRadius: '16px',
-                    overflow: 'visible',
-                    background: '#f3f3f3',
-                    boxShadow: '0 4px 12px rgba(0,0,0,0.05)',
+                    borderRadius: '8px',
+                    overflow: 'hidden',
+                    background: '#fff',
+                    border: '1px solid #e2e8f0',
                   }}
                 >
                   {hasDiscount && (
@@ -401,9 +424,9 @@ export default function ProductCarousel({
                         zIndex: 5,
                         backgroundColor: '#ffcb6b',
                         color: '#000',
-                        padding: '0px 12px',
-                        borderRadius: isRtl ? '16px 0 12px 0' : '0 16px 0 12px',
-                        fontSize: '14px',
+                        padding: '2px 12px',
+                        borderRadius: isRtl ? '0 0 12px 0' : '0 0 0 12px',
+                        fontSize: '13px',
                         fontWeight: '800',
                         boxShadow: '0 2px 6px rgba(0,0,0,0.1)',
                         fontFamily: textFont,
@@ -420,10 +443,12 @@ export default function ProductCarousel({
                     className="product-image-container"
                     style={{
                       position: 'absolute',
-                      inset: 0,
+                      top: 0,
+                      left: 0,
+                      right: 0,
+                      bottom: '90px',
                       overflow: 'hidden',
                       zIndex: 1,
-                      borderRadius: '16px',
                     }}
                   >
                     {imageUrl ? (
@@ -447,24 +472,16 @@ export default function ProductCarousel({
                         style={{
                           width: '100%',
                           height: '100%',
-                          background: '#334155',
+                          background: '#f1f5f9',
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'center',
-                          color: '#64748b',
+                          color: '#94a3b8',
                         }}
                       >
                         📦
                       </div>
                     )}
-                    <div
-                      style={{
-                        position: 'absolute',
-                        inset: 0,
-                        background:
-                          'linear-gradient(to top, rgba(15,23,42,0.95) 0%, rgba(15,23,42,0.3) 50%, rgba(0,0,0,0) 100%)',
-                      }}
-                    />
                   </div>
 
                   <div
@@ -528,36 +545,36 @@ export default function ProductCarousel({
                     </button>
                   </div>
 
+                  {/* Absolute Base Panel Content Block (Forced White Background / Black Typography) */}
                   <div
                     style={{
                       position: 'absolute',
-                      bottom: '36px',
+                      bottom: 0,
                       left: 0,
                       right: 0,
+                      height: '90px',
                       zIndex: 2,
-                      padding: '0 1.25rem',
+                      padding: '0.75rem 1rem',
                       display: 'flex',
                       flexDirection: 'column',
-                      gap: '6px',
+                      justifyContent: 'space-between',
+                      backgroundColor: '#ffffff',
                       textAlign: isRtl ? 'right' : 'left',
                     }}
                   >
-                    {/* Two line clamped header configuration */}
                     <h3
                       style={{
                         fontFamily: titleFont,
-                        fontSize: '16px',
+                        fontSize: '14px',
                         fontWeight: '600',
-                        color: '#fff',
+                        color: '#000000',
                         margin: 0,
                         display: '-webkit-box',
                         WebkitLineClamp: 2,
                         WebkitBoxOrient: 'vertical',
                         overflow: 'hidden',
                         textOverflow: 'ellipsis',
-                        lineHeight: '1.3',
-                        height: '2.6em',
-                        textShadow: '0 2px 4px rgba(0, 0, 0, 0.6), 0 1px 2px rgba(0, 0, 0, 0.8)',
+                        lineHeight: '1.25',
                       }}
                     >
                       {currentTitle}
@@ -566,42 +583,43 @@ export default function ProductCarousel({
                     <div
                       style={{
                         display: 'flex',
-                        flexDirection: 'column',
-                        alignItems: 'flex-start',
-                        gap: '2px',
+                        flexDirection: 'row',
+                        alignItems: 'baseline',
+                        justifyContent: 'space-between',
                         fontFamily: textFont,
+                        width: '100%',
                       }}
                     >
                       {hasDiscount ? (
-                        <>
+                        <div style={{ display: 'flex', alignItems: 'baseline', gap: '6px' }}>
                           <span
                             style={{
-                              fontSize: '13px',
+                              fontSize: '19px',
+                              fontWeight: '800',
+                              color: '#000000',
+                            }}
+                          >
+                            {t.currency}
+                            {finalPrice.toLocaleString()}
+                          </span>
+                          <span
+                            style={{
+                              fontSize: '12px',
                               fontWeight: '500',
-                              color: '#94a3b8',
+                              color: '#64748b',
                               textDecoration: 'line-through',
                             }}
                           >
                             {t.currency}
                             {originalPrice.toLocaleString()}
                           </span>
-                          <span
-                            style={{
-                              fontSize: '16px',
-                              fontWeight: '700',
-                              color: '#facc15',
-                            }}
-                          >
-                            {t.currency}
-                            {finalPrice.toLocaleString()}
-                          </span>
-                        </>
+                        </div>
                       ) : (
                         <span
                           style={{
-                            fontSize: '15px',
-                            fontWeight: '700',
-                            color: '#facc15',
+                            fontSize: '19px',
+                            fontWeight: '800',
+                            color: '#000000',
                           }}
                         >
                           {t.currency}
@@ -611,30 +629,16 @@ export default function ProductCarousel({
                     </div>
                   </div>
 
-                  <button
-                    onClick={(e) => handleAddToCart(e, product)}
-                    style={{
-                      position: 'absolute',
-                      bottom: '0px',
-                      left: '50%',
-                      transform: 'translate(-50%, 50%)',
-                      zIndex: 4,
-                      backgroundColor: '#000000',
-                      color: '#ffffff',
-                      border: 'none',
-                      padding: '6px 20px',
-                      borderRadius: '25px',
-                      fontSize: '15px',
-                      fontWeight: '600',
-                      whiteSpace: 'nowrap',
-                      cursor: 'pointer',
-                      boxShadow: '0 4px 14px rgba(0,0,0,0.25)',
-                      fontFamily: textFont,
-                      transition: 'background-color 0.2s',
-                    }}
-                  >
-                    {t.addToCart}
-                  </button>
+                  {/* Full-width Hover Shell Target Component Container */}
+                  <div className="hover-cart-overlay">
+                    <button
+                      className="hover-cart-btn"
+                      onClick={(e) => handleAddToCart(e, product)}
+                      style={{ fontFamily: textFont }}
+                    >
+                      {t.addToCart}
+                    </button>
+                  </div>
                 </div>
               </Link>
             )
@@ -659,16 +663,16 @@ export default function ProductCarousel({
         >
           <div
             style={{
-              backgroundColor: '#1e293b',
-              border: '2px solid #ffb83c',
+              backgroundColor: '#ffffff',
+              border: '1px solid #e2e8f0',
               borderRadius: '16px',
               maxWidth: '450px',
               width: '100%',
               padding: '24px',
               position: 'relative',
-              color: '#fff',
+              color: '#000000',
               textAlign: isRtl ? 'right' : 'left',
-              boxShadow: '0 25px 50px -12px rgba(0,0,0,0.5)',
+              boxShadow: '0 25px 50px -12px rgba(0,0,0,0.15)',
             }}
             onClick={(e) => e.stopPropagation()}
           >
@@ -702,9 +706,9 @@ export default function ProductCarousel({
 
             <div
               style={{
-                color: '#10b981',
-                fontSize: '22px',
-                fontWeight: '700',
+                color: '#000000',
+                fontSize: '24px',
+                fontWeight: '800',
                 marginBottom: '16px',
                 fontFamily: textFont,
               }}
@@ -715,7 +719,7 @@ export default function ProductCarousel({
             </div>
 
             {quickViewProduct.condition && (
-              <div style={{ marginBottom: '12px', fontSize: '14px', color: '#94a3b8' }}>
+              <div style={{ marginBottom: '12px', fontSize: '14px', color: '#64748b' }}>
                 <strong>{t.conditionLabel}</strong> {quickViewProduct.condition}
               </div>
             )}
@@ -723,13 +727,12 @@ export default function ProductCarousel({
             <div
               style={{
                 fontSize: '14px',
-                color: '#cbd5e1',
+                color: '#334155',
                 lineHeight: '1.5',
                 marginBottom: '20px',
               }}
             >
-              {getLocalizedDesc(quickViewProduct) ||
-                'Simple quick details overlay regarding your selected product item.'}
+              {getLocalizedDesc(quickViewProduct)}
             </div>
 
             <button
@@ -739,8 +742,8 @@ export default function ProductCarousel({
               }}
               style={{
                 width: '100%',
-                backgroundColor: '#ffb83c',
-                color: '#0f172a',
+                backgroundColor: '#000000',
+                color: '#ffffff',
                 border: 'none',
                 padding: '12px',
                 borderRadius: '8px',
@@ -762,17 +765,18 @@ export default function ProductCarousel({
             right: isRtl ? 'auto' : '24px',
             left: isRtl ? '24px' : 'auto',
             zIndex: 10000,
-            backgroundColor: '#0f172a',
-            borderLeft: isRtl ? 'transparent' : '4px solid #10b981',
-            borderRight: isRtl ? '4px solid #10b981' : 'transparent',
-            boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.3)',
+            backgroundColor: '#ffffff',
+            borderLeft: isRtl ? 'transparent' : '4px solid #000000',
+            borderRight: isRtl ? '4px solid #000000' : 'transparent',
+            boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.1)',
             borderRadius: '8px',
             padding: '16px',
             display: 'flex',
             alignItems: 'center',
             gap: '14px',
             maxWidth: '380px',
-            color: '#fff',
+            color: '#000000',
+            border: '1px solid #e2e8f0',
             animation: 'slideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
             direction: isRtl ? 'rtl' : 'ltr',
           }}
@@ -788,7 +792,7 @@ export default function ProductCarousel({
             }}
           />
 
-          <div style={{ fontSize: '20px', color: '#10b981' }}>✓</div>
+          <div style={{ fontSize: '20px', color: '#000000' }}>✓</div>
 
           <div style={{ flex: 1 }}>
             <div
@@ -804,7 +808,7 @@ export default function ProductCarousel({
             >
               {getLocalizedTitle(toastProduct)}
             </div>
-            <div style={{ fontSize: '12px', color: '#94a3b8' }}>{t.toastSuccess}</div>
+            <div style={{ fontSize: '12px', color: '#64748b' }}>{t.toastSuccess}</div>
           </div>
 
           <Link
@@ -812,10 +816,10 @@ export default function ProductCarousel({
             style={{
               fontSize: '13px',
               fontWeight: '700',
-              color: '#ffb83c',
+              color: '#ffffff',
               textDecoration: 'none',
               whiteSpace: 'nowrap',
-              background: 'rgba(255,184,60,0.1)',
+              background: '#000000',
               padding: '6px 10px',
               borderRadius: '6px',
             }}

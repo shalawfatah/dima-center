@@ -49,7 +49,11 @@ export default function Languages({ currentLocale }: LanguagesProps) {
           color: '#fff',
         }}
       >
-        <span style={{ fontSize: '16px', lineHeight: '1' }}>{currentLang.flag}</span>
+        {/* 🌐 Dynamically switch between the globe icon and the flag */}
+        <span style={{ fontSize: '16px', lineHeight: '1' }}>
+          {isOpen ? currentLang.flag : '🌐'}
+        </span>
+
         <svg
           xmlns="http://www.w3.org/2000/svg"
           width="10"
@@ -73,9 +77,6 @@ export default function Languages({ currentLocale }: LanguagesProps) {
           style={{
             position: 'absolute',
             top: 'calc(100% + 6px)',
-            // 🎯 Dynamic alignment:
-            // In LTR (English on the right side), anchor to the right edge and grow left.
-            // In RTL (Kurdish/Arabic on the left side), anchor to the left edge and grow right.
             right: isRtl ? 'auto' : 0,
             left: isRtl ? 0 : 'auto',
             backgroundColor: '#1e293b',

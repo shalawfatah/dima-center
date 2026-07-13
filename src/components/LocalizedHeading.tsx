@@ -19,7 +19,6 @@ export default function LocalizedHeading({
 }: LocalizedHeadingProps) {
   const isRtl = currentLocale === 'ar' || currentLocale === 'ckb'
 
-  // Resolve localized fallback string
   const fallbackText = currentLocale === 'en' ? en : currentLocale === 'ar' ? ar : ckb
 
   return (

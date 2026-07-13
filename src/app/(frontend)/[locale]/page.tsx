@@ -191,8 +191,8 @@ export default async function StorefrontHome({ params, searchParams }: PageProps
     <div className={`${styles.pageWrapper} ${styles.pageWrapperDefault} ${dirClass}`}>
       <CategoryCarousel currentLocale={currentLocale} />
       <div className={styles.promoWrapper}>
-        <PromoCarousel currentLocale={currentLocale} />
         <PCBuilderSection currentLocale={currentLocale} isRtl={isRtl} />
+        <PromoCarousel currentLocale={currentLocale} />
       </div>
 
       <main className={styles.defaultMain}>
