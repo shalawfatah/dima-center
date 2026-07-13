@@ -45,7 +45,8 @@ export default function PCBuilderSection({ currentLocale, isRtl }: PCBuilderSect
         overflow: 'hidden',
         background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 60%, #14213d 100%)',
         border: '1px solid rgba(255,184,60,0.25)',
-        margin: '0',
+        marginBottom: '1rem',
+        borderRadius: '.4rem',
       }}
       dir={isRtl ? 'rtl' : 'ltr'}
     >

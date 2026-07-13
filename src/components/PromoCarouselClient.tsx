@@ -84,7 +84,7 @@ export default function PromoCarouselClient({
 
       <div
         ref={emblaRef}
-        style={{ overflow: 'hidden', width: '100%', cursor: 'grab' }}
+        style={{ overflow: 'hidden', width: '100%', cursor: 'grab', borderRadius: '.4rem' }}
         className="embla-viewport"
       >
         <div className="carousel-track" style={{ direction: isRtl ? 'rtl' : 'ltr' }}>
