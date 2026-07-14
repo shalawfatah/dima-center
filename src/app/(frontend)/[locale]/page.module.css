@@ -1,9 +1,3 @@
-.promoWrapper {
-  display: flex;
-  flex-direction: column;
-  padding: 1rem;
-}
-
 /* Layout wrappers */
 .pageWrapper {
   display: flex;
@@ -25,6 +19,28 @@
 
 .rtl {
   direction: rtl;
+}
+
+/* 🚀 Responsive Promo Splits (2/3 & 1/3 Equal Heights Container) */
+.promoWrapper {
+  display: flex;
+  flex-direction: row;
+  align-items: stretch; /* Forces both blocks to match heights perfectly */
+  gap: 1rem;
+  padding: 1rem;
+  width: 100%;
+}
+
+.promoLeft {
+  flex: 2 1 0%;
+  min-width: 280px;
+  display: flex; /* Crucial: passes stretch height down to PCBuilderSection */
+}
+
+.promoRight {
+  flex: 1 1 0%;
+  min-width: 200px;
+  display: flex; /* Crucial: passes stretch height down to FullBuildsSection */
 }
 
 /* Filtered (category) view */
@@ -113,8 +129,6 @@
 }
 
 /* Default (carousel) view */
-/* NOTE: .promoWrapper already exists in your current page.module.css — left untouched */
-
 .defaultMain {
   flex: 1;
   padding-bottom: 3rem;
@@ -133,10 +147,16 @@
   margin-bottom: 0.5rem;
 }
 
-@media (max-width: 1000px) {
+/* 📱 Responsive break for tablets and mobile screens */
+@media (max-width: 1024px) {
   .promoWrapper {
-    flex-wrap: 'wrap';
     flex-direction: column;
-    gap: 0px;
+    align-items: stretch;
+  }
+
+  .promoLeft,
+  .promoRight {
+    flex: 1 1 auto;
+    width: 100%;
   }
 }

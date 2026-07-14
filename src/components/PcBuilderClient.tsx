@@ -1,7 +1,7 @@
 'use client'
 
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useState, useEffect } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { useLocalStorageState } from '../utils/pc_build_local_storage'
 import { COMPONENT_SLOTS, dict, PcBuilderClientProps } from '@/utils/pc_build_items'
 import Image from 'next/image'
@@ -18,6 +18,8 @@ export default function PcBuilderClient({
   generals,
 }: PcBuilderClientProps & { generals?: GeneralSettingsData }) {
   const router = useRouter()
+  const searchParams = useSearchParams()
+
   const [buildName, setBuildName] = useLocalStorageState<string>(
     'pc_build_name',
     'My Dream Rig Build',
@@ -32,6 +34,47 @@ export default function PcBuilderClient({
   const [message, setMessage] = useState({ type: '', text: '' })
 
   const dynamicExchangeRate = generals?.exchangeRate ?? 1500
+
+  // 🔄 Handle "Bring Parts to PC Builder" URL Syncing on Mount
+  useEffect(() => {
+    const partsParam = searchParams.get('parts')
+    if (!partsParam) return
+
+    try {
+      // Expecting comma-separated pairs like: ?parts=cpu:prod_1,gpu:prod_2
+      const incomingParts = partsParam.split(',').reduce(
+        (acc, pair) => {
+          const [slotKey, productId] = pair.split(':')
+          if (slotKey && productId) {
+            // Find the actual product object from our fetched payload collection
+            const matchedProduct = products.find((p) => p.id === productId)
+            if (matchedProduct) {
+              acc[slotKey] = matchedProduct
+            }
+          }
+          return acc
+        },
+        {} as Record<string, any>,
+      )
+
+      if (Object.keys(incomingParts).length > 0) {
+        setSelections((prev) => ({
+          ...prev,
+          ...incomingParts,
+        }))
+
+        // Clean up URL parameters instantly so refreshes do not overwrite future changes
+        const newParams = new URLSearchParams(searchParams.toString())
+        newParams.delete('parts')
+
+        const cleanQuery = newParams.toString()
+        const cleanPath = `/${currentLocale}/pc-builder${cleanQuery ? `?${cleanQuery}` : ''}`
+        router.replace(cleanPath)
+      }
+    } catch (error) {
+      console.error('System failed to process incoming transferred parts blueprint:', error)
+    }
+  }, [searchParams, products, setSelections, router, currentLocale])
 
   const openModal = (slotKey: string) => setActiveModalSlot(slotKey)
   const closeModal = () => setActiveModalSlot(null)
@@ -135,7 +178,6 @@ export default function PcBuilderClient({
       localStorage.setItem('cart', JSON.stringify(cart))
       window.dispatchEvent(new Event('cart-updated'))
 
-      // Inline messaging banner feedback replacement
       const localizedSuccessMsg =
         currentLocale === 'ckb'
           ? 'بەسەرکەوتوویی زیادکرا بۆ سەبەتەکەت!'
