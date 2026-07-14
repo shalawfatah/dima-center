@@ -3,11 +3,8 @@
 
 import React, { useEffect, useState } from 'react'
 import { useFormFields } from '@payloadcms/ui'
-// 1. Import the specific Description Component type from Payload
-import type { DescriptionComponent } from 'payload'
 
-// 2. Strongly type the component using Payload's generic DescriptionComponent type
-export const FeaturedImagePreview: DescriptionComponent = () => {
+export const FeaturedImagePreview: React.FC = () => {
   // Pulls the current selected media ID from the form state
   const featuredImageField = useFormFields(([fields]) => fields.featuredImage)
   const mediaId = featuredImageField?.value as string | undefined

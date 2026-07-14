@@ -1,6 +1,5 @@
 // src/collections/Products.ts
 import { CollectionConfig } from 'payload'
-import { FeaturedImagePreview } from '../components/FeaturedImagePreview' // Adjust this path to match your structure
 
 export const Products: CollectionConfig = {
   slug: 'products',
@@ -134,7 +133,8 @@ export const Products: CollectionConfig = {
       admin: {
         position: 'sidebar',
         components: {
-          Description: FeaturedImagePreview,
+          // Use your tsconfig path alias to ensure the path-resolver always finds it
+          Description: '@/components/FeaturedImagePreview#FeaturedImagePreview',
         },
       },
     },

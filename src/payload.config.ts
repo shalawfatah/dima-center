@@ -30,9 +30,7 @@ export default buildConfig({
   },
   db: postgresAdapter({
     pool: {
-      connectionString:
-        process.env.DATABASE_URL ||
-        'postgresql://neondb_owner:npg_yCxGtU06bYaq@ep-blue-pine-as51pzp5-pooler.c-4.eu-central-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require',
+      connectionString: process.env.DATABASE_URL,
     },
   }),
   localization: {
