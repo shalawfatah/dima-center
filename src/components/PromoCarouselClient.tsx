@@ -115,7 +115,7 @@ export default function PromoCarouselClient({
                   position: 'relative',
                 }}
               >
-                {/* Standard full-bleed background image, no offset/oversize */}
+                {/* 🖼️ BACKGROUND IMAGE & TEXT READABILITY PROTECTION LAYER */}
                 {imageUrl && (
                   <div
                     style={{
@@ -123,7 +123,6 @@ export default function PromoCarouselClient({
                       inset: 0,
                       zIndex: 0,
                       overflow: 'hidden',
-                      /* Removed isolation: 'isolate' so mixBlendMode can see the orange background */
                     }}
                   >
                     <Image
@@ -139,19 +138,24 @@ export default function PromoCarouselClient({
                         objectPosition: 'center',
                       }}
                     />
+                    {/* 🛡️ READABILITY OVERLAY: 
+                      Creates a smooth gradient from a darkened bottom/middle (where the text sits) 
+                      to transparent at the top. This makes white text pop perfectly on even plain white backgrounds.
+                    */}
                     <div
                       style={{
                         position: 'absolute',
                         inset: 0,
-                        background: isRtl
-                          ? 'linear-gradient(to left, rgba(0,0,0,0.8) 30%, rgba(0,0,0,0.2) 100%)'
-                          : 'linear-gradient(to right, rgba(0,0,0,0.8) 30%, rgba(0,0,0,0.2) 100%)',
+                        background:
+                          'linear-gradient(to top, rgba(0, 0, 0, 0.75) 0%, rgba(0, 0, 0, 0.4) 50%, rgba(0, 0, 0, 0.1) 100%)',
+                        zIndex: 1,
                       }}
                     />
                   </div>
                 )}
 
-                <div style={{ maxWidth: '600px', position: 'relative', zIndex: 1 }}>
+                {/* ✍️ TEXT CONTENT LAYER */}
+                <div style={{ maxWidth: '600px', position: 'relative', zIndex: 2 }}>
                   {promo.type !== 'generic' && (
                     <span
                       style={{
@@ -164,6 +168,7 @@ export default function PromoCarouselClient({
                         borderRadius: '4px',
                         fontWeight: 'bold',
                         display: 'inline-block',
+                        boxShadow: '0 2px 4px rgba(0,0,0,0.2)', // Visual pop-out
                       }}
                     >
                       {promo.type}
@@ -177,6 +182,8 @@ export default function PromoCarouselClient({
                       marginTop: '0.5rem',
                       marginBottom: '0.5rem',
                       lineHeight: '1.2',
+                      // Text shadow ensures separation on bright patches
+                      textShadow: '0 2px 8px rgba(0, 0, 0, 0.5), 0 1px 2px rgba(0, 0, 0, 0.3)',
                     }}
                   >
                     {promo.title}
@@ -186,9 +193,10 @@ export default function PromoCarouselClient({
                       style={{
                         fontFamily: '"Sarchia", sans-serif',
                         fontSize: '1rem',
-                        color: '#cbd5e1',
+                        color: '#f1f5f9', // Brighter text color shade for crisp contrast over darker gradient
                         marginBottom: '1rem',
                         lineHeight: '1.5',
+                        textShadow: '0 1px 4px rgba(0, 0, 0, 0.5)',
                       }}
                     >
                       {promo.description}

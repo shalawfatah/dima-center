@@ -1,10 +1,11 @@
+// src/collections/Products.ts
 import { CollectionConfig } from 'payload'
+import { FeaturedImagePreview } from '../components/FeaturedImagePreview' // Adjust this path to match your structure
 
 export const Products: CollectionConfig = {
   slug: 'products',
   admin: {
     useAsTitle: 'title',
-    // 'stock' is back in the main dashboard table view
     defaultColumns: ['title', 'brand', 'barcode', 'category', 'price', 'stock'],
   },
   fields: [
@@ -130,7 +131,12 @@ export const Products: CollectionConfig = {
       type: 'relationship',
       relationTo: 'media',
       required: false,
-      admin: { position: 'sidebar' },
+      admin: {
+        position: 'sidebar',
+        components: {
+          Description: FeaturedImagePreview,
+        },
+      },
     },
     {
       name: 'imagesGallery',
