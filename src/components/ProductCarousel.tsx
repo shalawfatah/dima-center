@@ -10,6 +10,7 @@ interface ProductItem {
   id: string
   title: string
   price: number | string
+  priceIQD?: number | string | null
   condition?: string
   hasDiscount?: boolean
   discountType?: 'fixed' | 'percentage'
@@ -93,7 +94,8 @@ export default function ProductCarousel({
   const titleFont = isRegionalLocale ? '"Rudaw", sans-serif' : 'inherit'
   const textFont = isRegionalLocale ? '"Rudaw", sans-serif' : 'inherit'
 
-  const getNumericalPrice = (price: number | string): number => {
+  const getNumericalPrice = (price: number | string | null | undefined): number => {
+    if (price === null || price === undefined) return 0
     if (typeof price === 'string') {
       return parseFloat(price.replace(/,/g, '')) || 0
     }
@@ -279,6 +281,26 @@ export default function ProductCarousel({
   ) as 'en' | 'ar' | 'ckb'
   const t = carouselDictionary[activeLocale]
 
+  const IQDBadge = ({ amount }: { amount: number }) => (
+    <span
+      style={{
+        display: 'inline-flex',
+        alignItems: 'center',
+        gap: '3px',
+        backgroundColor: '#64748b',
+        color: '#ffffff',
+        fontSize: '11px',
+        fontWeight: 700,
+        padding: '2px 6px',
+        borderRadius: '4px',
+        lineHeight: '1.4',
+        whiteSpace: 'nowrap',
+      }}
+    >
+      {amount.toLocaleString()} IQD د.ع
+    </span>
+  )
+
   return (
     <div style={{ width: '100%', overflow: 'hidden', padding: '1rem 0' }}>
       <style>{`
@@ -393,6 +415,10 @@ export default function ProductCarousel({
             const hasDiscount = !!product.hasDiscount
             const originalPrice = getNumericalPrice(product.price)
             const finalPrice = getDiscountedPrice(product)
+            const priceIQDValue =
+              product.priceIQD !== null && product.priceIQD !== undefined
+                ? getNumericalPrice(product.priceIQD)
+                : null
 
             return (
               <Link
@@ -583,15 +609,48 @@ export default function ProductCarousel({
                     <div
                       style={{
                         display: 'flex',
-                        flexDirection: 'row',
-                        alignItems: 'baseline',
-                        justifyContent: 'space-between',
+                        flexDirection: 'column',
+                        alignItems: 'flex-start',
+                        justifyContent: 'center',
+                        gap: '3px',
                         fontFamily: textFont,
                         width: '100%',
                       }}
                     >
-                      {hasDiscount ? (
-                        <div style={{ display: 'flex', alignItems: 'baseline', gap: '6px' }}>
+                      <div
+                        style={{
+                          display: 'flex',
+                          flexDirection: 'row',
+                          alignItems: 'baseline',
+                          justifyContent: 'space-between',
+                          width: '100%',
+                        }}
+                      >
+                        {hasDiscount ? (
+                          <div style={{ display: 'flex', alignItems: 'baseline', gap: '6px' }}>
+                            <span
+                              style={{
+                                fontSize: '19px',
+                                fontWeight: '800',
+                                color: '#000000',
+                              }}
+                            >
+                              {t.currency}
+                              {finalPrice.toLocaleString()}
+                            </span>
+                            <span
+                              style={{
+                                fontSize: '12px',
+                                fontWeight: '500',
+                                color: '#64748b',
+                                textDecoration: 'line-through',
+                              }}
+                            >
+                              {t.currency}
+                              {originalPrice.toLocaleString()}
+                            </span>
+                          </div>
+                        ) : (
                           <span
                             style={{
                               fontSize: '19px',
@@ -600,31 +659,13 @@ export default function ProductCarousel({
                             }}
                           >
                             {t.currency}
-                            {finalPrice.toLocaleString()}
-                          </span>
-                          <span
-                            style={{
-                              fontSize: '12px',
-                              fontWeight: '500',
-                              color: '#64748b',
-                              textDecoration: 'line-through',
-                            }}
-                          >
-                            {t.currency}
                             {originalPrice.toLocaleString()}
                           </span>
-                        </div>
-                      ) : (
-                        <span
-                          style={{
-                            fontSize: '19px',
-                            fontWeight: '800',
-                            color: '#000000',
-                          }}
-                        >
-                          {t.currency}
-                          {originalPrice.toLocaleString()}
-                        </span>
+                        )}
+                      </div>
+
+                      {priceIQDValue !== null && priceIQDValue > 0 && (
+                        <IQDBadge amount={priceIQDValue} />
                       )}
                     </div>
                   </div>
@@ -706,16 +747,30 @@ export default function ProductCarousel({
 
             <div
               style={{
-                color: '#000000',
-                fontSize: '24px',
-                fontWeight: '800',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '10px',
                 marginBottom: '16px',
-                fontFamily: textFont,
               }}
             >
-              {quickViewProduct.hasDiscount
-                ? `${t.currency}${getDiscountedPrice(quickViewProduct).toLocaleString()}`
-                : `${t.currency}${getNumericalPrice(quickViewProduct.price).toLocaleString()}`}
+              <div
+                style={{
+                  color: '#000000',
+                  fontSize: '24px',
+                  fontWeight: '800',
+                  fontFamily: textFont,
+                }}
+              >
+                {quickViewProduct.hasDiscount
+                  ? `${t.currency}${getDiscountedPrice(quickViewProduct).toLocaleString()}`
+                  : `${t.currency}${getNumericalPrice(quickViewProduct.price).toLocaleString()}`}
+              </div>
+
+              {quickViewProduct.priceIQD !== null &&
+                quickViewProduct.priceIQD !== undefined &&
+                getNumericalPrice(quickViewProduct.priceIQD) > 0 && (
+                  <IQDBadge amount={getNumericalPrice(quickViewProduct.priceIQD)} />
+                )}
             </div>
 
             {quickViewProduct.condition && (

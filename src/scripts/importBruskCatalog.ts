@@ -15,6 +15,8 @@ interface ExternalItem {
   barcode?: string
   price: number
   currency: string
+  websitePrice?: number
+  websitePriceCurrency?: string
   quantity?: number
   category?: string
   brand?: string
@@ -42,6 +44,52 @@ function slugify(text: string): string {
     .replace(/\s+/g, '-')
     .replace(/[^\w\-]+/g, '')
     .replace(/\-\-+/g, '-')
+}
+
+// Bruska represents USD sometimes as "usd" and sometimes literally as the
+// symbol "$". Normalize both currency fields down to a known code so we can
+// reliably tell which of price / websitePrice is dollars vs dinar.
+function normalizeCurrency(c?: string): 'usd' | 'iqd' | null {
+  if (!c) return null
+  const v = c.trim().toLowerCase()
+  if (v === 'usd' || v === '$') return 'usd'
+  if (v === 'iqd') return 'iqd'
+  return null
+}
+
+// Items from /items carry two price fields: `price`/`currency` and
+// `websitePrice`/`websitePriceCurrency`. In practice these are usually one
+// USD value and one IQD value, but the currency isn't guaranteed to be
+// pinned to a specific field, so we resolve both by inspecting the actual
+// currency string on each side rather than assuming positions.
+// If only one side is present, we derive the other using the branch's
+// live exchange rate (from /items/ex_rate_change/:branchId) as a fallback.
+function resolveDualPrices(
+  item: ExternalItem,
+  exRate: number | null,
+): { priceUSD: number; priceIQD: number | undefined } {
+  let priceUSD: number | undefined
+  let priceIQD: number | undefined
+
+  const cur1 = normalizeCurrency(item.currency)
+  if (cur1 === 'usd') priceUSD = item.price
+  if (cur1 === 'iqd') priceIQD = item.price
+
+  const cur2 = normalizeCurrency(item.websitePriceCurrency)
+  if (item.websitePrice !== undefined) {
+    if (cur2 === 'usd') priceUSD = item.websitePrice
+    if (cur2 === 'iqd') priceIQD = item.websitePrice
+  }
+
+  // Fallback: derive the missing side from the exchange rate if we have one
+  if (priceUSD === undefined && priceIQD !== undefined && exRate) {
+    priceUSD = priceIQD / exRate
+  }
+  if (priceIQD === undefined && priceUSD !== undefined && exRate) {
+    priceIQD = priceUSD * exRate
+  }
+
+  return { priceUSD: priceUSD ?? item.price ?? 0, priceIQD }
 }
 
 export async function executeDifferentialSync() {
@@ -172,6 +220,29 @@ export async function executeDifferentialSync() {
   }
 
   // =================================================================
+  // 1c. FETCH CURRENT EXCHANGE RATE (USD <-> IQD)
+  // Used only as a fallback to derive a missing currency side when an
+  // item is priced in just one of the two currencies.
+  // =================================================================
+  payload.logger.info('💱 Fetching current exchange rate...')
+  let exRate: number | null = null
+  try {
+    const exRes = await fetch(
+      `${BASE_URL}${PREFIX}/items/ex_rate_change/${BRANCH_ID}?t=${timestamp}`,
+      { method: 'GET', headers: requestHeaders, cache: 'no-store' },
+    )
+    if (exRes.ok) {
+      const exData = await exRes.json()
+      exRate = typeof exData.exRate === 'number' ? exData.exRate : null
+    } else {
+      payload.logger.info(`⚠️ Could not fetch exchange rate — status ${exRes.status}`)
+    }
+  } catch (exErr) {
+    console.error('⚠️ Exchange rate fetch failed:', exErr)
+  }
+  payload.logger.info(`Exchange rate (USD→IQD): ${exRate ?? 'unavailable'}`)
+
+  // =================================================================
   // 2. FETCH & SYNC PRODUCTS (Cache Busted)
   // =================================================================
   payload.logger.info('📡 Fetching active Bruska catalog snapshot...')
@@ -210,11 +281,14 @@ export async function executeDifferentialSync() {
         linkedCategoryId = Object.values(categoryIdMap)[0]
       }
 
+      const { priceUSD, priceIQD } = resolveDualPrices(item, exRate)
+
       const productPayloadData: any = {
         title: item.name,
         barcode: item.barcode || '',
         code: item._id,
-        price: item.price || 0,
+        price: priceUSD,
+        priceIQD: priceIQD,
         stock:
           (item.barcode && stockByBarcode[item.barcode.trim()] !== undefined
             ? stockByBarcode[item.barcode.trim()]
@@ -234,17 +308,26 @@ export async function executeDifferentialSync() {
         const dbPrice = parseFloat(current.price) || 0
         const apiPrice = parseFloat(productPayloadData.price as any) || 0
 
+        const dbPriceIQD = parseFloat(current.priceIQD) || 0
+        const apiPriceIQD = parseFloat(productPayloadData.priceIQD as any) || 0
+
         const dbStock = parseInt(current.stock, 10) || 0
         const apiStock = parseInt(productPayloadData.stock as any, 10) || 0
 
         const needsCodeLinkUpdate = !current.code || current.code !== item._id
 
-        if (dbPrice !== apiPrice || dbStock !== apiStock || needsCodeLinkUpdate) {
-          // Only touch price + stock on existing products. Title, barcode,
-          // description, brand, category, etc. are left exactly as they are
-          // in the DB — this update never overwrites them.
+        if (
+          dbPrice !== apiPrice ||
+          dbPriceIQD !== apiPriceIQD ||
+          dbStock !== apiStock ||
+          needsCodeLinkUpdate
+        ) {
+          // Only touch price + priceIQD + stock on existing products. Title,
+          // barcode, description, brand, category, etc. are left exactly as
+          // they are in the DB — this update never overwrites them.
           const updateData: any = {
             price: productPayloadData.price,
+            priceIQD: productPayloadData.priceIQD,
             stock: productPayloadData.stock,
           }
           if (needsCodeLinkUpdate) {
@@ -252,7 +335,8 @@ export async function executeDifferentialSync() {
           }
 
           payload.logger.info(
-            `🔄 Updating price/stock only: ${item.name} (ID: ${current.id}) — price ${dbPrice}→${apiPrice}, stock ${dbStock}→${apiStock}`,
+            `🔄 Updating price/stock only: ${item.name} (ID: ${current.id}) — ` +
+              `USD ${dbPrice}→${apiPrice}, IQD ${dbPriceIQD}→${apiPriceIQD}, stock ${dbStock}→${apiStock}`,
           )
           await payload.update({
             collection: 'products',

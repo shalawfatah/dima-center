@@ -1,11 +1,10 @@
 // src/collections/Products.ts
 import { CollectionConfig } from 'payload'
-
 export const Products: CollectionConfig = {
   slug: 'products',
   admin: {
     useAsTitle: 'title',
-    defaultColumns: ['title', 'brand', 'barcode', 'category', 'price', 'stock'],
+    defaultColumns: ['title', 'brand', 'barcode', 'category', 'price', 'priceIQD', 'stock'],
   },
   fields: [
     {
@@ -19,7 +18,6 @@ export const Products: CollectionConfig = {
       type: 'textarea',
       localized: true,
     },
-
     // === 📊 CORE INVENTORY & RETAIL FIELDS ===
     {
       type: 'row',
@@ -43,11 +41,24 @@ export const Products: CollectionConfig = {
       type: 'text',
       label: 'Brand',
     },
+    // === 💵 DUAL CURRENCY PRICING ===
     {
-      name: 'price',
-      type: 'number',
-      label: 'Selling Price (Base)',
-      required: true,
+      type: 'row',
+      fields: [
+        {
+          name: 'price',
+          type: 'number',
+          label: 'Selling Price (USD)',
+          required: true,
+          admin: { width: '50%' },
+        },
+        {
+          name: 'priceIQD',
+          type: 'number',
+          label: 'Selling Price (IQD)',
+          admin: { width: '50%' },
+        },
+      ],
     },
     {
       name: 'stock',
@@ -75,7 +86,6 @@ export const Products: CollectionConfig = {
       relationTo: 'categories',
       required: true,
     },
-
     // === 🏷️ DISCOUNT CONFIGURATION BLOCK ===
     {
       name: 'hasDiscount',
@@ -112,7 +122,6 @@ export const Products: CollectionConfig = {
         },
       ],
     },
-
     // === TECHNICAL SPECS ARRAY ===
     {
       name: 'technicalSpecs',
@@ -123,7 +132,6 @@ export const Products: CollectionConfig = {
         { name: 'value', type: 'text', required: true, localized: true },
       ],
     },
-
     // === ✅ ROOT LEVEL MEDIA FIELDS ===
     {
       name: 'featuredImage',

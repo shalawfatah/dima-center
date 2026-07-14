@@ -49,6 +49,14 @@ export default function ProductInfoSidebar({
   isDiscounted,
   iqdPrice,
 }: ProductInfoSidebarProps) {
+  // Prefer the product's real, synced priceIQD (direct from Bruska) over the
+  // computed/derived iqdPrice — only fall back to iqdPrice when priceIQD is
+  // missing or 0.
+  const realIqdPrice =
+    product.priceIQD !== null && product.priceIQD !== undefined && Number(product.priceIQD) > 0
+      ? Number(product.priceIQD)
+      : iqdPrice
+
   return (
     <div
       style={{
@@ -163,7 +171,7 @@ export default function ProductInfoSidebar({
               finalPrice={finalPrice}
               originalPrice={originalPrice}
               isDiscounted={isDiscounted}
-              iqdPrice={iqdPrice}
+              iqdPrice={realIqdPrice}
               currentLocale={currentLocale}
               isRtl={isRtl}
             />

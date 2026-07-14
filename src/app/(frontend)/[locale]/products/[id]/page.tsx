@@ -92,6 +92,8 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
   const payload = await getPayload({ config })
 
   // 1. Fetch Global Settings for the Active Exchange Rate
+  // (kept as a fallback only — used when a product doesn't have a direct
+  // priceIQD value stored, e.g. legacy/unsynced items)
   let settings
   try {
     settings = await payload.findGlobal({
@@ -150,7 +152,31 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
 
   // 2. Calculate runtime values based on final pricing nodes
   const usdPriceNum = Number(mainPriceSpecs.finalPrice)
-  const iqdPriceNum = usdPriceNum * exchangeRate
+  const usdOriginalNum = Number(mainPriceSpecs.originalPrice)
+
+  // 🎯 Use the product's real, synced priceIQD value directly instead of
+  // deriving IQD purely from the branch exchange rate — the exchange rate
+  // is only a fallback for products that don't have a priceIQD yet.
+  const storedIqdPrice =
+    product.priceIQD !== null && product.priceIQD !== undefined ? Number(product.priceIQD) : null
+
+  let iqdPriceNum: number
+  if (storedIqdPrice && storedIqdPrice > 0) {
+    if (mainPriceSpecs.isDiscounted && usdOriginalNum > 0) {
+      // Apply the same relative discount (percentage or fixed) to the real
+      // IQD price by scaling it with the USD final/original ratio, so the
+      // displayed dinar total stays consistent with whatever discount rule
+      // was used (percentage or fixed-dollar).
+      const discountRatio = usdPriceNum / usdOriginalNum
+      iqdPriceNum = storedIqdPrice * discountRatio
+    } else {
+      iqdPriceNum = storedIqdPrice
+    }
+  } else {
+    // Fallback: no direct priceIQD on this product — derive it from the
+    // branch exchange rate like before.
+    iqdPriceNum = usdPriceNum * exchangeRate
+  }
 
   return (
     <div
@@ -183,7 +209,7 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
             currentLocale={currentLocale}
             isRtl={isRtl}
             finalPrice={usdPriceNum}
-            originalPrice={Number(mainPriceSpecs.originalPrice)}
+            originalPrice={usdOriginalNum}
             isDiscounted={mainPriceSpecs.isDiscounted}
             iqdPrice={iqdPriceNum}
           />
