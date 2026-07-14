@@ -17,7 +17,6 @@ import { CATEGORY_MAP } from '@/utils/categories'
 import { getStorefrontMetadata } from '@/utils/seo'
 import Image from 'next/image'
 import PCBuilderSection from '@/components/PCBuilderSection'
-import FullBuildsSection from '@/components/FullBuildsSection' // imported here
 import CategoryCarousel from '@/components/CategoryCarousel'
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
@@ -196,9 +195,6 @@ export default async function StorefrontHome({ params, searchParams }: PageProps
       <div className={styles.promoWrapper}>
         <div className={styles.promoLeft}>
           <PCBuilderSection currentLocale={currentLocale} isRtl={isRtl} />
-        </div>
-        <div className={styles.promoRight}>
-          <FullBuildsSection currentLocale={currentLocale} isRtl={isRtl} />
         </div>
       </div>
 

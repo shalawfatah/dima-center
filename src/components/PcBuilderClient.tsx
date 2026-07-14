@@ -10,7 +10,6 @@ import { GeneralSettingsData } from '@/types/types'
 import ProductPickerModal from './ProductPickerModal'
 import styles from '@/styles/pc_builder.module.css'
 
-// Helper function to calculate discounted price for a product
 const getDiscountedPrice = (product: any): number => {
   if (!product) return 0
   const originalPrice = Number(product.price) || 0
@@ -23,7 +22,6 @@ const getDiscountedPrice = (product: any): number => {
     const discountPercent = Number(product.discountValue) || 0
     return Math.max(0, originalPrice - (originalPrice * discountPercent) / 100)
   }
-
   return originalPrice
 }
 
@@ -52,19 +50,45 @@ export default function PcBuilderClient({
 
   const dynamicExchangeRate = generals?.exchangeRate ?? 1500
 
-  // 🔄 Handle "Bring Parts to PC Builder" URL Syncing on Mount
+  // 🔄 Handle URL Syncing on Mount
   useEffect(() => {
-    const partsParam = searchParams.get('parts')
-    if (!partsParam) return
+    // FALLBACK ENGINE: If Next.js searchParams hook returns blank, pull directly from native browser window context
+    let partsParam = searchParams.get('parts')
+
+    if (!partsParam && typeof window !== 'undefined') {
+      const nativeParams = new URLSearchParams(window.location.search)
+      partsParam = nativeParams.get('parts')
+      console.log(
+        '⚠️ Next.js Hook skipped param. Native Browser Window check retrieved:',
+        partsParam,
+      )
+    }
+
+    if (!partsParam) {
+      console.log(
+        "🔴 CRITICAL: The string parameter '?parts=' is missing entirely from both Next.js context and window.location.",
+      )
+      return
+    }
+
+    console.log('🟢 Processing raw query payload string:', partsParam)
 
     try {
-      // Expecting comma-separated pairs like: ?parts=cpu:prod_1,gpu:prod_2
       const incomingParts = partsParam.split(',').reduce(
         (acc, pair) => {
           const [slotKey, productId] = pair.split(':')
           if (slotKey && productId) {
-            // Find the actual product object from our fetched payload collection
-            const matchedProduct = products.find((p) => p.id === productId)
+            const matchedProduct = products.find(
+              (p) =>
+                String(p.id) === String(productId) ||
+                (p.code && String(p.code) === String(productId)),
+            )
+
+            console.log(
+              `🔍 Mapping [${slotKey}] -> Target ID: "${productId}". Found?`,
+              matchedProduct ? '✅ YES' : '❌ NO',
+            )
+
             if (matchedProduct) {
               acc[slotKey] = matchedProduct
             }
@@ -75,32 +99,23 @@ export default function PcBuilderClient({
       )
 
       if (Object.keys(incomingParts).length > 0) {
-        setSelections((prev) => ({
-          ...prev,
-          ...incomingParts,
-        }))
+        setSelections((prev) => ({ ...prev, ...incomingParts }))
 
-        // Clean up URL parameters instantly so refreshes do not overwrite future changes
-        const newParams = new URLSearchParams(searchParams.toString())
-        newParams.delete('parts')
-
-        const cleanQuery = newParams.toString()
-        const cleanPath = `/${currentLocale}/pc-builder${cleanQuery ? `?${cleanQuery}` : ''}`
-        router.replace(cleanPath)
+        // Perform clean navigation cleanup to drop params safely from the browser viewport
+        const nextUrl = `/${currentLocale}/pc-builder`
+        window.history.replaceState(null, '', nextUrl)
+        console.log('🚀 Browser address parameters cleaned successfully.')
       }
     } catch (error) {
       console.error('System failed to process incoming transferred parts blueprint:', error)
     }
-  }, [searchParams, products, setSelections, router, currentLocale])
+  }, [searchParams, products, setSelections, currentLocale])
 
   const openModal = (slotKey: string) => setActiveModalSlot(slotKey)
   const closeModal = () => setActiveModalSlot(null)
 
   const selectComponent = (slotKey: string, product: any) => {
-    setSelections((prev) => ({
-      ...prev,
-      [slotKey]: product,
-    }))
+    setSelections((prev) => ({ ...prev, [slotKey]: product }))
     closeModal()
   }
 
@@ -112,13 +127,10 @@ export default function PcBuilderClient({
     })
   }
 
-  // Final Total Price (sum of discounted prices)
   const totalPrice = Object.values(selections).reduce(
     (sum, item) => sum + getDiscountedPrice(item),
     0,
   )
-
-  // Sum of Original prices (just in case you want to track pre-discount totals)
   const totalOriginalPrice = Object.values(selections).reduce(
     (sum, item) => sum + (Number(item.price) || 0),
     0,
@@ -143,7 +155,7 @@ export default function PcBuilderClient({
         body: JSON.stringify({
           name: buildName,
           user: user.id,
-          totalPrice: totalPrice, // Sends final discounted aggregate
+          totalPrice: totalPrice,
           components: componentsData,
         }),
       })
@@ -151,7 +163,6 @@ export default function PcBuilderClient({
       if (res.ok) {
         window.localStorage.removeItem('pc_build_selections')
         window.localStorage.removeItem('pc_build_name')
-
         setMessage({ type: 'success', text: 'Rig blueprint layout secured successfully!' })
         router.push(`/${currentLocale}/account`)
       } else {
@@ -166,7 +177,6 @@ export default function PcBuilderClient({
 
   const getLocalizedTitle = (product: any): string => {
     if (!product) return ''
-
     const rawTitle = product.title || ''
     if (fallbackCatalog[rawTitle]) {
       return fallbackCatalog[rawTitle][currentLocale as 'en' | 'ar' | 'ckb'] || rawTitle
@@ -174,7 +184,7 @@ export default function PcBuilderClient({
     return rawTitle
   }
 
-  const getExchangeLabel = (): string => {
+  const getExchangeLabel = () => {
     if (currentLocale === 'ckb') return 'کۆی گشتی نرخ (IQD)'
     if (currentLocale === 'ar') return 'إجمالي السعر (IQD)'
     return 'Total Price (IQD)'
@@ -185,7 +195,6 @@ export default function PcBuilderClient({
       const stored = localStorage.getItem('cart')
       const cart = stored ? JSON.parse(stored) : []
       const existing = cart.find((item: any) => item.id === prod.id)
-
       const prodProductImg = prod?.featuredImage?.url || prod?.meta?.image?.url
       const calculatedFinalPrice = getDiscountedPrice(prod)
 
@@ -195,7 +204,7 @@ export default function PcBuilderClient({
         cart.push({
           id: prod.id,
           title: getLocalizedTitle(prod),
-          price: calculatedFinalPrice, // Store the final discounted price in cart
+          price: calculatedFinalPrice,
           quantity: 1,
           imageUrl: prodProductImg,
         })
@@ -254,8 +263,6 @@ export default function PcBuilderClient({
           {COMPONENT_SLOTS.map((slot) => {
             const chosenItem = selections[slot.key]
             const itemImageUrl = chosenItem?.featuredImage?.url || chosenItem?.meta?.image?.url
-
-            // Calculate item-specific prices
             const originalPrice = chosenItem ? Number(chosenItem.price) || 0 : 0
             const finalItemPrice = chosenItem ? getDiscountedPrice(chosenItem) : 0
             const hasItemDiscount = chosenItem ? !!chosenItem.hasDiscount : false
@@ -286,7 +293,6 @@ export default function PcBuilderClient({
                       />
                     )}
                   </div>
-
                   <div>
                     <span className={styles['pc-builder-slot-label']}>{slot.label}</span>
                     {chosenItem ? (
@@ -318,7 +324,6 @@ export default function PcBuilderClient({
                     )}
                   </div>
                 </div>
-
                 <div className={styles['pc-builder-actions-group']}>
                   {chosenItem && (
                     <button
@@ -349,7 +354,6 @@ export default function PcBuilderClient({
         <div className={styles['pc-builder-sidebar']}>
           <div className={styles['pc-builder-summary-card']}>
             <h3 className={styles['pc-builder-summary-heading']}>{t.summary}</h3>
-
             <div className={styles['pc-builder-field-group']}>
               <label className={styles['pc-builder-input-label']}>{t.configName}</label>
               <input
@@ -359,14 +363,12 @@ export default function PcBuilderClient({
                 className={styles['pc-builder-text-input']}
               />
             </div>
-
             <div className={styles['pc-builder-exchange-container']}>
               <span className={styles['pc-builder-exchange-label']}>{getExchangeLabel()}</span>
               <span className={styles['pc-builder-exchange-value']}>
                 {(totalPrice * dynamicExchangeRate).toLocaleString()} د.ع
               </span>
             </div>
-
             <div className={styles['pc-builder-price-row']}>
               <span className={styles['pc-builder-price-label']}>{t.totalPrice}</span>
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
@@ -382,7 +384,6 @@ export default function PcBuilderClient({
                 </span>
               </div>
             </div>
-
             {user ? (
               <button
                 onClick={handleSaveBuild}
