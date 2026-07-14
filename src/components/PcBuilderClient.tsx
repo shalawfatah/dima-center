@@ -10,6 +10,23 @@ import { GeneralSettingsData } from '@/types/types'
 import ProductPickerModal from './ProductPickerModal'
 import styles from '@/styles/pc_builder.module.css'
 
+// Helper function to calculate discounted price for a product
+const getDiscountedPrice = (product: any): number => {
+  if (!product) return 0
+  const originalPrice = Number(product.price) || 0
+  if (!product.hasDiscount) return originalPrice
+
+  if (product.discountType === 'fixed') {
+    const discount = Number(product.discountValue) || 0
+    return Math.max(0, originalPrice - discount)
+  } else if (product.discountType === 'percentage') {
+    const discountPercent = Number(product.discountValue) || 0
+    return Math.max(0, originalPrice - (originalPrice * discountPercent) / 100)
+  }
+
+  return originalPrice
+}
+
 export default function PcBuilderClient({
   products,
   user,
@@ -95,7 +112,14 @@ export default function PcBuilderClient({
     })
   }
 
+  // Final Total Price (sum of discounted prices)
   const totalPrice = Object.values(selections).reduce(
+    (sum, item) => sum + getDiscountedPrice(item),
+    0,
+  )
+
+  // Sum of Original prices (just in case you want to track pre-discount totals)
+  const totalOriginalPrice = Object.values(selections).reduce(
     (sum, item) => sum + (Number(item.price) || 0),
     0,
   )
@@ -119,7 +143,7 @@ export default function PcBuilderClient({
         body: JSON.stringify({
           name: buildName,
           user: user.id,
-          totalPrice: totalPrice,
+          totalPrice: totalPrice, // Sends final discounted aggregate
           components: componentsData,
         }),
       })
@@ -163,6 +187,7 @@ export default function PcBuilderClient({
       const existing = cart.find((item: any) => item.id === prod.id)
 
       const prodProductImg = prod?.featuredImage?.url || prod?.meta?.image?.url
+      const calculatedFinalPrice = getDiscountedPrice(prod)
 
       if (existing) {
         existing.quantity += 1
@@ -170,7 +195,7 @@ export default function PcBuilderClient({
         cart.push({
           id: prod.id,
           title: getLocalizedTitle(prod),
-          price: prod.price,
+          price: calculatedFinalPrice, // Store the final discounted price in cart
           quantity: 1,
           imageUrl: prodProductImg,
         })
@@ -230,6 +255,11 @@ export default function PcBuilderClient({
             const chosenItem = selections[slot.key]
             const itemImageUrl = chosenItem?.featuredImage?.url || chosenItem?.meta?.image?.url
 
+            // Calculate item-specific prices
+            const originalPrice = chosenItem ? Number(chosenItem.price) || 0 : 0
+            const finalItemPrice = chosenItem ? getDiscountedPrice(chosenItem) : 0
+            const hasItemDiscount = chosenItem ? !!chosenItem.hasDiscount : false
+
             return (
               <div
                 key={slot.key}
@@ -261,9 +291,26 @@ export default function PcBuilderClient({
                     <span className={styles['pc-builder-slot-label']}>{slot.label}</span>
                     {chosenItem ? (
                       <div className={styles['pc-builder-chosen-title']}>
-                        {getLocalizedTitle(chosenItem)}
+                        {getLocalizedTitle(chosenItem)}{' '}
                         <span className={styles['pc-builder-chosen-price']}>
-                          (${chosenItem.price})
+                          {hasItemDiscount ? (
+                            <>
+                              <span
+                                style={{
+                                  textDecoration: 'line-through',
+                                  color: '#888',
+                                  marginRight: '4px',
+                                }}
+                              >
+                                (${originalPrice})
+                              </span>
+                              <span style={{ fontWeight: 'bold', color: '#22c55e' }}>
+                                (${finalItemPrice})
+                              </span>
+                            </>
+                          ) : (
+                            <span>(${originalPrice})</span>
+                          )}
                         </span>
                       </div>
                     ) : (
@@ -322,9 +369,18 @@ export default function PcBuilderClient({
 
             <div className={styles['pc-builder-price-row']}>
               <span className={styles['pc-builder-price-label']}>{t.totalPrice}</span>
-              <span className={styles['pc-builder-price-value']}>
-                ${totalPrice.toLocaleString()}
-              </span>
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
+                {totalOriginalPrice > totalPrice && (
+                  <span
+                    style={{ textDecoration: 'line-through', color: '#888', fontSize: '0.9em' }}
+                  >
+                    ${totalOriginalPrice.toLocaleString()}
+                  </span>
+                )}
+                <span className={styles['pc-builder-price-value']}>
+                  ${totalPrice.toLocaleString()}
+                </span>
+              </div>
             </div>
 
             {user ? (
