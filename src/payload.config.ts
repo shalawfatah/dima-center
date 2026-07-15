@@ -12,6 +12,7 @@ import { fileURLToPath } from 'url'
 import { Products } from './collections/Products'
 import { Users } from './collections/Users'
 import { GeneralSettings } from './globals/GeneralSettings'
+import { CaseOffers } from './collections/CaseOffers'
 
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
@@ -21,7 +22,7 @@ export default buildConfig({
     user: Users.slug,
     disable: false,
   },
-  collections: [Users, Products, Orders, Media, Categories, Promotions, PCBuilds],
+  collections: [Users, Products, Orders, Media, Categories, Promotions, PCBuilds, CaseOffers],
   globals: [GeneralSettings],
   editor: lexicalEditor({}),
   secret: process.env.PAYLOAD_SECRET || 'fallback-secret-for-vercel-build-phase',

@@ -74,6 +74,7 @@ export interface Config {
     categories: Category;
     promotions: Promotion;
     'pc-builds': PcBuild;
+    'case-offers': CaseOffer;
     'payload-kv': PayloadKv;
     'payload-locked-documents': PayloadLockedDocument;
     'payload-preferences': PayloadPreference;
@@ -88,6 +89,7 @@ export interface Config {
     categories: CategoriesSelect<false> | CategoriesSelect<true>;
     promotions: PromotionsSelect<false> | PromotionsSelect<true>;
     'pc-builds': PcBuildsSelect<false> | PcBuildsSelect<true>;
+    'case-offers': CaseOffersSelect<false> | CaseOffersSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
     'payload-preferences': PayloadPreferencesSelect<false> | PayloadPreferencesSelect<true>;
@@ -285,6 +287,44 @@ export interface PcBuild {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "case-offers".
+ */
+export interface CaseOffer {
+  id: number;
+  title: string;
+  /**
+   * Used in the URL (e.g., mega-gaming-pc-offer)
+   */
+  slug: string;
+  featured_image: number | Media;
+  description?: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  } | null;
+  /**
+   * Original retail price of the full build
+   */
+  price: number;
+  /**
+   * Optional promotional price (leave blank if not discounted)
+   */
+  discountedPrice?: number | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-kv".
  */
 export interface PayloadKv {
@@ -334,6 +374,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'pc-builds';
         value: number | PcBuild;
+      } | null)
+    | ({
+        relationTo: 'case-offers';
+        value: number | CaseOffer;
       } | null);
   globalSlug?: string | null;
   user: {
@@ -510,6 +554,20 @@ export interface PcBuildsSelect<T extends boolean = true> {
         case?: T;
         cooler?: T;
       };
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "case-offers_select".
+ */
+export interface CaseOffersSelect<T extends boolean = true> {
+  title?: T;
+  slug?: T;
+  featured_image?: T;
+  description?: T;
+  price?: T;
+  discountedPrice?: T;
   updatedAt?: T;
   createdAt?: T;
 }
