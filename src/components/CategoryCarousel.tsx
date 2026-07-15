@@ -53,12 +53,14 @@ export default function CategoryCarousel({ currentLocale }: CategoryCarouselProp
     <div className={styles['embla-wrapper']} style={{ direction: isRtl ? 'rtl' : 'ltr' }}>
       <div className={styles['embla-viewport']} ref={emblaRef}>
         <div className={styles['embla-container']}>
-          <SingleCategoryLink
-            key={0}
-            titleFont={titleFont}
-            title={caseOffersTitle}
-            link={`/${activeLocale}/case-offers`}
-          />
+          <div style={{ marginRight: '2rem' }}>
+            <SingleCategoryLink
+              key={0}
+              titleFont={titleFont}
+              title={caseOffersTitle}
+              link={`/${activeLocale}/case-offers`}
+            />
+          </div>
           {items.map((category, index) => (
             <SingleCategoryLink
               key={index + 1}
@@ -67,6 +69,10 @@ export default function CategoryCarousel({ currentLocale }: CategoryCarouselProp
               link={`/${activeLocale}?category=${category.slug}`}
             />
           ))}
+
+          <div style={{ marginLeft: '2rem' }}>
+            <p></p>
+          </div>
         </div>
       </div>
 
