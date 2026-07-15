@@ -3,15 +3,29 @@
 import { useRouter, useSearchParams, usePathname } from 'next/navigation'
 import { useState, FormEvent, useEffect, useRef } from 'react'
 
-// ⚡ REAL DATABASE FETCH FUNCTION (Hits your custom Payload CMS API Route)
+// 🧠 Simple Client-Side In-Memory Cache Object to store search results
+// key: "query_locale" -> value: results array
+const searchCache: Record<string, any[]> = {}
+
+// ⚡ DATABASE FETCH FUNCTION (Hits your custom Payload CMS API Route)
 async function fetchSearchResults(query: string, locale: string) {
+  const cacheKey = `${query.toLowerCase()}_${locale}`
+
+  // 1. Check local memory cache first for immediate retrieval
+  if (searchCache[cacheKey]) {
+    return searchCache[cacheKey]
+  }
+
   try {
     const res = await fetch(`/api/search?q=${encodeURIComponent(query)}&locale=${locale}`)
     if (!res.ok) throw new Error('Search network request failed')
 
     const data = await res.json()
-    // Payload returns result.docs from the backend; the API endpoint maps this to an array
-    return Array.isArray(data) ? data : []
+    const mappedData = Array.isArray(data) ? data : []
+
+    // 2. Store results in cache for subsequent keystrokes
+    searchCache[cacheKey] = mappedData
+    return mappedData
   } catch (err) {
     console.error('Error fetching real-time search results:', err)
     return []
@@ -36,30 +50,40 @@ export default function SearchBar({ locale: initialLocale }: { locale: string })
   const locale = ['en', 'ar', 'ckb'].includes(segments[1]) ? segments[1] : initialLocale || 'en'
   const isRtl = locale === 'ar' || locale === 'ckb'
 
-  // 1. Debounce and fetch logic
+  // 🎯 Instant search logic using local cache + fast debouncing
   useEffect(() => {
     const trimmed = searchTerm.trim()
 
-    if (trimmed.length < 3) {
+    // Reduced threshold to 1 character so search starts immediately
+    if (trimmed.length < 1) {
       setResults([])
       setShowDropdown(false)
       return
     }
 
-    setIsLoading(true)
+    const cacheKey = `${trimmed.toLowerCase()}_${locale}`
 
-    // Wait 500ms after user stops typing to trigger the request
+    // 🏎️ INSTANT PATH: If we have the results cached locally, render them immediately
+    if (searchCache[cacheKey]) {
+      setResults(searchCache[cacheKey])
+      setShowDropdown(true)
+      setIsLoading(false)
+      return
+    }
+
+    // 🌐 NETWORK PATH: If not in cache, fetch with a rapid 150ms debounce (down from 500ms)
+    setIsLoading(true)
     const delayDebounceFn = setTimeout(async () => {
       const data = await fetchSearchResults(trimmed, locale)
       setResults(data)
       setShowDropdown(true)
       setIsLoading(false)
-    }, 500)
+    }, 150) // 150ms is imperceptible to humans, but prevents spamming your API
 
     return () => clearTimeout(delayDebounceFn)
   }, [searchTerm, locale])
 
-  // 2. Close dropdown if clicked outside of component container
+  // Close dropdown if clicked outside of component container
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
@@ -94,9 +118,10 @@ export default function SearchBar({ locale: initialLocale }: { locale: string })
     ckb: 'گەڕان بۆ پرۆسێسەر، کارتی شاشە، لاپتۆپ...',
   }
 
-  // Common Results Dropdown UI component to keep it DRY
+  // Common Results Dropdown UI component
   const RenderSearchResults = () => {
-    if (!showDropdown || searchTerm.trim().length < 3) return null
+    // Show dropdown starting from 1 character
+    if (!showDropdown || searchTerm.trim().length < 1) return null
 
     return (
       <div className="search-results-dropdown" style={{ direction: isRtl ? 'rtl' : 'ltr' }}>
@@ -105,7 +130,6 @@ export default function SearchBar({ locale: initialLocale }: { locale: string })
         ) : results.length > 0 ? (
           <ul className="results-list">
             {results.map((item) => {
-              // Gracefully handle both "title" (standard Payload) or "name" fields
               const displayName = item.title || item.name || ''
               return (
                 <li
@@ -150,7 +174,6 @@ export default function SearchBar({ locale: initialLocale }: { locale: string })
           color: #475569; 
         }
         
-        /* 🎯 MULTI-LANGUAGE STABLE LAYOUT */
         .search-mobile-overlay { 
           display: none; 
           position: absolute; 
@@ -165,7 +188,6 @@ export default function SearchBar({ locale: initialLocale }: { locale: string })
           box-sizing: border-box;
         }
 
-        /* 📋 REAL-TIME DROPDOWN STYLING */
         .search-results-dropdown {
           position: absolute;
           top: 105%;
@@ -262,7 +284,6 @@ export default function SearchBar({ locale: initialLocale }: { locale: string })
             🔍
           </button>
         </form>
-        {/* Render Mobile Results inside the active overlay container */}
         <RenderSearchResults />
       </div>
 
@@ -289,7 +310,7 @@ export default function SearchBar({ locale: initialLocale }: { locale: string })
           onFocus={(e) => {
             e.currentTarget.style.borderColor = '#3b82f6'
             e.currentTarget.style.boxShadow = '0 0 0 3px rgba(59, 130, 246, 0.15)'
-            setShowDropdown(searchTerm.trim().length >= 3)
+            setShowDropdown(searchTerm.trim().length >= 1)
           }}
           onBlur={(e) => {
             e.currentTarget.style.borderColor = '#cbd5e1'
@@ -311,7 +332,6 @@ export default function SearchBar({ locale: initialLocale }: { locale: string })
         >
           🔍
         </button>
-        {/* Render Desktop Results */}
         <RenderSearchResults />
       </form>
     </div>
