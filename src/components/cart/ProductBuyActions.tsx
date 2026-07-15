@@ -1,56 +1,41 @@
 'use client'
 
-import { useCart } from '@/components/cart/CartContext'
+import { usePathname } from 'next/navigation'
+import OrderButton from '../OrderButton'
 
 interface ProductBuyActionsProps {
   product: any
   finalPrice: number
-  originalPrice: number
-  isDiscounted: boolean
+  iqdPrice: number
   currentLocale: string
 }
 
 export default function ProductBuyActions({
   product,
   finalPrice,
-  originalPrice,
-  isDiscounted,
+  iqdPrice,
   currentLocale,
 }: ProductBuyActionsProps) {
-  const { openCheckout } = useCart()
+  // 1. Get the exact path (e.g., "/ckb/products/4339")
+  const pathname = usePathname()
+
+  // 2. Build the full link dynamically
+  const origin = typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3000'
+  const productUrl = `${origin}${pathname}`
+
+  // 3. Format prices
+  const formattedIqd = iqdPrice.toLocaleString()
+  const formattedUsd = finalPrice.toLocaleString()
+  const displayPrice = `${formattedIqd} IQD (~$${formattedUsd})`
 
   return (
-    <button
-      type="button"
-      disabled={product.stock <= 0}
-      onClick={() =>
-        openCheckout({
-          id: product.id,
-          title: product.title,
-          price: finalPrice, // Using the clean props passed from server
-          originalPrice: originalPrice,
-          isDiscounted: isDiscounted,
-        })
-      }
-      style={{
-        width: '100%',
-        background: product.stock > 0 ? '#ffcb6b' : '#ccc',
-        color: '#000',
-        border: 'none',
-        padding: '1rem',
-        borderRadius: '8px',
-        fontSize: '16px',
-        fontWeight: 'bold',
-        cursor: product.stock > 0 ? 'pointer' : 'not-allowed',
-        marginTop: '1rem',
-        fontFamily: 'Rudaw',
+    <OrderButton
+      currentLocale={currentLocale}
+      product={{
+        title: product.title,
+        price: displayPrice,
+        url: productUrl,
       }}
-    >
-      {currentLocale === 'ar'
-        ? 'إضافة إلى السلة'
-        : currentLocale === 'ckb'
-          ? 'بخەرە سەبەتەوە'
-          : 'Add to Cart'}
-    </button>
+    />
   )
 }
