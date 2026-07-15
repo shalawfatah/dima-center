@@ -19,6 +19,8 @@ interface ProductItem {
     url: string
     alt?: string
   } | null
+  isCaseOffer?: boolean
+  href?: string
   [key: string]: any
 }
 
@@ -27,6 +29,7 @@ interface ProductCarouselProps {
   currentLocale: string
   isRtl: boolean
   onAddToCart?: (product: ProductItem) => void
+  linkResolver?: (product: ProductItem) => string // 👈 Parent routing injection point
 }
 
 export default function ProductCarousel({
@@ -34,6 +37,7 @@ export default function ProductCarousel({
   currentLocale,
   isRtl,
   onAddToCart,
+  linkResolver,
 }: ProductCarouselProps) {
   const [emblaRef, emblaApi] = useEmblaCarousel({
     loop: false,
@@ -53,6 +57,15 @@ export default function ProductCarousel({
     }, 4000)
     return () => clearTimeout(timer)
   }, [toastProduct])
+
+  // 🎯 Dynamic routing path resolver (Uses parent prop callback if available)
+  const getProductPath = (product: ProductItem): string => {
+    if (linkResolver) return linkResolver(product)
+
+    // Default fallback routing logic
+    const routeSegment = product.isCaseOffer ? 'case-offers' : 'products'
+    return `/${currentLocale}/${routeSegment}/${product.id}`
+  }
 
   const onScroll = useCallback((api: any) => {
     const engine = api.internalEngine() as EngineType
@@ -134,7 +147,7 @@ export default function ProductCarousel({
         ar: 'معالج الألعاب اي ام دي رايزن 7 7800X3D',
         ckb: 'پرۆسێسەری یاری RX 7800X3D',
       },
-      'ئینتێل کۆر i9-14900K': {
+      'ئێنتێل کۆر i9-14900K': {
         en: 'Intel Core i9-14900K Processor',
         ar: 'معالج إنتل كور i9-14900K',
         ckb: 'ئینتێل کۆر i9-14900K',
@@ -217,17 +230,17 @@ export default function ProductCarousel({
   const handleShare = (e: React.MouseEvent, product: ProductItem) => {
     e.preventDefault()
     const localizedTitle = getLocalizedTitle(product)
+    const targetUrl = `${window.location.origin}${getProductPath(product)}`
+
     if (navigator.share) {
       navigator
         .share({
           title: localizedTitle,
-          url: `${window.location.origin}/${currentLocale}/products/${product.id}`,
+          url: targetUrl,
         })
         .catch(console.error)
     } else {
-      navigator.clipboard.writeText(
-        `${window.location.origin}/${currentLocale}/products/${product.id}`,
-      )
+      navigator.clipboard.writeText(targetUrl)
       alert('Link copied to clipboard!')
     }
   }
@@ -364,7 +377,6 @@ export default function ProductCarousel({
           color: #0f172a;
         }
         
-        /* Full-Width Hover Slide-In Overlay Configuration */
         .hover-cart-overlay {
           position: absolute;
           left: 0;
@@ -423,7 +435,7 @@ export default function ProductCarousel({
             return (
               <Link
                 key={product.id}
-                href={`/${currentLocale}/products/${product.id}`}
+                href={getProductPath(product)}
                 className="product-carousel-slide"
                 style={{ textDecoration: 'none', color: 'inherit', position: 'relative' }}
                 draggable={false}
@@ -571,7 +583,6 @@ export default function ProductCarousel({
                     </button>
                   </div>
 
-                  {/* Absolute Base Panel Content Block (Forced White Background / Black Typography) */}
                   <div
                     style={{
                       position: 'absolute',
@@ -670,7 +681,6 @@ export default function ProductCarousel({
                     </div>
                   </div>
 
-                  {/* Full-width Hover Shell Target Component Container */}
                   <div className="hover-cart-overlay">
                     <button
                       className="hover-cart-btn"

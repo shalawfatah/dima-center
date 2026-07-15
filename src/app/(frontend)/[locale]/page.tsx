@@ -40,6 +40,12 @@ export default async function StorefrontHome({ params, searchParams }: PageProps
 
   const englishCategoriesList = CATEGORY_MAP['en']
 
+  // --- Dynamic Routing Link Generator (Kept on Server) ---
+  const resolveProductHref = (id: string | number, isCaseOffer: boolean) => {
+    const routeSegment = isCaseOffer ? 'case-offers' : 'products'
+    return `/${currentLocale}/${routeSegment}/${id}`
+  }
+
   if (activeCategory) {
     const matchedCatEn = CATEGORY_MAP.en.find((c) => c.slug === activeCategory)
     const matchedCatAr = CATEGORY_MAP.ar.find((c) => c.slug === activeCategory)
@@ -85,12 +91,10 @@ export default async function StorefrontHome({ params, searchParams }: PageProps
               {res.docs.map((product: any) => {
                 const hasImage = product.featuredImage && typeof product.featuredImage === 'object'
                 const imageUrl = hasImage ? (product.featuredImage as any).url : null
+                const productHref = resolveProductHref(product.id, false)
+
                 return (
-                  <Link
-                    key={product.id}
-                    href={`/${currentLocale}/products/${product.id}`}
-                    className={styles.productCardLink}
-                  >
+                  <Link key={product.id} href={productHref} className={styles.productCardLink}>
                     <div className={styles.productCard}>
                       <div className={styles.productImageWrapper}>
                         {imageUrl ? (
@@ -123,7 +127,7 @@ export default async function StorefrontHome({ params, searchParams }: PageProps
   try {
     const fetchedOffers = await payload.find({
       collection: 'case-offers',
-      locale: currentLocale, // Dynamic locale data fetching
+      locale: currentLocale,
       limit: 20,
     })
     caseOffers = fetchedOffers.docs
@@ -189,24 +193,26 @@ export default async function StorefrontHome({ params, searchParams }: PageProps
     console.error('Failed fetching other categories:', e)
   }
 
-  // Standard product mapper for existing carousel setup
+  // Standard product mapper
   const formatProductForCarousel = (p: any) => {
     const isImageObj = p.featuredImage && typeof p.featuredImage === 'object' && p.featuredImage.url
+    const productId = String(p.id)
     return {
       ...p,
-      id: String(p.id),
+      id: productId,
       featuredImage: isImageObj
         ? { url: p.featuredImage.url, alt: p.featuredImage.alt || '' }
         : null,
+      isCaseOffer: false,
+      href: resolveProductHref(productId, false), // 👈 Pre-serialized route parameter
     }
   }
 
-  // Custom mapper to bridge CaseOffers properties schema to ProductCarousel contract specs
+  // Custom mapper to bridge CaseOffers properties schema
   const formatCaseOfferForCarousel = (offer: any) => {
     const isImageObj =
       offer.featured_image && typeof offer.featured_image === 'object' && offer.featured_image.url
 
-    // URL-encode spaces in the image URL to prevent Supabase 400 bad requests
     let rawUrl = isImageObj ? offer.featured_image.url : null
     if (rawUrl && rawUrl.includes(' ')) {
       rawUrl = rawUrl.replace(/ /g, '%20')
@@ -216,16 +222,19 @@ export default async function StorefrontHome({ params, searchParams }: PageProps
     const promoPrice = offer.discountedPrice ? Number(offer.discountedPrice) : null
     const hasPromo = !!promoPrice && promoPrice < originalPrice
     const discountAmount = hasPromo ? originalPrice - promoPrice : 0
+    const offerId = String(offer.id)
 
     return {
-      id: String(offer.id),
+      id: offerId,
       title: offer.title,
       featuredImage: rawUrl ? { url: rawUrl, alt: offer.featured_image.alt || offer.title } : null,
       price: originalPrice,
       hasDiscount: hasPromo,
-      discountType: 'fixed' as const, // 👈 Added "as const" to force literal type assignment
+      discountType: 'fixed' as const,
       discountValue: discountAmount,
       discountedPrice: promoPrice,
+      isCaseOffer: true,
+      href: resolveProductHref(offerId, true), // 👈 Pre-serialized route parameter
     }
   }
 
@@ -233,7 +242,6 @@ export default async function StorefrontHome({ params, searchParams }: PageProps
     <div className={`${styles.pageWrapper} ${styles.pageWrapperDefault} ${dirClass}`}>
       <CategoryCarousel currentLocale={currentLocale} />
 
-      {/* 2/3 and 1/3 split layout container */}
       <div className={styles.promoWrapper}>
         <div className={styles.promoLeft}>
           <PCBuilderSection currentLocale={currentLocale} isRtl={isRtl} />
