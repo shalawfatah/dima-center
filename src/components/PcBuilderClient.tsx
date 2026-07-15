@@ -25,6 +25,33 @@ const getDiscountedPrice = (product: any): number => {
   return originalPrice
 }
 
+// 🎯 Quick Iraqi phone utility
+function normalizeIraqiNumber(number: string): string {
+  let digits = number.replace(/\D/g, '')
+  if (digits.startsWith('0')) digits = digits.slice(1) // drop leading 0
+  if (!digits.startsWith('964')) digits = '964' + digits // add country code
+  return digits
+}
+
+// Localized UI form labels
+const phonePlaceholder: Record<string, string> = {
+  ar: 'رقم الواتساب (مثال: 07701234567)',
+  ckb: 'ژمارەی واتسئەپ (نموونە: 07701234567)',
+  en: 'WhatsApp Number (e.g., 07701234567)',
+}
+
+const submitLabel: Record<string, string> = {
+  ar: 'اطلب هذا التجميع عبر واتساب 🛒',
+  ckb: 'داواکردنی ئەم کۆمپیوتەرە بە واتسئەپ 🛒',
+  en: 'Order This Build via WhatsApp 🛒',
+}
+
+const phoneErrorLabel: Record<string, string> = {
+  ar: 'يرجى إدخال رقم هاتفك لإتمام طلب التجميع!',
+  ckb: 'تکایە ژمارەی مۆبایلەکەت بنووسە بۆ ناردنی داواکارییەکە!',
+  en: 'Please enter your phone number to complete the build order!',
+}
+
 export default function PcBuilderClient({
   products,
   user,
@@ -45,14 +72,13 @@ export default function PcBuilderClient({
   )
 
   const [activeModalSlot, setActiveModalSlot] = useState<string | null>(null)
-  const [isSaving, setIsSaving] = useState(false)
+  const [buyerNumber, setBuyerNumber] = useState('')
   const [message, setMessage] = useState({ type: '', text: '' })
 
   const dynamicExchangeRate = generals?.exchangeRate ?? 1500
 
   // 🔄 Handle URL Syncing on Mount
   useEffect(() => {
-    // FALLBACK ENGINE: If Next.js searchParams hook returns blank, pull directly from native browser window context
     let partsParam = searchParams.get('parts')
 
     if (!partsParam && typeof window !== 'undefined') {
@@ -61,9 +87,6 @@ export default function PcBuilderClient({
     }
 
     if (!partsParam) {
-      console.log(
-        "🔴 CRITICAL: The string parameter '?parts=' is missing entirely from both Next.js context and window.location.",
-      )
       return
     }
 
@@ -78,11 +101,6 @@ export default function PcBuilderClient({
                 (p.code && String(p.code) === String(productId)),
             )
 
-            console.log(
-              `🔍 Mapping [${slotKey}] -> Target ID: "${productId}". Found?`,
-              matchedProduct ? '✅ YES' : '❌ NO',
-            )
-
             if (matchedProduct) {
               acc[slotKey] = matchedProduct
             }
@@ -94,8 +112,6 @@ export default function PcBuilderClient({
 
       if (Object.keys(incomingParts).length > 0) {
         setSelections((prev) => ({ ...prev, ...incomingParts }))
-
-        // Perform clean navigation cleanup to drop params safely from the browser viewport
         const nextUrl = `/${currentLocale}/pc-builder`
         window.history.replaceState(null, '', nextUrl)
       }
@@ -129,43 +145,56 @@ export default function PcBuilderClient({
     0,
   )
 
-  const handleSaveBuild = async () => {
-    if (!user) return
-    setIsSaving(true)
-    setMessage({ type: '', text: '' })
+  // 🎯 Gathers selections, builds a custom formatted invoice list, and opens WhatsApp
+  const handleWhatsAppBuildOrder = (e: React.FormEvent) => {
+    e.preventDefault()
 
-    const componentsData: Record<string, string> = {}
+    if (!buyerNumber.trim()) {
+      alert(phoneErrorLabel[currentLocale] || phoneErrorLabel.en)
+      return
+    }
+
+    if (Object.keys(selections).length === 0) {
+      alert('Please select at least one component before ordering!')
+      return
+    }
+
+    // 1. Build the spec breakdown text
+    const specLines: string[] = []
     COMPONENT_SLOTS.forEach((slot) => {
-      if (selections[slot.key]) {
-        componentsData[slot.key] = selections[slot.key].id
+      const chosen = selections[slot.key]
+      if (chosen) {
+        const finalPrice = getDiscountedPrice(chosen)
+        const itemTitle = getLocalizedTitle(chosen)
+        specLines.push(`⚙️ *${slot.label}:* ${itemTitle} ($${finalPrice.toLocaleString()})`)
       }
     })
 
-    try {
-      const res = await fetch('/api/pc-builds', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: buildName,
-          user: user.id,
-          totalPrice: totalPrice,
-          components: componentsData,
-        }),
-      })
+    const finalIqd = (totalPrice * dynamicExchangeRate).toLocaleString()
 
-      if (res.ok) {
-        window.localStorage.removeItem('pc_build_selections')
-        window.localStorage.removeItem('pc_build_name')
-        setMessage({ type: 'success', text: 'Rig blueprint layout secured successfully!' })
-        router.push(`/${currentLocale}/account`)
-      } else {
-        setMessage({ type: 'error', text: 'Failed to preserve layout blueprint metrics.' })
-      }
-    } catch (err) {
-      setMessage({ type: 'error', text: 'An unexpected system networking error occurred.' })
-    } finally {
-      setIsSaving(false)
-    }
+    // 2. Draft the beautiful WhatsApp message
+    const waMessageText =
+      `🖥️ *New PC Build Order Request: "${buildName}"*\n\n` +
+      `*Selected Hardware Spec Breakdown:*\n` +
+      `---------------------------------\n` +
+      `${specLines.join('\n')}\n\n` +
+      `---------------------------------\n` +
+      `*Total Price (USD):* $${totalPrice.toLocaleString()}\n` +
+      `*Total Price (IQD):* ${finalIqd} IQD\n` +
+      `*Buyer Phone Number:* ${buyerNumber}\n\n` +
+      `🔗 *Build Editor Sync Link:*\n` +
+      `${window.location.origin}/${currentLocale}/pc-builder?parts=` +
+      COMPONENT_SLOTS.filter((s) => selections[s.key])
+        .map((s) => `${s.key}:${selections[s.key].id}`)
+        .join(',')
+
+    // 3. Fire WhatsApp redirection
+    const sellerNumber = '9647701414269'
+    const cleanSellerNumber = normalizeIraqiNumber(sellerNumber)
+    const encodedMessage = encodeURIComponent(waMessageText)
+    const waLink = `https://wa.me/${cleanSellerNumber}?text=${encodedMessage}`
+
+    window.open(waLink, '_blank')
   }
 
   const getLocalizedTitle = (product: any): string => {
@@ -275,6 +304,7 @@ export default function PcBuilderClient({
                         src={itemImageUrl}
                         alt={getLocalizedTitle(chosenItem)}
                         className="object-cover w-full h-full"
+                        style={{ height: 'auto' }}
                       />
                     ) : (
                       <Image
@@ -283,6 +313,7 @@ export default function PcBuilderClient({
                         src={(slot as any).defaultImage || `/categories/${slot.key}.png`}
                         alt={slot.label}
                         className="object-contain opacity-60 w-4/5 h-4/5"
+                        style={{ height: 'auto' }}
                       />
                     )}
                   </div>
@@ -347,6 +378,7 @@ export default function PcBuilderClient({
         <div className={styles['pc-builder-sidebar']}>
           <div className={styles['pc-builder-summary-card']}>
             <h3 className={styles['pc-builder-summary-heading']}>{t.summary}</h3>
+
             <div className={styles['pc-builder-field-group']}>
               <label className={styles['pc-builder-input-label']}>{t.configName}</label>
               <input
@@ -356,12 +388,14 @@ export default function PcBuilderClient({
                 className={styles['pc-builder-text-input']}
               />
             </div>
+
             <div className={styles['pc-builder-exchange-container']}>
               <span className={styles['pc-builder-exchange-label']}>{getExchangeLabel()}</span>
               <span className={styles['pc-builder-exchange-value']}>
                 {(totalPrice * dynamicExchangeRate).toLocaleString()} د.ع
               </span>
             </div>
+
             <div className={styles['pc-builder-price-row']}>
               <span className={styles['pc-builder-price-label']}>{t.totalPrice}</span>
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
@@ -377,27 +411,50 @@ export default function PcBuilderClient({
                 </span>
               </div>
             </div>
-            {user ? (
+
+            {/* 🎯 Integrated Phone Input and WhatsApp Buy CTA */}
+            <form
+              onSubmit={handleWhatsAppBuildOrder}
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '0.75rem',
+                marginTop: '1.25rem',
+              }}
+            >
+              <input
+                type="tel"
+                placeholder={phonePlaceholder[currentLocale] || phonePlaceholder.en}
+                value={buyerNumber}
+                onChange={(e) => setBuyerNumber(e.target.value)}
+                required
+                style={{
+                  width: '100%',
+                  padding: '0.75rem 1rem',
+                  borderRadius: '8px',
+                  border: '1px solid #cbd5e1',
+                  fontSize: '14px',
+                  outline: 'none',
+                  boxSizing: 'border-box',
+                }}
+              />
               <button
-                onClick={handleSaveBuild}
-                disabled={isSaving || Object.keys(selections).length === 0}
+                type="submit"
+                disabled={Object.keys(selections).length === 0}
                 className={styles['pc-builder-submit-btn']}
                 style={{
+                  width: '100%',
+                  background: '#25D366', // WhatsApp Brand Green
+                  color: '#fff',
+                  border: 'none',
                   cursor: Object.keys(selections).length === 0 ? 'not-allowed' : 'pointer',
-                  opacity: Object.keys(selections).length === 0 || isSaving ? 0.6 : 1,
+                  opacity: Object.keys(selections).length === 0 ? 0.6 : 1,
+                  fontFamily: fontFam,
                 }}
               >
-                {isSaving ? t.saving : t.saveBtn}
+                {submitLabel[currentLocale] || submitLabel.en}
               </button>
-            ) : (
-              <div className={styles['pc-builder-auth-notice']}>
-                {t.loginPrompt} <br />
-                <a href={`/${currentLocale}/login`} className={styles['pc-builder-auth-link']}>
-                  {t.signIn}
-                </a>{' '}
-                {t.saveSuffix}
-              </div>
-            )}
+            </form>
           </div>
         </div>
       </div>

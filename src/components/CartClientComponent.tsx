@@ -21,16 +21,27 @@ interface TranslationBundle {
   currency: string
   clear: string
   checkout: string
+  phonePlaceholder: string
+  phoneError: string
 }
 
 interface CartClientComponentProps {
   currentLocale: string
 }
 
+// 🎯 Quick Iraqi phone helper
+function normalizeIraqiNumber(number: string): string {
+  let digits = number.replace(/\D/g, '')
+  if (digits.startsWith('0')) digits = digits.slice(1) // drop leading 0
+  if (!digits.startsWith('964')) digits = '964' + digits // add country code if missing
+  return digits
+}
+
 export default function CartClientComponent({ currentLocale }: CartClientComponentProps) {
   const isRtl = currentLocale === 'ar' || currentLocale === 'ckb'
   const [cartItems, setCartItems] = useState<CartItem[]>([])
   const [isLoading, setIsLoading] = useState<boolean>(true)
+  const [buyerNumber, setBuyerNumber] = useState('')
 
   useEffect(() => {
     try {
@@ -44,10 +55,9 @@ export default function CartClientComponent({ currentLocale }: CartClientCompone
     } catch (err) {
       console.error('Error reading cart data:', err)
     } finally {
-      setIsLoading(false)
+      setIsLoading(false) // 👈 Changed from isLoading(false) to setIsLoading(false)
     }
   }, [])
-
   const saveCart = (updatedItems: CartItem[]) => {
     setCartItems(updatedItems)
     localStorage.setItem('cart', JSON.stringify(updatedItems))
@@ -82,20 +92,24 @@ export default function CartClientComponent({ currentLocale }: CartClientCompone
       empty: 'Your cart is completely empty.',
       continue: 'Continue Shopping',
       summary: 'Order Summary',
-      subtotal: 'Subtotal',
+      subtotal: 'Total Amount',
       currency: 'USD',
       clear: 'Clear Cart',
-      checkout: 'Proceed to Checkout',
+      checkout: 'Order via WhatsApp 🛒',
+      phonePlaceholder: 'Enter your WhatsApp number (e.g. 07701234567)',
+      phoneError: 'Please enter your WhatsApp number to complete the order!',
     },
     ar: {
       title: 'حقيبة التسوق الخاصة بك',
       empty: 'حقيبة التسوق فارغة تماماً.',
       continue: 'متابعة التسوق',
       summary: 'ملخص الطلب',
-      subtotal: 'المجموع الفرعي',
+      subtotal: 'المجموع الكلي',
       currency: 'دۆلار',
       clear: 'تفريغ السلة',
-      checkout: 'المتابعة لإتمام الطلب',
+      checkout: 'اطلب عبر واتساب 🛒',
+      phonePlaceholder: 'أدخل رقم الواتساب الخاص بك (مثال: 07701234567)',
+      phoneError: 'يرجى إدخال رقم هاتف الواتساب الخاص بك لإرسال الطلب!',
     },
     ckb: {
       title: 'سەبەتەی کڕینەکەت',
@@ -105,7 +119,9 @@ export default function CartClientComponent({ currentLocale }: CartClientCompone
       subtotal: 'کۆ گشتی',
       currency: 'دۆلار',
       clear: 'سڕینەوەی سەبەتە',
-      checkout: 'بەردەوامبوون بۆ پارەدان',
+      checkout: 'داواکردن لە ڕێگەی واتسئەپ 🛒',
+      phonePlaceholder: 'ژمارەی واتسئەپەکەت بنووسە (نموونە: 07701234567)',
+      phoneError: 'تکایە ژمارەی واتسئەپەکەت بنووسە بۆ ناردنی داواکارییەکە!',
     },
   }
 
@@ -119,6 +135,42 @@ export default function CartClientComponent({ currentLocale }: CartClientCompone
   const regularFont = isRegionalLocale ? '"Sarchia", sans-serif' : 'system-ui, sans-serif'
 
   const totalAmount = cartItems.reduce((acc, item) => acc + item.price * item.quantity, 0)
+
+  // 🎯 Handles gathering all cart items, building the text list, and redirecting.
+  const handleWhatsAppCheckout = (e: React.FormEvent) => {
+    e.preventDefault()
+
+    if (!buyerNumber.trim()) {
+      alert(t.phoneError)
+      return
+    }
+
+    // 1. Build a clean formatted item manifest list
+    const itemsText = cartItems
+      .map(
+        (item, index) =>
+          `${index + 1}. *${item.title}*\n` +
+          `   Qty: ${item.quantity} × ${item.price.toLocaleString()} ${t.currency}\n` +
+          `   Link: ${window.location.origin}/${currentLocale}/products/${item.id}`,
+      )
+      .join('\n\n')
+
+    // 2. Draft the complete WhatsApp message template
+    const orderMessage =
+      `New cart order request 🛒\n\n` +
+      `${itemsText}\n\n` +
+      `---------------------------\n` +
+      `*Total Amount:* ${totalAmount.toLocaleString()} ${t.currency}\n` +
+      `*Buyer Number:* ${buyerNumber}`
+
+    const sellerNumber = '9647701414269'
+    const cleanSellerNumber = normalizeIraqiNumber(sellerNumber)
+    const encodedMessage = encodeURIComponent(orderMessage)
+    const waLink = `https://wa.me/${cleanSellerNumber}?text=${encodedMessage}`
+
+    // 3. Open WhatsApp Web / App
+    window.open(waLink, '_blank')
+  }
 
   if (isLoading) {
     return <div style={{ padding: '4rem', textAlign: 'center', color: '#666' }}>...</div>
@@ -361,24 +413,49 @@ export default function CartClientComponent({ currentLocale }: CartClientCompone
               </span>
             </div>
 
-            <button
-              style={{
-                width: '100%',
-                background: '#000',
-                color: '#fff',
-                padding: '1rem',
-                borderRadius: '10px',
-                fontWeight: '600',
-                border: 'none',
-                cursor: 'pointer',
-                fontSize: '1rem',
-                transition: 'opacity 0.2s',
-                fontFamily: headingFont,
-              }}
-              onClick={() => alert('Proceeding to checkout layout tracking implementation...')}
+            {/* 🎯 Interactive Phone Form and WhatsApp CTA button */}
+            <form
+              onSubmit={handleWhatsAppCheckout}
+              style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}
             >
-              {t.checkout}
-            </button>
+              <input
+                type="tel"
+                placeholder={t.phonePlaceholder}
+                value={buyerNumber}
+                onChange={(e) => setBuyerNumber(e.target.value)}
+                required
+                style={{
+                  width: '100%',
+                  padding: '0.75rem 1rem',
+                  borderRadius: '8px',
+                  border: '1px solid #cbd5e1',
+                  fontSize: '15px',
+                  outline: 'none',
+                  boxSizing: 'border-box',
+                  fontFamily: regularFont,
+                }}
+              />
+              <button
+                type="submit"
+                style={{
+                  width: '100%',
+                  background: '#25D366', // WhatsApp Green
+                  color: '#fff',
+                  padding: '1rem',
+                  borderRadius: '10px',
+                  fontWeight: '700',
+                  border: 'none',
+                  cursor: 'pointer',
+                  fontSize: '1rem',
+                  transition: 'background-color 0.2s',
+                  fontFamily: headingFont,
+                }}
+                onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#1fbc54')}
+                onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = '#25D366')}
+              >
+                {t.checkout}
+              </button>
+            </form>
           </div>
         </div>
       )}
