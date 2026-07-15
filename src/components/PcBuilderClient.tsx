@@ -58,10 +58,6 @@ export default function PcBuilderClient({
     if (!partsParam && typeof window !== 'undefined') {
       const nativeParams = new URLSearchParams(window.location.search)
       partsParam = nativeParams.get('parts')
-      console.log(
-        '⚠️ Next.js Hook skipped param. Native Browser Window check retrieved:',
-        partsParam,
-      )
     }
 
     if (!partsParam) {
@@ -70,8 +66,6 @@ export default function PcBuilderClient({
       )
       return
     }
-
-    console.log('🟢 Processing raw query payload string:', partsParam)
 
     try {
       const incomingParts = partsParam.split(',').reduce(
@@ -104,7 +98,6 @@ export default function PcBuilderClient({
         // Perform clean navigation cleanup to drop params safely from the browser viewport
         const nextUrl = `/${currentLocale}/pc-builder`
         window.history.replaceState(null, '', nextUrl)
-        console.log('🚀 Browser address parameters cleaned successfully.')
       }
     } catch (error) {
       console.error('System failed to process incoming transferred parts blueprint:', error)

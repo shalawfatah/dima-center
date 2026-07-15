@@ -34,11 +34,6 @@ export default function ProductPickerModal({
   const currentSlotConfig = COMPONENT_SLOTS.find((s) => s.key === activeModalSlot)
   if (!currentSlotConfig) return null
 
-  console.log(
-    'ALL RAW PRODUCTS IN BUILDER:',
-    products.map((p) => ({ title: p.title, cat: p.category })),
-  )
-
   const filteredProducts = products.filter((prod) => {
     // 1. Dynamic fallback support for both 'cat' and 'category' property namespaces
     const prodCategory = prod.cat !== undefined ? prod.cat : prod.category

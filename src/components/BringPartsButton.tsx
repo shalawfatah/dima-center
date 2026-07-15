@@ -14,8 +14,6 @@ export default function BringPartsButton({ components, locale }: BringPartsButto
     e.preventDefault()
     e.stopPropagation()
 
-    console.log('🔍 DEBUG [Button Click]: Raw components array received by button:', components)
-
     if (!components || components.length === 0) {
       alert('❌ Debug Error: The components array passed to this button is completely empty!')
       return
@@ -32,8 +30,6 @@ export default function BringPartsButton({ components, locale }: BringPartsButto
     const partsQuery = validComponents.map((item) => `${item.slotKey}:${item.productId}`).join(',')
 
     const targetUrl = `/${locale}/pc-builder?parts=${partsQuery}`
-
-    console.log('🚀 DEBUG [Button Click]: Attempting hard browser routing to:', targetUrl)
 
     // FORCE A HARD REFRESH ROUTE: This guarantees middleware can't mask the query string on client-side state
     window.location.href = targetUrl

@@ -83,7 +83,6 @@ export default function ProductCarousel({
     })
   }, [])
 
-  console.log('product ', products[0])
   useEffect(() => {
     if (!emblaApi) return
     emblaApi.on('scroll', onScroll)

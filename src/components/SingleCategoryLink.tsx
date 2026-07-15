@@ -1,20 +1,14 @@
 import Link from 'next/link'
 
 interface SingleCategoryLinkProps {
-  key: number
   link: string
   titleFont: string
   title: string
 }
 
-export default function SingleCategoryLink({
-  key,
-  link,
-  titleFont,
-  title,
-}: SingleCategoryLinkProps) {
+export default function SingleCategoryLink({ link, titleFont, title }: SingleCategoryLinkProps) {
   return (
-    <div className="embla-slide" key={key}>
+    <div className="embla-slide">
       <Link href={link} style={{ textDecoration: 'none' }}>
         <div className="text-badge-container">
           <span

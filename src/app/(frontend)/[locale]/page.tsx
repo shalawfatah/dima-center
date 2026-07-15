@@ -118,6 +118,20 @@ export default async function StorefrontHome({ params, searchParams }: PageProps
     )
   }
 
+  // --- Fetch Case Offers (Full Build Offers) ---
+  let caseOffers: any[] = []
+  try {
+    const fetchedOffers = await payload.find({
+      collection: 'case-offers',
+      locale: currentLocale, // Dynamic locale data fetching
+      limit: 20,
+    })
+    caseOffers = fetchedOffers.docs
+  } catch (err) {
+    console.error('Failed to fetch case offers:', err)
+  }
+
+  // --- Fetch Standard Discounts ---
   let productsWithDiscount: any[] = []
   try {
     const fetchedDiscounts = await payload.find({
@@ -136,7 +150,7 @@ export default async function StorefrontHome({ params, searchParams }: PageProps
     )
   }
 
-  // Fetch products maps sequentially using the dynamic locale strings mapped across standard slugs
+  // --- Fetch Categories Matrix ---
   const categoriesWithProducts = await Promise.all(
     englishCategoriesList.map(async (cat: any) => {
       const res = await payload.find({
@@ -145,7 +159,6 @@ export default async function StorefrontHome({ params, searchParams }: PageProps
         limit: 20,
       })
 
-      // Fetch distinct language string variations for the current unique slug loop iteration
       const enTitle = CATEGORY_MAP.en.find((c) => c.slug === cat.slug)?.title || ''
       const arTitle = CATEGORY_MAP.ar.find((c) => c.slug === cat.slug)?.title || ''
       const ckbTitle = CATEGORY_MAP.ckb.find((c) => c.slug === cat.slug)?.title || ''
@@ -176,6 +189,7 @@ export default async function StorefrontHome({ params, searchParams }: PageProps
     console.error('Failed fetching other categories:', e)
   }
 
+  // Standard product mapper for existing carousel setup
   const formatProductForCarousel = (p: any) => {
     const isImageObj = p.featuredImage && typeof p.featuredImage === 'object' && p.featuredImage.url
     return {
@@ -184,6 +198,34 @@ export default async function StorefrontHome({ params, searchParams }: PageProps
       featuredImage: isImageObj
         ? { url: p.featuredImage.url, alt: p.featuredImage.alt || '' }
         : null,
+    }
+  }
+
+  // Custom mapper to bridge CaseOffers properties schema to ProductCarousel contract specs
+  const formatCaseOfferForCarousel = (offer: any) => {
+    const isImageObj =
+      offer.featured_image && typeof offer.featured_image === 'object' && offer.featured_image.url
+
+    // URL-encode spaces in the image URL to prevent Supabase 400 bad requests
+    let rawUrl = isImageObj ? offer.featured_image.url : null
+    if (rawUrl && rawUrl.includes(' ')) {
+      rawUrl = rawUrl.replace(/ /g, '%20')
+    }
+
+    const originalPrice = Number(offer.price)
+    const promoPrice = offer.discountedPrice ? Number(offer.discountedPrice) : null
+    const hasPromo = !!promoPrice && promoPrice < originalPrice
+    const discountAmount = hasPromo ? originalPrice - promoPrice : 0
+
+    return {
+      id: String(offer.id),
+      title: offer.title,
+      featuredImage: rawUrl ? { url: rawUrl, alt: offer.featured_image.alt || offer.title } : null,
+      price: originalPrice,
+      hasDiscount: hasPromo,
+      discountType: 'fixed' as const, // 👈 Added "as const" to force literal type assignment
+      discountValue: discountAmount,
+      discountedPrice: promoPrice,
     }
   }
 
@@ -203,8 +245,27 @@ export default async function StorefrontHome({ params, searchParams }: PageProps
       </div>
 
       <main className={styles.defaultMain}>
-        {productsWithDiscount.length > 0 && (
+        {/* 🔥 SECTION 1: Full Build Offers / Case Offers */}
+        {caseOffers.length > 0 && (
           <section className={styles.sectionFirst}>
+            <LocalizedHeading
+              currentLocale={currentLocale}
+              en="Full Build Offers"
+              ar="عروض الكيسات الكاملة"
+              ckb="ئۆفەری کەیس"
+              style={{ fontSize: '1.4rem', marginBottom: '0.5rem' }}
+            />
+            <ProductCarousel
+              isRtl={isRtl}
+              currentLocale={currentLocale}
+              products={caseOffers.map(formatCaseOfferForCarousel)}
+            />
+          </section>
+        )}
+
+        {/* ⚡ SECTION 2: Standard Hot Discounts */}
+        {productsWithDiscount.length > 0 && (
+          <section className={styles.section}>
             <LocalizedHeading
               currentLocale={currentLocale}
               en="Hot Discounts 🔥"
@@ -220,6 +281,7 @@ export default async function StorefrontHome({ params, searchParams }: PageProps
           </section>
         )}
 
+        {/* Categories Section */}
         {categoriesWithProducts.map((cat) => {
           if (cat.products.length === 0) return null
           return (
@@ -240,6 +302,7 @@ export default async function StorefrontHome({ params, searchParams }: PageProps
           )
         })}
 
+        {/* Other Products Section */}
         {otherProducts.length > 0 && (
           <section className={styles.section}>
             <LocalizedHeading
