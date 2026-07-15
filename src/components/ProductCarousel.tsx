@@ -1,36 +1,12 @@
 'use client'
 
-import React, { useCallback, useEffect, useState } from 'react'
+import React, { useCallback, useEffect, useState, useMemo } from 'react'
 import Link from 'next/link'
 import useEmblaCarousel from 'embla-carousel-react'
 import { EngineType } from 'embla-carousel'
 import Image from 'next/image'
-
-interface ProductItem {
-  id: string
-  title: string
-  price: number | string
-  priceIQD?: number | string | null
-  condition?: string
-  hasDiscount?: boolean
-  discountType?: 'fixed' | 'percentage'
-  discountValue?: number
-  featuredImage?: {
-    url: string
-    alt?: string
-  } | null
-  isCaseOffer?: boolean
-  href?: string
-  [key: string]: any
-}
-
-interface ProductCarouselProps {
-  products: ProductItem[]
-  currentLocale: string
-  isRtl: boolean
-  onAddToCart?: (product: ProductItem) => void
-  linkResolver?: (product: ProductItem) => string // 👈 Parent routing injection point
-}
+import { ProductCarouselProps, ProductItem } from '@/types/types'
+import styles from '@/styles/product_carousel.module.css'
 
 export default function ProductCarousel({
   products,
@@ -57,6 +33,57 @@ export default function ProductCarousel({
     }, 4000)
     return () => clearTimeout(timer)
   }, [toastProduct])
+
+  // 🎯 STEP 1: Helper to check if product belongs to the "monitor" category
+  const isMonitorCategory = (product: ProductItem): boolean => {
+    if (!product.category) return false
+
+    // If category is loaded as a populated object
+    if (typeof product.category === 'object') {
+      const cat = product.category as any
+      const slug = String(cat.slug || '').toLowerCase()
+      const titleEn = String(cat.title?.en || cat.title || '').toLowerCase()
+      const nameEn = String(cat.name?.en || cat.name || '').toLowerCase()
+
+      return (
+        slug === 'monitor' ||
+        slug === 'monitors' ||
+        titleEn === 'monitor' ||
+        titleEn === 'monitors' ||
+        nameEn === 'monitor' ||
+        nameEn === 'monitors'
+      )
+    }
+
+    // If category is raw ID string (Fallback: compare string value if your ID is 'monitor')
+    return String(product.category).toLowerCase() === 'monitor'
+  }
+
+  // 🎯 STEP 2: Partition & Sort the products list with useMemo
+  const sortedProducts = useMemo(() => {
+    if (!products || !Array.isArray(products)) return []
+
+    // 1. Group into buckets to prevent inter-category layout shuffling
+    const manualOffers: ProductItem[] = []
+    const discountedProducts: ProductItem[] = []
+    const monitorProducts: ProductItem[] = []
+    const defaultProducts: ProductItem[] = []
+
+    products.forEach((product) => {
+      if (product.isCaseOffer) {
+        manualOffers.push(product)
+      } else if (product.hasDiscount) {
+        discountedProducts.push(product)
+      } else if (isMonitorCategory(product)) {
+        monitorProducts.push(product)
+      } else {
+        defaultProducts.push(product)
+      }
+    })
+
+    // 2. Merge back into the exact priority structure
+    return [...manualOffers, ...discountedProducts, ...monitorProducts, ...defaultProducts]
+  }, [products])
 
   // 🎯 Dynamic routing path resolver (Uses parent prop callback if available)
   const getProductPath = (product: ProductItem): string => {
@@ -89,7 +116,7 @@ export default function ProductCarousel({
       let xTranslation = diffToTarget * (-1 * parallaxFactor * 100)
       xTranslation = Math.max(-11, Math.min(11, xTranslation))
 
-      const imgLayer = slide.querySelector('.product-parallax-img') as HTMLElement
+      const imgLayer = slide.querySelector(`.${styles['product-parallax-img']}`) as HTMLElement
       if (imgLayer) {
         imgLayer.style.transform = `translateX(${xTranslation}%)`
       }
@@ -295,129 +322,20 @@ export default function ProductCarousel({
   const t = carouselDictionary[activeLocale]
 
   const IQDBadge = ({ amount }: { amount: number }) => (
-    <span
-      style={{
-        display: 'inline-flex',
-        alignItems: 'center',
-        gap: '3px',
-        backgroundColor: '#64748b',
-        color: '#ffffff',
-        fontSize: '11px',
-        fontWeight: 700,
-        padding: '2px 6px',
-        borderRadius: '4px',
-        lineHeight: '1.4',
-        whiteSpace: 'nowrap',
-      }}
-    >
-      {amount.toLocaleString()} IQD د.ع
-    </span>
+    <span className={styles['pc-iqd-badge']}>{amount.toLocaleString()} IQD د.ع</span>
   )
 
+  const rootVars = {
+    '--pc-title-font': titleFont,
+    '--pc-text-font': textFont,
+  } as React.CSSProperties
+
   return (
-    <div style={{ width: '100%', overflow: 'hidden', padding: '1rem 0' }}>
-      <style>{`
-        .product-carousel-track {
-          display: flex;
-          touch-action: pan-y;
-        }
-        .product-carousel-slide {
-          flex: 0 0 calc(100% / 1.5 - 12px); 
-          min-width: 0;
-          padding-bottom: 0px;
-        }
-        @media (min-width: 480px) {
-          .product-carousel-slide { flex: 0 0 calc(100% / 2.2 - 12px); }
-        }
-        @media (min-width: 768px) {
-          .product-carousel-slide { flex: 0 0 calc(100% / 3.2 - 14px); }
-        }
-        @media (min-width: 1024px) {
-          .product-carousel-slide { flex: 0 0 calc(100% / 4.2 - 14px); }
-        }
-        @media (min-width: 1280px) {
-          .product-carousel-slide { flex: 0 0 calc(100% / 5.2 - 16px); }
-        }
-
-        .product-card-inner {
-          transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-        }
-        .product-carousel-slide:hover .product-card-inner {
-          transform: translateY(-4px);
-          box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04) !important;
-        }
-        
-        .side-actions-wrapper {
-          opacity: 0;
-          transform: translateY(-4px);
-          transition: opacity 0.25s ease, transform 0.25s ease;
-        }
-        .product-carousel-slide:hover .side-actions-wrapper {
-          opacity: 1;
-          transform: translateY(0);
-        }
-
-        .side-action-btn {
-          background: #ffb83c;
-          border: none;
-          border-radius: 50%;
-          width: 32px;
-          height: 32px;
-          display: inline-flex !important;
-          align-items: center !important;
-          justify-content: center !important;
-          padding: 0 !important;
-          cursor: pointer;
-          transition: transform 0.2s ease, box-shadow 0.2s ease;
-          color: #64748b;
-          box-shadow: 0 2px 8px rgba(0,0,0,0.12);
-        }
-        .side-action-btn:hover {
-          transform: scale(1.08);
-          color: #0f172a;
-        }
-        
-        .hover-cart-overlay {
-          position: absolute;
-          left: 0;
-          right: 0;
-          bottom: 0;
-          height: 0;
-          background-color: #000000;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          overflow: hidden;
-          z-index: 10;
-          transition: height 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-          border-bottom-left-radius: 8px;
-          border-bottom-right-radius: 8px;
-        }
-        .product-carousel-slide:hover .hover-cart-overlay {
-          height: 54px;
-        }
-        .hover-cart-btn {
-          width: 100%;
-          height: 100%;
-          background: #ffb83c;
-          color: #000;
-          border: none;
-          font-size: 15px;
-          font-weight: 700;
-          cursor: pointer;
-          transition: background-color 0.2s;
-        }
-        .hover-cart-btn:hover {
-          background-color: #ff8c00;
-        }
-      `}</style>
-
-      <div ref={emblaRef} style={{ overflow: 'visible', width: '100%', cursor: 'grab' }}>
-        <div
-          className="product-carousel-track"
-          style={{ gap: '20px', direction: isRtl ? 'rtl' : 'ltr' }}
-        >
-          {products.map((product) => {
+    <div className={styles['pc-wrapper']} data-dir={isRtl ? 'rtl' : 'ltr'} style={rootVars}>
+      <div ref={emblaRef} className={styles['pc-viewport']}>
+        <div className={styles['product-carousel-track']}>
+          {/* 🎯 STEP 3: Map over sortedProducts instead of raw products */}
+          {sortedProducts.map((product) => {
             const currentTitle = getLocalizedTitle(product)
             const imageUrl =
               typeof product.featuredImage === 'object' ? product.featuredImage?.url : null
@@ -436,107 +354,35 @@ export default function ProductCarousel({
               <Link
                 key={product.id}
                 href={getProductPath(product)}
-                className="product-carousel-slide"
-                style={{ textDecoration: 'none', color: 'inherit', position: 'relative' }}
+                className={`${styles['product-carousel-slide']} ${styles['pc-slide-link']}`}
                 draggable={false}
               >
-                <div
-                  className="product-card-inner"
-                  style={{
-                    position: 'relative',
-                    width: '100%',
-                    aspectRatio: '3 / 4',
-                    borderRadius: '8px',
-                    overflow: 'hidden',
-                    background: '#fff',
-                    border: '1px solid #e2e8f0',
-                  }}
-                >
+                <div className={styles['product-card-inner']}>
                   {hasDiscount && (
-                    <div
-                      style={{
-                        position: 'absolute',
-                        top: '0px',
-                        left: isRtl ? '0px' : 'auto',
-                        right: isRtl ? 'auto' : '0px',
-                        zIndex: 5,
-                        backgroundColor: '#ffcb6b',
-                        color: '#000',
-                        padding: '2px 12px',
-                        borderRadius: isRtl ? '0 0 12px 0' : '0 0 0 12px',
-                        fontSize: '13px',
-                        fontWeight: '800',
-                        boxShadow: '0 2px 6px rgba(0,0,0,0.1)',
-                        fontFamily: textFont,
-                        direction: isRtl ? 'rtl' : 'ltr',
-                      }}
-                    >
+                    <div className={styles['pc-discount-badge']}>
                       {product.discountType === 'percentage'
                         ? `-${product.discountValue}%\u00A0${t.discountLabel}`
                         : `-$${product.discountValue}\u00A0${t.discountLabel}`}
                     </div>
                   )}
 
-                  <div
-                    className="product-image-container"
-                    style={{
-                      position: 'absolute',
-                      top: 0,
-                      left: 0,
-                      right: 0,
-                      bottom: '90px',
-                      overflow: 'hidden',
-                      zIndex: 1,
-                    }}
-                  >
+                  <div className={styles['pc-image-container']}>
                     {imageUrl ? (
                       <Image
                         width={300}
                         height={400}
                         src={imageUrl}
                         alt={imageAlt || currentTitle}
-                        className="product-parallax-img"
-                        style={{
-                          width: '100%',
-                          height: '100%',
-                          objectFit: 'cover',
-                          position: 'absolute',
-                          willChange: 'transform',
-                          transition: 'transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
-                        }}
+                        className={styles['product-parallax-img']}
                       />
                     ) : (
-                      <div
-                        style={{
-                          width: '100%',
-                          height: '100%',
-                          background: '#f1f5f9',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          color: '#94a3b8',
-                        }}
-                      >
-                        📦
-                      </div>
+                      <div className={styles['pc-image-placeholder']}>📦</div>
                     )}
                   </div>
 
-                  <div
-                    className="side-actions-wrapper"
-                    style={{
-                      position: 'absolute',
-                      top: '12px',
-                      left: isRtl ? 'auto' : '12px',
-                      right: isRtl ? '12px' : 'auto',
-                      zIndex: 3,
-                      display: 'flex',
-                      flexDirection: 'row',
-                      gap: '6px',
-                    }}
-                  >
+                  <div className={styles['side-actions-wrapper']}>
                     <button
-                      className="side-action-btn"
+                      className={styles['side-action-btn']}
                       onClick={(e) => handleQuickView(e, product)}
                       title={t.quickViewTitle}
                     >
@@ -562,7 +408,7 @@ export default function ProductCarousel({
                     </button>
 
                     <button
-                      className="side-action-btn"
+                      className={styles['side-action-btn']}
                       onClick={(e) => handleShare(e, product)}
                       title={t.shareTitle}
                     >
@@ -583,92 +429,24 @@ export default function ProductCarousel({
                     </button>
                   </div>
 
-                  <div
-                    style={{
-                      position: 'absolute',
-                      bottom: 0,
-                      left: 0,
-                      right: 0,
-                      height: '90px',
-                      zIndex: 2,
-                      padding: '0.75rem 1rem',
-                      display: 'flex',
-                      flexDirection: 'column',
-                      justifyContent: 'space-between',
-                      backgroundColor: '#ffffff',
-                      textAlign: isRtl ? 'right' : 'left',
-                    }}
-                  >
-                    <h3
-                      style={{
-                        fontFamily: titleFont,
-                        fontSize: '14px',
-                        fontWeight: '600',
-                        color: '#000000',
-                        margin: 0,
-                        display: '-webkit-box',
-                        WebkitLineClamp: 2,
-                        WebkitBoxOrient: 'vertical',
-                        overflow: 'hidden',
-                        textOverflow: 'ellipsis',
-                        lineHeight: '1.25',
-                      }}
-                    >
-                      {currentTitle}
-                    </h3>
+                  <div className={styles['pc-info-panel']}>
+                    <h3 className={styles['pc-title']}>{currentTitle}</h3>
 
-                    <div
-                      style={{
-                        display: 'flex',
-                        flexDirection: 'column',
-                        alignItems: 'flex-start',
-                        justifyContent: 'center',
-                        gap: '3px',
-                        fontFamily: textFont,
-                        width: '100%',
-                      }}
-                    >
-                      <div
-                        style={{
-                          display: 'flex',
-                          flexDirection: 'row',
-                          alignItems: 'baseline',
-                          justifyContent: 'space-between',
-                          width: '100%',
-                        }}
-                      >
+                    <div className={styles['pc-price-container']}>
+                      <div className={styles['pc-price-row']}>
                         {hasDiscount ? (
-                          <div style={{ display: 'flex', alignItems: 'baseline', gap: '6px' }}>
-                            <span
-                              style={{
-                                fontSize: '19px',
-                                fontWeight: '800',
-                                color: '#000000',
-                              }}
-                            >
+                          <div className={styles['pc-price-group']}>
+                            <span className={styles['pc-price-final']}>
                               {t.currency}
                               {finalPrice.toLocaleString()}
                             </span>
-                            <span
-                              style={{
-                                fontSize: '12px',
-                                fontWeight: '500',
-                                color: '#64748b',
-                                textDecoration: 'line-through',
-                              }}
-                            >
+                            <span className={styles['pc-price-original']}>
                               {t.currency}
                               {originalPrice.toLocaleString()}
                             </span>
                           </div>
                         ) : (
-                          <span
-                            style={{
-                              fontSize: '19px',
-                              fontWeight: '800',
-                              color: '#000000',
-                            }}
-                          >
+                          <span className={styles['pc-price-final']}>
                             {t.currency}
                             {originalPrice.toLocaleString()}
                           </span>
@@ -681,11 +459,10 @@ export default function ProductCarousel({
                     </div>
                   </div>
 
-                  <div className="hover-cart-overlay">
+                  <div className={styles['hover-cart-overlay']}>
                     <button
-                      className="hover-cart-btn"
+                      className={styles['hover-cart-btn']}
                       onClick={(e) => handleAddToCart(e, product)}
-                      style={{ fontFamily: textFont }}
                     >
                       {t.addToCart}
                     </button>
@@ -698,79 +475,16 @@ export default function ProductCarousel({
       </div>
 
       {quickViewProduct && (
-        <div
-          style={{
-            position: 'fixed',
-            inset: 0,
-            zIndex: 9999,
-            backgroundColor: 'rgba(0,0,0,0.6)',
-            backdropFilter: 'blur(4px)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            padding: '20px',
-          }}
-          onClick={() => setQuickViewProduct(null)}
-        >
-          <div
-            style={{
-              backgroundColor: '#ffffff',
-              border: '1px solid #e2e8f0',
-              borderRadius: '16px',
-              maxWidth: '450px',
-              width: '100%',
-              padding: '24px',
-              position: 'relative',
-              color: '#000000',
-              textAlign: isRtl ? 'right' : 'left',
-              boxShadow: '0 25px 50px -12px rgba(0,0,0,0.15)',
-            }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <button
-              onClick={() => setQuickViewProduct(null)}
-              style={{
-                position: 'absolute',
-                top: '16px',
-                right: isRtl ? 'auto' : '16px',
-                left: isRtl ? '16px' : 'auto',
-                background: 'transparent',
-                border: 'none',
-                color: '#64748b',
-                fontSize: '20px',
-                cursor: 'pointer',
-              }}
-            >
+        <div className={styles['pc-modal-backdrop']} onClick={() => setQuickViewProduct(null)}>
+          <div className={styles['pc-modal-content']} onClick={(e) => e.stopPropagation()}>
+            <button className={styles['pc-modal-close']} onClick={() => setQuickViewProduct(null)}>
               ✕
             </button>
 
-            <h2
-              style={{
-                fontFamily: titleFont,
-                fontSize: '20px',
-                marginBottom: '8px',
-                paddingRight: '20px',
-              }}
-            >
-              {getLocalizedTitle(quickViewProduct)}
-            </h2>
+            <h2 className={styles['pc-modal-title']}>{getLocalizedTitle(quickViewProduct)}</h2>
 
-            <div
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '10px',
-                marginBottom: '16px',
-              }}
-            >
-              <div
-                style={{
-                  color: '#000000',
-                  fontSize: '24px',
-                  fontWeight: '800',
-                  fontFamily: textFont,
-                }}
-              >
+            <div className={styles['pc-modal-price-row']}>
+              <div className={styles['pc-modal-price']}>
                 {quickViewProduct.hasDiscount
                   ? `${t.currency}${getDiscountedPrice(quickViewProduct).toLocaleString()}`
                   : `${t.currency}${getNumericalPrice(quickViewProduct.price).toLocaleString()}`}
@@ -784,36 +498,18 @@ export default function ProductCarousel({
             </div>
 
             {quickViewProduct.condition && (
-              <div style={{ marginBottom: '12px', fontSize: '14px', color: '#64748b' }}>
+              <div className={styles['pc-modal-condition']}>
                 <strong>{t.conditionLabel}</strong> {quickViewProduct.condition}
               </div>
             )}
 
-            <div
-              style={{
-                fontSize: '14px',
-                color: '#334155',
-                lineHeight: '1.5',
-                marginBottom: '20px',
-              }}
-            >
-              {getLocalizedDesc(quickViewProduct)}
-            </div>
+            <div className={styles['pc-modal-desc']}>{getLocalizedDesc(quickViewProduct)}</div>
 
             <button
+              className={styles['pc-modal-addcart']}
               onClick={(e) => {
                 setQuickViewProduct(null)
                 handleAddToCart(e, quickViewProduct)
-              }}
-              style={{
-                width: '100%',
-                backgroundColor: '#000000',
-                color: '#ffffff',
-                border: 'none',
-                padding: '12px',
-                borderRadius: '8px',
-                fontWeight: '600',
-                cursor: 'pointer',
               }}
             >
               {t.addToCart}
@@ -823,72 +519,15 @@ export default function ProductCarousel({
       )}
 
       {toastProduct && (
-        <div
-          style={{
-            position: 'fixed',
-            bottom: '24px',
-            right: isRtl ? 'auto' : '24px',
-            left: isRtl ? '24px' : 'auto',
-            zIndex: 10000,
-            backgroundColor: '#ffffff',
-            borderLeft: isRtl ? 'transparent' : '4px solid #000000',
-            borderRight: isRtl ? '4px solid #000000' : 'transparent',
-            boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.1)',
-            borderRadius: '8px',
-            padding: '16px',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '14px',
-            maxWidth: '380px',
-            color: '#000000',
-            border: '1px solid #e2e8f0',
-            animation: 'slideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
-            direction: isRtl ? 'rtl' : 'ltr',
-          }}
-        >
-          <style
-            dangerouslySetInnerHTML={{
-              __html: `
-            @keyframes slideIn {
-              from { transform: translateY(15px); opacity: 0; }
-              to { transform: translateY(0); opacity: 1; }
-            }
-          `,
-            }}
-          />
+        <div className={styles['pc-toast']}>
+          <div className={styles['pc-toast-check']}>✓</div>
 
-          <div style={{ fontSize: '20px', color: '#000000' }}>✓</div>
-
-          <div style={{ flex: 1 }}>
-            <div
-              style={{
-                fontSize: '16px',
-                fontWeight: '600',
-                marginBottom: '2px',
-                whiteSpace: 'nowrap',
-                overflow: 'hidden',
-                textOverflow: 'ellipsis',
-                maxWidth: '240px',
-              }}
-            >
-              {getLocalizedTitle(toastProduct)}
-            </div>
-            <div style={{ fontSize: '12px', color: '#64748b' }}>{t.toastSuccess}</div>
+          <div className={styles['pc-toast-text']}>
+            <div className={styles['pc-toast-title']}>{getLocalizedTitle(toastProduct)}</div>
+            <div className={styles['pc-toast-subtitle']}>{t.toastSuccess}</div>
           </div>
 
-          <Link
-            href={`/${currentLocale}/cart`}
-            style={{
-              fontSize: '13px',
-              fontWeight: '700',
-              color: '#ffffff',
-              textDecoration: 'none',
-              whiteSpace: 'nowrap',
-              background: '#000000',
-              padding: '6px 10px',
-              borderRadius: '6px',
-            }}
-          >
+          <Link href={`/${currentLocale}/cart`} className={styles['pc-toast-cta']}>
             {t.viewCart}
           </Link>
         </div>

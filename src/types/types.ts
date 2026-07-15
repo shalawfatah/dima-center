@@ -7,3 +7,29 @@ export interface GeneralSettingsData {
   address?: string
   socials?: Array<{ platform: string; url: string }>
 }
+
+export interface ProductItem {
+  id: string
+  title: string
+  price: number | string
+  priceIQD?: number | string | null
+  condition?: string
+  hasDiscount?: boolean
+  discountType?: 'fixed' | 'percentage'
+  discountValue?: number
+  featuredImage?: {
+    url: string
+    alt?: string
+  } | null
+  isCaseOffer?: boolean
+  href?: string
+  [key: string]: any
+}
+
+export interface ProductCarouselProps {
+  products: ProductItem[]
+  currentLocale: string
+  isRtl: boolean
+  onAddToCart?: (product: ProductItem) => void
+  linkResolver?: (product: ProductItem) => string // 👈 Parent routing injection point
+}

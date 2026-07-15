@@ -155,7 +155,7 @@ export default async function StorefrontHome({ params, searchParams }: PageProps
   }
 
   // --- Fetch Categories Matrix ---
-  const categoriesWithProducts = await Promise.all(
+  const rawCategoriesWithProducts = await Promise.all(
     englishCategoriesList.map(async (cat: any) => {
       const res = await payload.find({
         collection: 'products',
@@ -176,6 +176,16 @@ export default async function StorefrontHome({ params, searchParams }: PageProps
       }
     }),
   )
+
+  // 🎯 SORT: Make sure category 'monitor' appears first in the regular categories array
+  const categoriesWithProducts = [...rawCategoriesWithProducts].sort((a, b) => {
+    const aIsMonitor = String(a.slug).toLowerCase() === 'monitor'
+    const bIsMonitor = String(b.slug).toLowerCase() === 'monitor'
+
+    if (aIsMonitor && !bIsMonitor) return -1
+    if (!aIsMonitor && bIsMonitor) return 1
+    return 0
+  })
 
   let otherProducts: any[] = []
   try {
@@ -204,7 +214,7 @@ export default async function StorefrontHome({ params, searchParams }: PageProps
         ? { url: p.featuredImage.url, alt: p.featuredImage.alt || '' }
         : null,
       isCaseOffer: false,
-      href: resolveProductHref(productId, false), // 👈 Pre-serialized route parameter
+      href: resolveProductHref(productId, false),
     }
   }
 
@@ -234,7 +244,7 @@ export default async function StorefrontHome({ params, searchParams }: PageProps
       discountValue: discountAmount,
       discountedPrice: promoPrice,
       isCaseOffer: true,
-      href: resolveProductHref(offerId, true), // 👈 Pre-serialized route parameter
+      href: resolveProductHref(offerId, true),
     }
   }
 
