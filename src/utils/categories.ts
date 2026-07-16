@@ -212,7 +212,7 @@ export const MAIN_CATEGORY_GROUPS: Record<'en' | 'ar' | 'ckb', CategoryGroup[]> 
       ],
     },
     {
-      title: 'لابتۆپ',
+      title: 'لاپتۆپ',
       slug: 'laptop',
     },
     {
@@ -258,8 +258,8 @@ export const MAIN_CATEGORY_GROUPS: Record<'en' | 'ar' | 'ckb', CategoryGroup[]> 
         { title: 'سوکان', slug: 'steering-wheel' },
         { title: 'جاوی VR', slug: 'vr' },
         { title: 'بەرگی پارێزەر', slug: 'hard-cover' },
-        { title: 'ڕامی لابتۆپ', slug: 'laptop-ram' },
-        { title: 'پادی فێنککەرەوەی لابتۆپ', slug: 'laptop-cooling-pad' },
+        { title: 'ڕامی لاپتۆپ', slug: 'laptop-ram' },
+        { title: 'پادی فێنککەرەوەی لاپتۆپ', slug: 'laptop-cooling-pad' },
         { title: 'تی ڤی بۆکس', slug: 'tv-box' },
         { title: 'پرینتەر', slug: 'printer' },
         { title: 'جانتا', slug: 'bag' },
