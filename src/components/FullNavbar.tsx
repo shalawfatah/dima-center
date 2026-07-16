@@ -67,10 +67,7 @@ export default async function FullNavbar({ currentLocale }: FullNavbarProps) {
         <SearchBar locale={currentLocale} />
 
         <div className="actions-cluster">
-          {/* Passed database categories down securely to the client script */}
           <Navbar currentLocale={currentLocale} categories={categoriesData.docs as any} />
-          <NavUserMenu currentLocale={currentLocale} />
-          <Languages currentLocale={currentLocale} />
         </div>
       </div>
     </header>

@@ -9,6 +9,7 @@
 .burgerMenu {
   display: block !important;
   font-size: 1.75rem;
+  color: #808080;
   cursor: pointer;
   order: 1 !important;
 }

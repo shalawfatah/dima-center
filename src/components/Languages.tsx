@@ -39,7 +39,7 @@ export default function Languages({ currentLocale }: LanguagesProps) {
         style={{
           display: 'flex',
           alignItems: 'center',
-          gap: '4px',
+          gap: '6px',
           background: 'rgba(255, 255, 255, 0.1)',
           border: '1px solid rgba(255, 255, 255, 0.2)',
           padding: '4px 8px',
@@ -50,8 +50,27 @@ export default function Languages({ currentLocale }: LanguagesProps) {
         }}
       >
         {/* 🌐 Dynamically switch between the globe icon and the flag */}
-        <span style={{ fontSize: '16px', lineHeight: '1' }}>
-          {isOpen ? currentLang.flag : '🌐'}
+        <span style={{ fontSize: '16px', lineHeight: '1', display: 'flex', alignItems: 'center' }}>
+          {isOpen ? (
+            currentLang.flag
+          ) : (
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="#808080"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              style={{ display: 'inline-block', verticalAlign: 'middle' }}
+            >
+              <circle cx="12" cy="12" r="10" />
+              <path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20" />
+              <path d="M2 12h20" />
+            </svg>
+          )}
         </span>
 
         <svg

@@ -271,7 +271,7 @@ export default function SearchBar({ locale: initialLocale }: { locale: string })
             fontSize: '16px',
           }}
         >
-          <SearchIcon color="#f3f3f3" size={16} />
+          <SearchIcon color="#808080" size={16} />
         </button>
         <RenderSearchResults />
       </form>

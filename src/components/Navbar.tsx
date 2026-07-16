@@ -5,8 +5,8 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { getNavbarStyles } from '@/styles/navbar_styles'
 import styles from '@/styles/navbar.module.css'
+import Languages from './Languages'
 
-// Shape definition representing Payload database collection structure
 interface CategoryItem {
   id: string | number
   title: string
@@ -16,7 +16,7 @@ interface CategoryItem {
 interface NavbarProps {
   currentLocale?: string
   activeCategory?: string | null
-  categories?: CategoryItem[] // 🔥 Swapped out navTree for dynamic database categories array
+  categories?: CategoryItem[]
 }
 
 export default function Navbar({
@@ -72,6 +72,10 @@ export default function Navbar({
         className={styles.navContainer}
         style={
           {
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            padding: '0 1rem', // 🟢 Added global horizontal safety padding so items don't hit edge of screen
             '--nav-links-display': isOpen ? 'flex' : 'none',
             '--nav-links-left': isRtl ? 'auto' : '0',
             '--nav-links-right': isRtl ? '0' : 'auto',
@@ -81,13 +85,91 @@ export default function Navbar({
           } as React.CSSProperties
         }
       >
-        {/* Hamburger Toggle */}
-        <label className={styles.burgerMenu} onClick={() => setIsOpen(!isOpen)}>
+        {/* 1. Languages Dropdown */}
+        <div
+          style={{
+            order: isRtl ? 4 : 1,
+            display: 'flex',
+            alignItems: 'center',
+            marginInlineEnd: isRtl ? '0' : '0.5rem', // 🟢 Subtle safe margins between elements
+            marginInlineStart: isRtl ? '0.5rem' : '0',
+          }}
+        >
+          <Languages currentLocale={currentLocale} />
+        </div>
+
+        {/* 2. Hamburger Toggle */}
+        <label
+          className={styles.burgerMenu}
+          onClick={() => setIsOpen(!isOpen)}
+          style={{
+            order: 2,
+            display: 'inline-flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            cursor: 'pointer',
+            margin: '0 0.5rem', // 🟢 Side margins for spacing
+          }}
+        >
           ☰
         </label>
 
-        {/* Shopping Cart Icon Section */}
-        <div className={styles.cartWrapper}>
+        {/* 3. Dynamic DB Category Listing Mapping */}
+        <div
+          className={styles.navLinks}
+          style={{
+            order: 3,
+            display: isOpen ? 'flex' : 'none', // Overrides/complements your CSS module rules cleanly
+            alignItems: 'center',
+            backgroundColor: isOpen ? '#ffffff' : 'transparent', // 🟢 Forces open state mobile container to have a clean white bg
+          }}
+        >
+          <div className={styles.navDropdown}>
+            <button className={styles.dropdownTrigger}>
+              {currentLocale === 'ar'
+                ? 'الأقسام'
+                : currentLocale === 'ckb'
+                  ? 'هاوپۆلەکان'
+                  : 'Categories'}{' '}
+              ▾
+            </button>
+            <div className={styles.dropdownContent}>
+              {categories.map((category) => {
+                const isActive = activeCategory === category.slug
+
+                return (
+                  <Link
+                    key={category.id || category.slug}
+                    href={`/${currentLocale}?category=${category.slug}`}
+                    onClick={() => setIsOpen(false)}
+                    style={{
+                      color: isActive ? '#0070f3' : '#555',
+                      fontWeight: isActive ? '700' : undefined,
+                      textDecoration: 'none',
+                      fontSize: '14px',
+                      padding: '4px 0',
+                    }}
+                  >
+                    {category.title}
+                  </Link>
+                )
+              })}
+            </div>
+          </div>
+        </div>
+
+        {/* 4. Shopping Cart Icon Section */}
+        <div
+          className={styles.cartWrapper}
+          style={{
+            order: isRtl ? 1 : 4,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            marginInlineStart: isRtl ? '0' : '0.5rem',
+            marginInlineEnd: isRtl ? '0.5rem' : '0',
+          }}
+        >
           <Link
             href={`/${currentLocale}/cart`}
             style={{
@@ -96,7 +178,7 @@ export default function Navbar({
               alignItems: 'center',
               justifyContent: 'center',
               padding: '6px',
-              color: '#333',
+              color: '#808080',
               textDecoration: 'none',
               transition: 'color 0.2s ease',
             }}
@@ -142,42 +224,6 @@ export default function Navbar({
               </span>
             )}
           </Link>
-        </div>
-
-        {/* Dynamic DB Category Listing Mapping */}
-        <div className={styles.navLinks}>
-          <div className={styles.navDropdown}>
-            <button className={styles.dropdownTrigger}>
-              {currentLocale === 'ar'
-                ? 'الأقسام'
-                : currentLocale === 'ckb'
-                  ? 'هاوپۆلەکان'
-                  : 'Categories'}{' '}
-              ▾
-            </button>
-            <div className={styles.dropdownContent}>
-              {categories.map((category) => {
-                const isActive = activeCategory === category.slug
-
-                return (
-                  <Link
-                    key={category.id || category.slug}
-                    href={`/${currentLocale}?category=${category.slug}`}
-                    onClick={() => setIsOpen(false)}
-                    style={{
-                      color: isActive ? '#0070f3' : '#555',
-                      fontWeight: isActive ? '700' : undefined,
-                      textDecoration: 'none',
-                      fontSize: '14px',
-                      padding: '4px 0',
-                    }}
-                  >
-                    {category.title}
-                  </Link>
-                )
-              })}
-            </div>
-          </div>
         </div>
       </div>
     </>
