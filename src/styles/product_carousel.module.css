@@ -221,3 +221,153 @@
   transition: background-color 0.2s;
   font-family: var(--pc-text-font, inherit);
 }
+
+/* ---------- Quick View Modal Backdrop ---------- */
+.pc-modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5); /* Semi-transparent background mask */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999; /* Ensures it sits above headers/navbars */
+  padding: 16px;
+  animation: pcFadeIn 0.2s ease-out;
+}
+
+/* ---------- Modal Content Panel ---------- */
+.pc-modal-content {
+  position: relative;
+  background-color: #f3f3f3;
+  border-radius: 12px;
+  padding: 24px;
+  max-width: 460px;
+  width: 100%;
+  box-shadow:
+    0 20px 25px -5px rgba(0, 0, 0, 0.1),
+    0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  text-align: left;
+  animation: pcScaleUp 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* RTL handling for content alignment */
+.pc-wrapper[data-dir='rtl'] .pc-modal-content {
+  text-align: right;
+}
+
+/* ---------- Close Button ---------- */
+.pc-modal-close {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  background: transparent;
+  border: none;
+  font-size: 16px;
+  cursor: pointer;
+  color: #64748b;
+  padding: 4px;
+  transition: color 0.15s ease;
+  line-height: 1;
+}
+
+.pc-wrapper[data-dir='rtl'] .pc-modal-close {
+  right: auto;
+  left: 16px;
+}
+
+.pc-modal-close:hover {
+  color: #000000;
+}
+
+/* ---------- Typography & Elements ---------- */
+.pc-modal-title {
+  font-family: var(--pc-title-font, inherit);
+  font-size: 18px;
+  font-weight: 700;
+  color: #000000;
+  margin: 0;
+  padding-right: 24px; /* Avoid overlapping the close button */
+}
+
+.pc-wrapper[data-dir='rtl'] .pc-modal-title {
+  padding-right: 0;
+  padding-left: 24px;
+}
+
+.pc-modal-price-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.pc-modal-price {
+  font-size: 20px;
+  font-weight: 800;
+  color: #000000;
+}
+
+.pc-modal-condition {
+  font-size: 12px;
+  color: #475569;
+  background-color: #f1f5f9;
+  padding: 4px 8px;
+  border-radius: 4px;
+  align-self: flex-start;
+}
+
+.pc-wrapper[data-dir='rtl'] .pc-modal-condition {
+  align-self: flex-start;
+}
+
+.pc-modal-desc {
+  font-size: 13px;
+  color: #475569;
+  line-height: 1.5;
+  margin: 4px 0;
+}
+
+/* ---------- Action CTA Button ---------- */
+.pc-modal-addcart {
+  background-color: #ffb83c;
+  color: #000000;
+  border: none;
+  border-radius: 8px;
+  padding: 12px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: var(--pc-text-font, inherit);
+  transition: background-color 0.15s ease;
+  margin-top: 8px;
+}
+
+.pc-modal-addcart:hover {
+  background-color: #e5a22d;
+}
+
+/* ---------- Animations ---------- */
+@keyframes pcFadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes pcScaleUp {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
