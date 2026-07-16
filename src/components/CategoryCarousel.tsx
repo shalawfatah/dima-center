@@ -2,7 +2,7 @@
 
 import { useMemo, useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
-import { MAIN_CATEGORY_GROUPS, CategoryGroup } from '@/utils/categories'
+import { MAIN_CATEGORY_GROUPS } from '@/utils/categories'
 import styles from '@/styles/category_carousel.module.css'
 
 interface CategoryDropdownNavProps {

@@ -5,7 +5,7 @@
   background-color: #ffb83c;
   margin: 0 1.1rem;
   border-radius: 0.4rem;
-  padding: 0.3rem 1rem; /* Slim compact height */
+  padding: 0.1rem 1rem; /* Slim compact height */
   z-index: 999;
   font-family: 'Rudaw', sans-serif; /* Applied Rudaw globally */
 }
@@ -44,30 +44,8 @@
   position: relative;
 }
 
-/* Direct category links styling */
-.direct-link-btn {
-  font-family: 'Rudaw', sans-serif;
-  background: transparent;
-  color: #000000;
-  border: none;
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  padding: 4px 10px;
-  border-radius: 6px;
-  text-decoration: none;
-  display: inline-flex;
-  align-items: center;
-  transition:
-    background-color 0.2s ease,
-    color 0.2s ease;
-}
-
-.direct-link-btn:hover {
-  background-color: rgba(0, 0, 0, 0.06);
-}
-
-/* Trigger Button with chevron rules */
+/* ---------- Unified Direct Links & Dropdown Buttons ---------- */
+.direct-link-btn,
 .dropdown-trigger-btn {
   font-family: 'Rudaw', sans-serif;
   background: transparent;
@@ -78,15 +56,29 @@
   cursor: pointer;
   padding: 4px 10px;
   border-radius: 6px;
-  display: flex;
+  text-decoration: none;
+
+  /* Unified layout alignment */
+  display: inline-flex;
   align-items: center;
-  gap: 6px;
-  transition: background-color 0.2s ease;
+  box-sizing: border-box;
+  white-space: nowrap; /* Forces text to stay on one line */
+
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease;
 }
 
+/* Standardized Hover and Active States */
+.direct-link-btn:hover,
 .dropdown-trigger-btn:hover,
 .active-trigger {
   background-color: rgba(0, 0, 0, 0.08);
+}
+
+/* Add the layout gap only to buttons containing chevrons */
+.dropdown-trigger-btn {
+  gap: 6px;
 }
 
 .dropdown-caret {

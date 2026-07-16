@@ -92,7 +92,7 @@ export default async function StorefrontHome({ params, searchParams }: PageProps
               {currentLocale === 'ar'
                 ? '← عرض الكل'
                 : currentLocale === 'ckb'
-                  ? '← پیشاندانی هەموو'
+                  ? '← گەڕانەوە'
                   : '← Show All'}
             </Link>
           </div>
