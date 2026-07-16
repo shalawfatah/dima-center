@@ -3,6 +3,7 @@
   grid-template-columns: 1fr;
   gap: 3rem;
   margin-top: 2rem;
+  background: var(--brand-background);
 }
 @media (min-width: 992px) {
   .product-layout-grid {
@@ -13,5 +14,11 @@
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
   gap: 1.5rem;
+  background: var(--brand-background);
   margin-top: 2rem;
+}
+
+.product-carousel-slide {
+  max-width: 220px !important;
+  max-height: 300px !important;
 }

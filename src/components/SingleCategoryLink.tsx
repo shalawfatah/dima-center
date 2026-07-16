@@ -8,7 +8,7 @@ interface SingleCategoryLinkProps {
 
 export default function SingleCategoryLink({ link, titleFont, title }: SingleCategoryLinkProps) {
   return (
-    <div className="embla-slide">
+    <div className="embla-slide" style={{ borderLeft: '1px solid #f3f3f3' }}>
       <Link href={link} style={{ textDecoration: 'none' }}>
         <div className="text-badge-container">
           <span
@@ -18,6 +18,7 @@ export default function SingleCategoryLink({ link, titleFont, title }: SingleCat
               fontWeight: '600',
               color: '#1e293b',
               whiteSpace: 'nowrap',
+              marginLeft: '2rem',
             }}
           >
             {title}

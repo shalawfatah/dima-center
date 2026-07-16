@@ -24,7 +24,6 @@ export default async function LocalizedLayout({
   return (
     <html lang={locale} dir={isRtl ? 'rtl' : 'ltr'}>
       <body>
-        {/* Injecting context layers enables instant checkout calls from anywhere */}
         <CartProvider user={user} currentLocale={locale}>
           {children}
         </CartProvider>

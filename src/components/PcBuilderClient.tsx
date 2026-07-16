@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useSearchParams } from 'next/navigation'
 import { useLocalStorageState } from '../utils/pc_build_local_storage'
 import { COMPONENT_SLOTS, dict, PcBuilderClientProps } from '@/utils/pc_build_items'
 import Image from 'next/image'
@@ -52,14 +52,19 @@ const phoneErrorLabel: Record<string, string> = {
   en: 'Please enter your phone number to complete the build order!',
 }
 
+// 🎯 Translated WhatsApp pricing notices
+const whatsappPriceNotice: Record<string, string> = {
+  en: 'This is not the final price. To get a lower, final price, send your order through our WhatsApp.',
+  ckb: 'ئەمە نرخی کۆتایی نیە، بۆ نرخی کەمتر و کۆتایی بەرهەمەکەت بنێرە بۆ وەتسئەپەکەمان.',
+  ar: 'هذا ليس السعر النهائي، للحصول على سعر نهائي أقل، يرجى إرسال طلبك عبر الواتساب الخاص بنا.',
+}
+
 export default function PcBuilderClient({
   products,
-  user,
   currentLocale,
   isRtl,
   generals,
 }: PcBuilderClientProps & { generals?: GeneralSettingsData }) {
-  const router = useRouter()
   const searchParams = useSearchParams()
 
   const [buildName, setBuildName] = useLocalStorageState<string>(
@@ -412,14 +417,30 @@ export default function PcBuilderClient({
               </div>
             </div>
 
-            {/* 🎯 Integrated Phone Input and WhatsApp Buy CTA */}
+            {/* 🎯 Localized green/red styled notice banner above submit form */}
+            <div
+              style={{
+                backgroundColor: 'rgba(37, 211, 102, 0.08)', // Light WhatsApp Green tint
+                border: '1px dashed rgba(37, 211, 102, 0.3)',
+                borderRadius: '8px',
+                padding: '0.75rem',
+                fontSize: '13px',
+                color: '#15803d', // Dark forest/emerald green text
+                lineHeight: '1.4',
+                marginTop: '1.25rem',
+                fontWeight: '500',
+              }}
+            >
+              ℹ️ {whatsappPriceNotice[currentLocale] || whatsappPriceNotice.en}
+            </div>
+
             <form
               onSubmit={handleWhatsAppBuildOrder}
               style={{
                 display: 'flex',
                 flexDirection: 'column',
                 gap: '0.75rem',
-                marginTop: '1.25rem',
+                marginTop: '0.75rem',
               }}
             >
               <input

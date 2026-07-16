@@ -1,0 +1,62 @@
+.navContainer {
+  display: flex !important;
+  align-items: center !important;
+  position: relative;
+  padding: 0.5rem 1rem;
+  width: 100%;
+}
+
+.burgerMenu {
+  display: block !important;
+  font-size: 1.75rem;
+  cursor: pointer;
+  order: 1 !important;
+}
+
+.cartWrapper {
+  order: 2 !important;
+}
+
+/* 🎯 FIXED DROPDOWN HEIGHT & BOX OVERFLOW SCREEN BOUNDS */
+.navLinks {
+  display: var(--nav-links-display, none) !important;
+  flex-direction: column !important;
+  position: absolute !important;
+  top: 100% !important;
+  left: var(--nav-links-left, 0) !important;
+  right: var(--nav-links-right, auto) !important;
+  width: 260px !important;
+  max-height: 80vh !important; /* Forces dropdown bounds onto limited vertical screens */
+  overflow-y: auto !important; /* Generates fluid vertical browsing matrix */
+  border: 1px solid #eaeaea !important;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1) !important;
+  padding: 1rem !important;
+  z-index: 1000 !important;
+  gap: 0.75rem !important;
+}
+
+.navDropdown {
+  width: 100%;
+}
+
+.dropdownTrigger {
+  width: 100%;
+  text-align: var(--dropdown-trigger-align, left) !important;
+  padding: 0.5rem 0;
+  background: none;
+  border: none;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.dropdownContent {
+  position: static !important;
+  display: flex !important;
+  flex-direction: column !important;
+  box-shadow: none !important;
+  padding-left: var(--dropdown-content-pl, 1rem) !important;
+  padding-right: var(--dropdown-content-pr, 0) !important;
+  gap: 0.5rem;
+  border: none !important;
+}

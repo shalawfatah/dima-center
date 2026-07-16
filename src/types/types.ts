@@ -33,3 +33,8 @@ export interface ProductCarouselProps {
   onAddToCart?: (product: ProductItem) => void
   linkResolver?: (product: ProductItem) => string // 👈 Parent routing injection point
 }
+
+export interface PCBuilderSectionProps {
+  currentLocale: string
+  isRtl: boolean
+}

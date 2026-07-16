@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { getNavbarStyles } from '@/styles/navbar_styles'
+import styles from '@/styles/navbar.module.css'
 
 // Shape definition representing Payload database collection structure
 interface CategoryItem {
@@ -67,74 +68,26 @@ export default function Navbar({
     <>
       <style dangerouslySetInnerHTML={{ __html: getNavbarStyles(isRtl) }} />
 
-      <style>{`
-        .nav-container {
-          display: flex !important;
-          align-items: center !important;
-          position: relative;
-          padding: 0.50rem 1rem;
-          width: 100%;
+      <div
+        className={styles.navContainer}
+        style={
+          {
+            '--nav-links-display': isOpen ? 'flex' : 'none',
+            '--nav-links-left': isRtl ? 'auto' : '0',
+            '--nav-links-right': isRtl ? '0' : 'auto',
+            '--dropdown-trigger-align': isRtl ? 'right' : 'left',
+            '--dropdown-content-pl': isRtl ? '0' : '1rem',
+            '--dropdown-content-pr': isRtl ? '1rem' : '0',
+          } as React.CSSProperties
         }
-        .burger-menu {
-          display: block !important;
-          font-size: 1.75rem;
-          cursor: pointer;
-          order: 1 !important; 
-        }
-        .cart-wrapper {
-          order: 2 !important;
-        }
-        /* 🎯 FIXED DROPDOWN HEIGHT & BOX OVERFLOW SCREEN BOUNDS */
-        .nav-links {
-          display: ${isOpen ? 'flex !important' : 'none !important'};
-          flex-direction: column !important;
-          position: absolute !important;
-          top: 100% !important;
-          left: ${isRtl ? 'auto !important' : '0 !important'};
-          right: ${isRtl ? '0 !important' : 'auto !important'};
-          background: #fff !important;
-          width: 260px !important;
-          max-height: 80vh !important; /* Forces dropdown bounds onto limited vertical screens */
-          overflow-y: auto !important; /* Generates fluid vertical browsing matrix */
-          border: 1px solid #eaeaea !important;
-          box-shadow: 0 8px 16px rgba(0,0,0,0.1) !important;
-          padding: 1rem !important;
-          z-index: 1000 !important;
-          gap: 0.75rem !important;
-        }
-        .nav-dropdown {
-          width: 100%;
-        }
-        .dropdown-trigger {
-          width: 100%;
-          text-align: ${isRtl ? 'right' : 'left'} !important;
-          padding: 0.5rem 0;
-          background: none;
-          border: none;
-          font-size: 1rem;
-          font-weight: 600;
-          cursor: pointer;
-        }
-        .dropdown-content {
-          position: static !important;
-          display: flex !important;
-          flex-direction: column !important;
-          box-shadow: none !important;
-          padding-left: ${isRtl ? '0' : '1rem'} !important;
-          padding-right: ${isRtl ? '1rem' : '0'} !important;
-          gap: 0.5rem;
-          border: none !important;
-        }
-      `}</style>
-
-      <div className="nav-container">
+      >
         {/* Hamburger Toggle */}
-        <label className="burger-menu" onClick={() => setIsOpen(!isOpen)}>
+        <label className={styles.burgerMenu} onClick={() => setIsOpen(!isOpen)}>
           ☰
         </label>
 
         {/* Shopping Cart Icon Section */}
-        <div className="cart-wrapper">
+        <div className={styles.cartWrapper}>
           <Link
             href={`/${currentLocale}/cart`}
             style={{
@@ -192,9 +145,9 @@ export default function Navbar({
         </div>
 
         {/* Dynamic DB Category Listing Mapping */}
-        <div className="nav-links">
-          <div className="nav-dropdown">
-            <button className="dropdown-trigger">
+        <div className={styles.navLinks}>
+          <div className={styles.navDropdown}>
+            <button className={styles.dropdownTrigger}>
               {currentLocale === 'ar'
                 ? 'الأقسام'
                 : currentLocale === 'ckb'
@@ -202,7 +155,7 @@ export default function Navbar({
                   : 'Categories'}{' '}
               ▾
             </button>
-            <div className="dropdown-content">
+            <div className={styles.dropdownContent}>
               {categories.map((category) => {
                 const isActive = activeCategory === category.slug
 

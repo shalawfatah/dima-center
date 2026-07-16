@@ -4,7 +4,7 @@ export const getNavbarStyles = (isRtl: boolean) => `
     justify-content: space-between;
     align-items: center;
     padding: 1rem 2rem;
-    background: #ffffff;
+    background: var(--brand-background);
     position: relative;
     z-index: 100;
     font-family: "Rudaw", sans-serif;
@@ -143,7 +143,7 @@ export const getNavbarStyles = (isRtl: boolean) => `
       left: 0;
       right: 0;
       width: 100%;
-      background: #ffffff;
+      background: var(--brand-background);
       padding: 1rem 1.25rem;
       border-bottom: 2px solid #e2e8f0;
       gap: 0.5rem;

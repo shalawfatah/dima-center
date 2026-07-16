@@ -1,7 +1,8 @@
 :root {
   --font-mono: 'Roboto Mono', monospace;
   --font-rudaw: 'Rudaw', monospace;
-  --brand-primary: '#ffcb6b';
+  --brand-primary: #ffcb6b;
+  --brand-background: #f3f3f3;
 }
 
 * {
@@ -239,4 +240,8 @@ html[lang='ckb'] h6,
 html[lang='ckb'] .headline-text {
   font-family: 'UniQaidar Headline', 'Rudaw', sans-serif !important;
   font-weight: bold;
+}
+
+.category_carousel-module__oVDnua__embla-wrapper {
+  background: var(--brand-background) !important;
 }

@@ -185,10 +185,16 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
         flexDirection: 'column',
         minHeight: '100vh',
         direction: isRtl ? 'rtl' : 'ltr',
-        backgroundColor: '#fff',
+        background: '#f3f3f3',
       }}
     >
-      <main style={{ flex: '1', padding: '2rem max(1.5rem, calc((100% - 1800px)/2))' }}>
+      <main
+        style={{
+          background: '#f3f3f3',
+          flex: '1',
+          padding: '2rem max(1.5rem, calc((100% - 1800px)/2))',
+        }}
+      >
         <ProductBreadcrumb currentLocale={currentLocale} categoryName={productCategoryName} />
 
         <div className={styles['product-layout-grid']}>

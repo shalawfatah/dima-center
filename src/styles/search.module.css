@@ -1,0 +1,90 @@
+.searchComponentRoot {
+  position: relative;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.searchFormDesktop {
+  display: flex;
+  width: 90%;
+  position: relative;
+  margin-right: auto;
+  margin-left: auto;
+}
+
+.searchMobileToggleBtn {
+  display: none;
+  background: none;
+  border: none;
+  font-size: 22px;
+  cursor: pointer;
+  padding: 6px;
+  color: #475569;
+}
+
+.searchMobileOverlay {
+  display: none;
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: #ffffff;
+  padding: 0.75rem 1rem;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+  z-index: 9999;
+  border-bottom: 1px solid #e2e8f0;
+  box-sizing: border-box;
+}
+
+.searchResultsDropdown {
+  position: absolute;
+  top: 105%;
+  left: 0;
+  right: 0;
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+  z-index: 10000;
+  overflow: hidden;
+  font-size: 14px;
+}
+
+.resultsList {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.resultsItem {
+  padding: 0.75rem 1rem;
+  cursor: pointer;
+  color: #1e293b;
+  transition: background-color 0.15s ease;
+  border-bottom: 1px solid #f1f5f9;
+  text-align: start;
+}
+.resultsItem:last-child {
+  border-bottom: none;
+}
+.resultsItem:hover {
+  background-color: #f1f5f9;
+}
+
+.searchStatusItem {
+  padding: 1rem;
+  color: #64748b;
+  text-align: center;
+}
+
+@media (max-width: 768px) {
+  .searchFormDesktop {
+    display: none !important;
+  }
+  .searchMobileToggleBtn {
+    display: block !important;
+  }
+  .searchMobileOverlay.isActive {
+    display: block !important;
+  }
+}

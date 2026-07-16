@@ -2,6 +2,7 @@
 
 import { useRouter, useSearchParams, usePathname } from 'next/navigation'
 import { useState, FormEvent, useEffect, useRef } from 'react'
+import styles from '@/styles/search.module.css'
 
 // 🧠 Simple Client-Side In-Memory Cache Object to store search results
 // key: "query_locale" -> value: results array
@@ -30,6 +31,27 @@ async function fetchSearchResults(query: string, locale: string) {
     console.error('Error fetching real-time search results:', err)
     return []
   }
+}
+
+// 🟢 Reusable, Minimalist 2D Flat SVG Search Icon Component
+function SearchIcon({ color = '#f3f3f3', size = 16 }: { color?: string; size?: number }) {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke={color}
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      style={{ display: 'inline-block', verticalAlign: 'middle' }}
+    >
+      <circle cx="11" cy="11" r="8" />
+      <path d="m21 21-4.3-4.3" />
+    </svg>
+  )
 }
 
 export default function SearchBar({ locale: initialLocale }: { locale: string }) {
@@ -124,11 +146,11 @@ export default function SearchBar({ locale: initialLocale }: { locale: string })
     if (!showDropdown || searchTerm.trim().length < 1) return null
 
     return (
-      <div className="search-results-dropdown" style={{ direction: isRtl ? 'rtl' : 'ltr' }}>
+      <div className={styles.searchResultsDropdown} style={{ direction: isRtl ? 'rtl' : 'ltr' }}>
         {isLoading ? (
-          <div className="search-status-item">Loading...</div>
+          <div className={styles.searchStatusItem}>Loading...</div>
         ) : results.length > 0 ? (
-          <ul className="results-list">
+          <ul className={styles.resultsList}>
             {results.map((item) => {
               const displayName = item.title || item.name || ''
               return (
@@ -138,113 +160,32 @@ export default function SearchBar({ locale: initialLocale }: { locale: string })
                     setSearchTerm(displayName)
                     triggerSearchRedirect(displayName)
                   }}
-                  className="results-item"
+                  className={styles.resultsItem}
                 >
-                  🔍 {displayName}
+                  <SearchIcon color="#64748b" size={14} /> {displayName}
                 </li>
               )
             })}
           </ul>
         ) : (
-          <div className="search-status-item">No results found</div>
+          <div className={styles.searchStatusItem}>No results found</div>
         )}
       </div>
     )
   }
 
   return (
-    <div className="search-component-root" ref={containerRef}>
-      <style>{`
-        .search-component-root {
-          position: relative;
-        }
-        .search-form-desktop { 
-          display: flex; 
-          width: 550px;
-          max-width: 100%;
-          position: relative; 
-        }
-        .search-mobile-toggle-btn { 
-          display: none; 
-          background: none; 
-          border: none; 
-          font-size: 22px; 
-          cursor: pointer; 
-          padding: 6px; 
-          color: #475569; 
-        }
-        
-        .search-mobile-overlay { 
-          display: none; 
-          position: absolute; 
-          top: 100%; 
-          left: 0; 
-          right: 0; 
-          background: #ffffff; 
-          padding: 0.75rem 1rem; 
-          box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); 
-          z-index: 9999; 
-          border-bottom: 1px solid #e2e8f0;
-          box-sizing: border-box;
-        }
-
-        .search-results-dropdown {
-          position: absolute;
-          top: 105%;
-          left: 0;
-          right: 0;
-          background: #ffffff;
-          border: 1px solid #cbd5e1;
-          border-radius: 8px;
-          box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-          z-index: 10000;
-          overflow: hidden;
-          font-size: 14px;
-        }
-        .results-list {
-          list-style: none;
-          padding: 0;
-          margin: 0;
-        }
-        .results-item {
-          padding: 0.75rem 1rem;
-          cursor: pointer;
-          color: #1e293b;
-          transition: background-color 0.15s ease;
-          border-bottom: 1px solid #f1f5f9;
-          text-align: start;
-        }
-        .results-item:last-child {
-          border-bottom: none;
-        }
-        .results-item:hover {
-          background-color: #f1f5f9;
-        }
-        .search-status-item {
-          padding: 1rem;
-          color: #64748b;
-          text-align: center;
-        }
-        
-        @media (max-width: 768px) {
-          .search-form-desktop { display: none !important; }
-          .search-mobile-toggle-btn { display: block !important; }
-          .search-mobile-overlay.is-active { 
-            display: block !important; 
-          }
-        }
-      `}</style>
-
+    <div className={styles.searchComponentRoot} ref={containerRef}>
       <button
         type="button"
-        className="search-mobile-toggle-btn"
+        className={styles.searchMobileToggleBtn}
         onClick={() => setIsMobileOpen(!isMobileOpen)}
       >
-        {isMobileOpen ? '✕' : '🔍'}
+        {isMobileOpen ? '✕' : <SearchIcon color="#f3f3f3" size={18} />}
       </button>
 
       {/* MOBILE OVERLAY DROPDOWN */}
-      <div className={`search-mobile-overlay ${isMobileOpen ? 'is-active' : ''}`}>
+      <div className={`${styles.searchMobileOverlay} ${isMobileOpen ? styles.isActive : ''}`}>
         <form
           onSubmit={handleSearchSubmit}
           style={{ display: 'flex', position: 'relative', width: '100%' }}
@@ -281,14 +222,14 @@ export default function SearchBar({ locale: initialLocale }: { locale: string })
               fontSize: '18px',
             }}
           >
-            🔍
+            <SearchIcon color="#f3f3f3" size={18} />
           </button>
         </form>
         <RenderSearchResults />
       </div>
 
       {/* DESKTOP SEARCH BAR */}
-      <form onSubmit={handleSearchSubmit} className="search-form-desktop">
+      <form onSubmit={handleSearchSubmit} className={styles.searchFormDesktop}>
         <input
           type="text"
           value={searchTerm}
@@ -330,7 +271,7 @@ export default function SearchBar({ locale: initialLocale }: { locale: string })
             fontSize: '16px',
           }}
         >
-          🔍
+          <SearchIcon color="#f3f3f3" size={16} />
         </button>
         <RenderSearchResults />
       </form>

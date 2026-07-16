@@ -8,13 +8,21 @@ import Image from 'next/image'
 import { ProductCarouselProps, ProductItem } from '@/types/types'
 import styles from '@/styles/product_carousel.module.css'
 
+// 🎯 Extend the component props interface to accept custom sizing
+interface ExtendedProductCarouselProps extends ProductCarouselProps {
+  cardWidth?: number // Optional, defaults to client's compact width (220)
+  cardHeight?: number // Optional, defaults to client's compact height (300)
+}
+
 export default function ProductCarousel({
   products,
   currentLocale,
   isRtl,
   onAddToCart,
   linkResolver,
-}: ProductCarouselProps) {
+  cardWidth = 220, // Default fallback
+  cardHeight = 300, // Default fallback
+}: ExtendedProductCarouselProps) {
   const [emblaRef, emblaApi] = useEmblaCarousel({
     loop: false,
     duration: 25,
@@ -34,11 +42,10 @@ export default function ProductCarousel({
     return () => clearTimeout(timer)
   }, [toastProduct])
 
-  // 🎯 STEP 1: Helper to check if product belongs to the "monitor" category
+  // Helper to check if product belongs to the "monitor" category
   const isMonitorCategory = (product: ProductItem): boolean => {
     if (!product.category) return false
 
-    // If category is loaded as a populated object
     if (typeof product.category === 'object') {
       const cat = product.category as any
       const slug = String(cat.slug || '').toLowerCase()
@@ -55,15 +62,13 @@ export default function ProductCarousel({
       )
     }
 
-    // If category is raw ID string (Fallback: compare string value if your ID is 'monitor')
     return String(product.category).toLowerCase() === 'monitor'
   }
 
-  // 🎯 STEP 2: Partition & Sort the products list with useMemo
+  // Partition & Sort the products list
   const sortedProducts = useMemo(() => {
     if (!products || !Array.isArray(products)) return []
 
-    // 1. Group into buckets to prevent inter-category layout shuffling
     const manualOffers: ProductItem[] = []
     const discountedProducts: ProductItem[] = []
     const monitorProducts: ProductItem[] = []
@@ -81,15 +86,12 @@ export default function ProductCarousel({
       }
     })
 
-    // 2. Merge back into the exact priority structure
     return [...manualOffers, ...discountedProducts, ...monitorProducts, ...defaultProducts]
   }, [products])
 
-  // 🎯 Dynamic routing path resolver (Uses parent prop callback if available)
+  // Dynamic routing path resolver
   const getProductPath = (product: ProductItem): string => {
     if (linkResolver) return linkResolver(product)
-
-    // Default fallback routing logic
     const routeSegment = product.isCaseOffer ? 'case-offers' : 'products'
     return `/${currentLocale}/${routeSegment}/${product.id}`
   }
@@ -325,6 +327,7 @@ export default function ProductCarousel({
     <span className={styles['pc-iqd-badge']}>{amount.toLocaleString()} IQD د.ع</span>
   )
 
+  // Root wrapper styles containing font settings
   const rootVars = {
     '--pc-title-font': titleFont,
     '--pc-text-font': textFont,
@@ -334,7 +337,6 @@ export default function ProductCarousel({
     <div className={styles['pc-wrapper']} data-dir={isRtl ? 'rtl' : 'ltr'} style={rootVars}>
       <div ref={emblaRef} className={styles['pc-viewport']}>
         <div className={styles['product-carousel-track']}>
-          {/* 🎯 STEP 3: Map over sortedProducts instead of raw products */}
           {sortedProducts.map((product) => {
             const currentTitle = getLocalizedTitle(product)
             const imageUrl =
@@ -356,6 +358,13 @@ export default function ProductCarousel({
                 href={getProductPath(product)}
                 className={`${styles['product-carousel-slide']} ${styles['pc-slide-link']}`}
                 draggable={false}
+                // 🎯 FORCE strict inline parameters to let Embla know the dynamic sizing metrics
+                style={
+                  {
+                    '--pc-card-width': `${cardWidth}px`,
+                    '--pc-card-height': `${cardHeight}px`,
+                  } as React.CSSProperties
+                }
               >
                 <div className={styles['product-card-inner']}>
                   {hasDiscount && (
@@ -369,11 +378,12 @@ export default function ProductCarousel({
                   <div className={styles['pc-image-container']}>
                     {imageUrl ? (
                       <Image
-                        width={300}
-                        height={400}
+                        width={cardWidth} // 🎯 Adapt width matching size parameters
+                        height={cardHeight} // 🎯 Adapt height matching size parameters
                         src={imageUrl}
                         alt={imageAlt || currentTitle}
                         className={styles['product-parallax-img']}
+                        priority={false}
                       />
                     ) : (
                       <div className={styles['pc-image-placeholder']}>📦</div>

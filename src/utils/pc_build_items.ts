@@ -42,12 +42,6 @@ export const COMPONENT_SLOTS = [
     categorySlug: 'cooler',
     defaultImage: '/categories/cooler.png',
   },
-  {
-    key: 'fan',
-    label: 'Case Fan',
-    categorySlug: 'fan',
-    defaultImage: '/categories/fan.png',
-  },
 ]
 
 export const dict: Record<string, Record<string, string>> = {
