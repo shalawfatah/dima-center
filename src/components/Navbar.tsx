@@ -88,7 +88,6 @@ export default function Navbar({
         {/* 1. Languages Dropdown */}
         <div
           style={{
-            order: isRtl ? 4 : 1,
             display: 'flex',
             alignItems: 'center',
             marginInlineEnd: isRtl ? '0' : '0.5rem', // 🟢 Subtle safe margins between elements

@@ -36,6 +36,7 @@
   box-sizing: border-box;
 }
 
+/* ---------- Dropdown Box ---------- */
 .searchResultsDropdown {
   position: absolute;
   top: 105%;
@@ -46,7 +47,8 @@
   border-radius: 8px;
   box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
   z-index: 10000;
-  overflow: hidden;
+  overflow-y: auto;
+  max-height: 380px;
   font-size: 14px;
 }
 
@@ -56,19 +58,88 @@
   margin: 0;
 }
 
+/* 🟢 Force-aligning item row so content splits horizontally */
 .resultsItem {
-  padding: 0.75rem 1rem;
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  padding: 0.5rem 1rem;
   cursor: pointer;
   color: #1e293b;
   transition: background-color 0.15s ease;
   border-bottom: 1px solid #f1f5f9;
-  text-align: start;
+  gap: 16px;
 }
+
 .resultsItem:last-child {
   border-bottom: none;
 }
+
 .resultsItem:hover {
   background-color: #f1f5f9;
+}
+
+/* 🟢 Left Column (Title layout wrapper) */
+.resultsLeftCol {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  flex: 1; /* Lets title expand dynamically */
+}
+
+.resultTitle {
+  font-size: 14px;
+  font-weight: 500;
+  color: #1e293b;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* 🟢 Right Column (Container for side-by-side Price & Thumbnail) */
+.resultsRightCol {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+.resultPrice {
+  font-size: 14px;
+  font-weight: 700;
+  color: #0f172a;
+  white-space: nowrap;
+}
+
+/* 🟢 Image Thumbnail Sizing bounds */
+.thumbWrapper {
+  position: relative;
+  width: 36px;
+  height: 36px;
+  border-radius: 6px;
+  overflow: hidden;
+  background-color: #f1f5f9;
+  flex-shrink: 0;
+  border: 1px solid #cbd5e1;
+}
+
+.resultThumb {
+  object-fit: cover;
+  width: 100%;
+  height: 100%;
+}
+
+.iconFallback {
+  width: 36px;
+  height: 36px;
+  border-radius: 6px;
+  background-color: #f1f5f9;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
 }
 
 .searchStatusItem {
@@ -77,6 +148,7 @@
   text-align: center;
 }
 
+/* ---------- Media Breakpoints ---------- */
 @media (max-width: 768px) {
   .searchFormDesktop {
     display: none !important;

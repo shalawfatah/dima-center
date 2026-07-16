@@ -2,8 +2,6 @@ import { getPayload } from 'payload'
 import config from '@/payload.config'
 import Link from 'next/link'
 import Image from 'next/image'
-import NavUserMenu from './NavUserMenu'
-import Languages from './Languages'
 import Navbar from './Navbar'
 import SearchBar from './SearchBar'
 import logoImg from '../../public/media/logo.png'
@@ -13,11 +11,9 @@ interface FullNavbarProps {
   currentLocale: string
 }
 
-// 🎯 FIX: Turned the functional wrapper into an async component
 export default async function FullNavbar({ currentLocale }: FullNavbarProps) {
   const isRtl = currentLocale === 'ar' || currentLocale === 'ckb'
 
-  // Initialize payload instance cleanly on the server node
   const payload = await getPayload({ config })
 
   const categoriesData = await payload.find({
@@ -27,8 +23,7 @@ export default async function FullNavbar({ currentLocale }: FullNavbarProps) {
   })
 
   return (
-    <header style={{ width: '100%' }} dir={isRtl ? 'rtl' : 'ltr'}>
-      {/* ⚡ Dynamic styles block injecting search rules and responsive logo bounds */}
+    <header style={{ width: '100%' }}>
       <style
         dangerouslySetInnerHTML={{
           __html: `

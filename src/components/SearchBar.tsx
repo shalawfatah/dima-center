@@ -2,10 +2,9 @@
 
 import { useRouter, useSearchParams, usePathname } from 'next/navigation'
 import { useState, FormEvent, useEffect, useRef } from 'react'
+import Image from 'next/image'
 import styles from '@/styles/search.module.css'
 
-// 🧠 Simple Client-Side In-Memory Cache Object to store search results
-// key: "query_locale" -> value: results array
 const searchCache: Record<string, any[]> = {}
 
 // ⚡ DATABASE FETCH FUNCTION (Hits your custom Payload CMS API Route)
@@ -100,7 +99,7 @@ export default function SearchBar({ locale: initialLocale }: { locale: string })
       setResults(data)
       setShowDropdown(true)
       setIsLoading(false)
-    }, 150) // 150ms is imperceptible to humans, but prevents spamming your API
+    }, 150)
 
     return () => clearTimeout(delayDebounceFn)
   }, [searchTerm, locale])
@@ -142,7 +141,6 @@ export default function SearchBar({ locale: initialLocale }: { locale: string })
 
   // Common Results Dropdown UI component
   const RenderSearchResults = () => {
-    // Show dropdown starting from 1 character
     if (!showDropdown || searchTerm.trim().length < 1) return null
 
     return (
@@ -153,6 +151,18 @@ export default function SearchBar({ locale: initialLocale }: { locale: string })
           <ul className={styles.resultsList}>
             {results.map((item) => {
               const displayName = item.title || item.name || ''
+
+              // Safe fallbacks for Payload CMS dynamic schemas (camelCase & snake_case)
+              const rawImage = item.featuredImage || item.featured_image
+              const imageUrl =
+                typeof rawImage === 'object' && rawImage !== null
+                  ? rawImage.url
+                  : typeof rawImage === 'string'
+                    ? rawImage
+                    : null
+
+              const price = item.price
+
               return (
                 <li
                   key={item.id}
@@ -162,7 +172,36 @@ export default function SearchBar({ locale: initialLocale }: { locale: string })
                   }}
                   className={styles.resultsItem}
                 >
-                  <SearchIcon color="#64748b" size={14} /> {displayName}
+                  {/* Left Side: Just the text title */}
+                  <div className={styles.resultsLeftCol}>
+                    <span className={styles.resultTitle}>{displayName}</span>
+                  </div>
+
+                  {/* Right Side: Price + Thumbnail image side-by-side */}
+                  <div className={styles.resultsRightCol}>
+                    {price !== undefined && (
+                      <span className={styles.resultPrice}>
+                        {typeof price === 'number' ? `$${price.toLocaleString()}` : price}
+                      </span>
+                    )}
+
+                    {imageUrl ? (
+                      <div className={styles.thumbWrapper}>
+                        <Image
+                          src={imageUrl}
+                          alt={displayName}
+                          width={36}
+                          height={36}
+                          className={styles.resultThumb}
+                          unoptimized
+                        />
+                      </div>
+                    ) : (
+                      <div className={styles.iconFallback}>
+                        <SearchIcon color="#94a3b8" size={14} />
+                      </div>
+                    )}
+                  </div>
                 </li>
               )
             })}
@@ -198,7 +237,7 @@ export default function SearchBar({ locale: initialLocale }: { locale: string })
             placeholder={placeholders[locale] || placeholders.en}
             style={{
               width: '100%',
-              padding: '0.75rem 1rem',
+              padding: '0.75rem 2rem',
               fontSize: '15px',
               borderRadius: '8px',
               border: '1px solid #3b82f6',
@@ -237,7 +276,7 @@ export default function SearchBar({ locale: initialLocale }: { locale: string })
           placeholder={placeholders[locale] || placeholders.en}
           style={{
             width: '100%',
-            padding: '0.75rem 1.2rem',
+            padding: '0.75rem 3rem',
             fontSize: '14px',
             borderRadius: '9999px',
             border: '1px solid #cbd5e1',

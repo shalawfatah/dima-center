@@ -424,8 +424,8 @@ export default function PcBuilderClient({
                 border: '1px dashed rgba(37, 211, 102, 0.3)',
                 borderRadius: '8px',
                 padding: '0.75rem',
-                fontSize: '13px',
-                color: '#15803d', // Dark forest/emerald green text
+                fontSize: '16px',
+                color: '#C04000', // Dark forest/emerald green text
                 lineHeight: '1.4',
                 marginTop: '1.25rem',
                 fontWeight: '500',
