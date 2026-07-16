@@ -26,7 +26,6 @@ export default function Navbar({
 }: NavbarProps) {
   const pathname = usePathname()
   const [cartCount, setCartCount] = useState<number>(0)
-  const [isOpen, setIsOpen] = useState<boolean>(false)
 
   const segments = pathname.split('/')
   const currentLocale = ['en', 'ar', 'ckb'].includes(segments[1])
@@ -75,10 +74,7 @@ export default function Navbar({
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
-            padding: '0 1rem', // 🟢 Added global horizontal safety padding so items don't hit edge of screen
-            '--nav-links-display': isOpen ? 'flex' : 'none',
-            '--nav-links-left': isRtl ? 'auto' : '0',
-            '--nav-links-right': isRtl ? '0' : 'auto',
+            padding: '0 1rem', // Global horizontal safety padding
             '--dropdown-trigger-align': isRtl ? 'right' : 'left',
             '--dropdown-content-pl': isRtl ? '0' : '1rem',
             '--dropdown-content-pr': isRtl ? '1rem' : '0',
@@ -90,74 +86,14 @@ export default function Navbar({
           style={{
             display: 'flex',
             alignItems: 'center',
-            marginInlineEnd: isRtl ? '0' : '0.5rem', // 🟢 Subtle safe margins between elements
+            marginInlineEnd: isRtl ? '0' : '0.5rem', // Safe spacing margins
             marginInlineStart: isRtl ? '0.5rem' : '0',
           }}
         >
           <Languages currentLocale={currentLocale} />
         </div>
 
-        {/* 2. Hamburger Toggle */}
-        <label
-          className={styles.burgerMenu}
-          onClick={() => setIsOpen(!isOpen)}
-          style={{
-            order: 2,
-            display: 'inline-flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            cursor: 'pointer',
-            margin: '0 0.5rem', // 🟢 Side margins for spacing
-          }}
-        >
-          ☰
-        </label>
-
-        {/* 3. Dynamic DB Category Listing Mapping */}
-        <div
-          className={styles.navLinks}
-          style={{
-            order: 3,
-            display: isOpen ? 'flex' : 'none', // Overrides/complements your CSS module rules cleanly
-            alignItems: 'center',
-            backgroundColor: isOpen ? '#ffffff' : 'transparent', // 🟢 Forces open state mobile container to have a clean white bg
-          }}
-        >
-          <div className={styles.navDropdown}>
-            <button className={styles.dropdownTrigger}>
-              {currentLocale === 'ar'
-                ? 'الأقسام'
-                : currentLocale === 'ckb'
-                  ? 'هاوپۆلەکان'
-                  : 'Categories'}{' '}
-              ▾
-            </button>
-            <div className={styles.dropdownContent}>
-              {categories.map((category) => {
-                const isActive = activeCategory === category.slug
-
-                return (
-                  <Link
-                    key={category.id || category.slug}
-                    href={`/${currentLocale}?category=${category.slug}`}
-                    onClick={() => setIsOpen(false)}
-                    style={{
-                      color: isActive ? '#0070f3' : '#555',
-                      fontWeight: isActive ? '700' : undefined,
-                      textDecoration: 'none',
-                      fontSize: '14px',
-                      padding: '4px 0',
-                    }}
-                  >
-                    {category.title}
-                  </Link>
-                )
-              })}
-            </div>
-          </div>
-        </div>
-
-        {/* 4. Shopping Cart Icon Section */}
+        {/* 2. Shopping Cart Icon Section */}
         <div
           className={styles.cartWrapper}
           style={{

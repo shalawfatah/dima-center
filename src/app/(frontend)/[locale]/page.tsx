@@ -13,7 +13,7 @@ interface PageProps {
 }
 
 import type { Metadata } from 'next'
-import { CATEGORY_MAP } from '@/utils/categories'
+import { MAIN_CATEGORY_GROUPS } from '@/utils/categories'
 import { getStorefrontMetadata } from '@/utils/seo'
 import Image from 'next/image'
 import PCBuilderSection from '@/components/PCBuilderSection'
@@ -38,18 +38,38 @@ export default async function StorefrontHome({ params, searchParams }: PageProps
 
   const payload = await getPayload({ config })
 
-  const englishCategoriesList = CATEGORY_MAP['en']
+  // --- Helper: Flatten categories dynamically for active filtering searches ---
+  const getFlatCategories = (locale: 'en' | 'ar' | 'ckb') => {
+    const groups = MAIN_CATEGORY_GROUPS[locale] || []
+    const list: { title: string; slug: string }[] = []
 
-  // --- Dynamic Routing Link Generator (Kept on Server) ---
+    groups.forEach((group) => {
+      if (group.slug) {
+        list.push({ title: group.title, slug: group.slug })
+      } else if (group.subCategories) {
+        group.subCategories.forEach((sub) => {
+          list.push({ title: sub.title, slug: sub.slug })
+        })
+      }
+    })
+    return list
+  }
+
+  // --- Dynamic Routing Link Generator ---
   const resolveProductHref = (id: string | number, isCaseOffer: boolean) => {
     const routeSegment = isCaseOffer ? 'case-offers' : 'products'
     return `/${currentLocale}/${routeSegment}/${id}`
   }
 
+  // --- Active Selected Category Filter View (Unchanged fallback) ---
   if (activeCategory) {
-    const matchedCatEn = CATEGORY_MAP.en.find((c) => c.slug === activeCategory)
-    const matchedCatAr = CATEGORY_MAP.ar.find((c) => c.slug === activeCategory)
-    const matchedCatCkb = CATEGORY_MAP.ckb.find((c) => c.slug === activeCategory)
+    const flatEn = getFlatCategories('en')
+    const flatAr = getFlatCategories('ar')
+    const flatCkb = getFlatCategories('ckb')
+
+    const matchedCatEn = flatEn.find((c) => c.slug === activeCategory)
+    const matchedCatAr = flatAr.find((c) => c.slug === activeCategory)
+    const matchedCatCkb = flatCkb.find((c) => c.slug === activeCategory)
 
     const res = await payload.find({
       collection: 'products',
@@ -154,47 +174,119 @@ export default async function StorefrontHome({ params, searchParams }: PageProps
     )
   }
 
-  // --- Fetch Categories Matrix ---
-  const rawCategoriesWithProducts = await Promise.all(
-    englishCategoriesList.map(async (cat: any) => {
+  // --- Dynamic Category Organization ---
+  const majorGroupsEn = MAIN_CATEGORY_GROUPS['en'] || []
+  const majorGroupsAr = MAIN_CATEGORY_GROUPS['ar'] || []
+  const majorGroupsCkb = MAIN_CATEGORY_GROUPS['ckb'] || []
+
+  // Final array of renderable sections
+  const homepageSections: {
+    slug: string
+    en: string
+    ar: string
+    ckb: string
+    products: any[]
+  }[] = []
+
+  // Process all major groups to separate "Computer Parts" minors, keep "Monitor" solo, and combine rest
+  for (let idx = 0; idx < majorGroupsEn.length; idx++) {
+    const group = majorGroupsEn[idx]
+    const groupAr = majorGroupsAr[idx]
+    const groupCkb = majorGroupsCkb[idx]
+
+    const isComputerParts =
+      group.title.toLowerCase().includes('computer parts') ||
+      group.title.toLowerCase().includes('parts')
+    const isMonitor = group.slug && group.slug.toLowerCase() === 'monitor'
+
+    if (isMonitor) {
+      // 1. Monitor (Independent Major Category)
       const res = await payload.find({
         collection: 'products',
-        where: { 'category.slug': { equals: cat.slug } },
+        where: { 'category.slug': { equals: 'monitor' } },
         limit: 20,
       })
-
-      const enTitle = CATEGORY_MAP.en.find((c) => c.slug === cat.slug)?.title || ''
-      const arTitle = CATEGORY_MAP.ar.find((c) => c.slug === cat.slug)?.title || ''
-      const ckbTitle = CATEGORY_MAP.ckb.find((c) => c.slug === cat.slug)?.title || ''
-
-      return {
-        slug: cat.slug,
-        en: enTitle,
-        ar: arTitle,
-        ckb: ckbTitle,
+      homepageSections.push({
+        slug: 'monitor',
+        en: group.title,
+        ar: groupAr?.title || group.title,
+        ckb: groupCkb?.title || group.title,
         products: res.docs,
+      })
+    } else if (isComputerParts && group.subCategories) {
+      // 2. Computer Parts -> Split out every single inner subcategory independently
+      for (let subIdx = 0; subIdx < group.subCategories.length; subIdx++) {
+        const subEn = group.subCategories[subIdx]
+        const subAr = groupAr?.subCategories?.[subIdx]
+        const subCkb = groupCkb?.subCategories?.[subIdx]
+
+        const res = await payload.find({
+          collection: 'products',
+          where: { 'category.slug': { equals: subEn.slug } },
+          limit: 20,
+        })
+
+        if (res.docs.length > 0) {
+          homepageSections.push({
+            slug: subEn.slug,
+            en: subEn.title,
+            ar: subAr?.title || subEn.title,
+            ckb: subCkb?.title || subEn.title,
+            products: res.docs,
+          })
+        }
       }
-    }),
-  )
+    } else {
+      // 3. Any other non-parts groups (Combined collectively under their parent Title)
+      let products: any[] = []
+      if (group.slug) {
+        const res = await payload.find({
+          collection: 'products',
+          where: { 'category.slug': { equals: group.slug } },
+          limit: 20,
+        })
+        products = res.docs
+      } else if (group.subCategories) {
+        const subSlugs = group.subCategories.map((sub) => sub.slug)
+        const res = await payload.find({
+          collection: 'products',
+          where: { 'category.slug': { in: subSlugs } },
+          limit: 20,
+        })
+        products = res.docs
+      }
 
-  // 🎯 SORT: Make sure category 'monitor' appears first in the regular categories array
-  const categoriesWithProducts = [...rawCategoriesWithProducts].sort((a, b) => {
-    const aIsMonitor = String(a.slug).toLowerCase() === 'monitor'
-    const bIsMonitor = String(b.slug).toLowerCase() === 'monitor'
+      if (products.length > 0) {
+        homepageSections.push({
+          slug: group.slug || `group-${idx}`,
+          en: group.title,
+          ar: groupAr?.title || group.title,
+          ckb: groupCkb?.title || group.title,
+          products,
+        })
+      }
+    }
+  }
 
+  // --- 🎯 Sort Rules: Ensure "Monitor" section stays on top of other regular category sections ---
+  const sortedSections = [...homepageSections].sort((a, b) => {
+    const aIsMonitor = a.slug === 'monitor'
+    const bIsMonitor = b.slug === 'monitor'
     if (aIsMonitor && !bIsMonitor) return -1
     if (!aIsMonitor && bIsMonitor) return 1
     return 0
   })
 
+  // --- Fetch Other Uncategorized Products ---
   let otherProducts: any[] = []
   try {
+    const flatEnSlugs = getFlatCategories('en').map((c) => c.slug)
     const otherRes = await payload.find({
       collection: 'products',
       where: {
-        and: englishCategoriesList.map((cat) => ({
-          'category.slug': { not_equals: cat.slug },
-        })),
+        'category.slug': {
+          not_in: flatEnSlugs,
+        },
       },
       limit: 20,
     })
@@ -218,7 +310,7 @@ export default async function StorefrontHome({ params, searchParams }: PageProps
     }
   }
 
-  // Custom mapper to bridge CaseOffers properties schema
+  // Case Offers mapping mapper
   const formatCaseOfferForCarousel = (offer: any) => {
     const isImageObj =
       offer.featured_image && typeof offer.featured_image === 'object' && offer.featured_image.url
@@ -301,8 +393,8 @@ export default async function StorefrontHome({ params, searchParams }: PageProps
           </section>
         )}
 
-        {/* Categories Section */}
-        {categoriesWithProducts.map((cat) => {
+        {/* 📦 SECTIONS 3+: Dynamic Category blocks (starting with Monitor, followed by each CPU, GPU, RAM, etc., then any remaining groups) */}
+        {sortedSections.map((cat) => {
           if (cat.products.length === 0) return null
           return (
             <section key={cat.slug} className={styles.section}>
@@ -322,7 +414,7 @@ export default async function StorefrontHome({ params, searchParams }: PageProps
           )
         })}
 
-        {/* Other Products Section */}
+        {/* Miscellaneous/Other Products */}
         {otherProducts.length > 0 && (
           <section className={styles.section}>
             <LocalizedHeading

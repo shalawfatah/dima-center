@@ -1,0 +1,79 @@
+.nav {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  position: relative;
+}
+
+.navItem {
+  position: relative;
+}
+
+.navLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0.5rem 0.75rem;
+  font-size: 14px;
+  font-weight: 600;
+  color: #1e293b;
+  white-space: nowrap;
+  text-decoration: none;
+  border-radius: 8px;
+  transition: background-color 0.15s ease;
+}
+
+.navLink:hover {
+  background-color: #f1f5f9;
+}
+
+.chevron {
+  font-size: 10px;
+  opacity: 0.6;
+  transition: transform 0.15s ease;
+}
+
+.navItemOpen .chevron {
+  transform: rotate(180deg);
+}
+
+.dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  min-width: 200px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
+  padding: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  z-index: 50;
+}
+
+.nav[dir='rtl'] .dropdown {
+  left: auto;
+  right: 0;
+}
+
+.dropdownItem {
+  display: block;
+  padding: 0.5rem 0.75rem;
+  font-size: 14px;
+  font-weight: 500;
+  color: #334155;
+  text-decoration: none;
+  border-radius: 6px;
+  white-space: nowrap;
+}
+
+.dropdownItem:hover {
+  background-color: #f1f5f9;
+  color: #1e293b;
+}
