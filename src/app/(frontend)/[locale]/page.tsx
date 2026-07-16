@@ -336,8 +336,6 @@ export default async function StorefrontHome({ params, searchParams }: PageProps
               isRtl={isRtl}
               currentLocale={currentLocale}
               products={otherProducts.map(formatProductForCarousel)}
-              cardWidth={100}
-              cardHeight={100}
             />
           </section>
         )}
