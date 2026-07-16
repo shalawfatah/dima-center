@@ -1,10 +1,10 @@
 /* Container Layout without Sliders */
 .nav-wrapper {
   position: relative;
-  width: 100%;
-  max-width: 1800px;
   margin: 0 auto;
   background-color: #ffb83c;
+  margin: 0 1.1rem;
+  border-radius: 0.4rem;
   padding: 0.3rem 1rem; /* Slim compact height */
   z-index: 999;
   font-family: 'Rudaw', sans-serif; /* Applied Rudaw globally */
