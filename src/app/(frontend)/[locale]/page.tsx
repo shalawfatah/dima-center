@@ -413,24 +413,6 @@ export default async function StorefrontHome({ params, searchParams }: PageProps
             </section>
           )
         })}
-
-        {/* Miscellaneous/Other Products */}
-        {otherProducts.length > 0 && (
-          <section className={styles.section}>
-            <LocalizedHeading
-              currentLocale={currentLocale}
-              en="Other Products"
-              ar="منتجات أخرى"
-              ckb="کاڵاکانی تر"
-              style={{ fontSize: '1.4rem', marginBottom: '0.5rem' }}
-            />
-            <ProductCarousel
-              isRtl={isRtl}
-              currentLocale={currentLocale}
-              products={otherProducts.map(formatProductForCarousel)}
-            />
-          </section>
-        )}
       </main>
     </div>
   )

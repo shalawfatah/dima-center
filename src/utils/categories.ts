@@ -67,6 +67,16 @@ export const MAIN_CATEGORY_GROUPS: Record<'en' | 'ar' | 'ckb', CategoryGroup[]> 
       ],
     },
     {
+      title: 'Network',
+      slug: null,
+      subCategories: [
+        { title: 'Router', slug: 'router' },
+        { title: 'Adapter', slug: 'adapter' },
+        { title: 'Cable', slug: 'cable' },
+        { title: 'Other Network Accessories', slug: 'network' },
+      ],
+    },
+    {
       title: 'Other',
       slug: null,
       subCategories: [
@@ -77,10 +87,6 @@ export const MAIN_CATEGORY_GROUPS: Record<'en' | 'ar' | 'ckb', CategoryGroup[]> 
         { title: 'Controller', slug: 'controller' },
         { title: 'Steering Wheel', slug: 'steering-wheel' },
         { title: 'VR', slug: 'vr' },
-        { title: 'Router', slug: 'router' },
-        { title: 'Network', slug: 'network' },
-        { title: 'Cable', slug: 'cable' },
-        { title: 'Adapter', slug: 'adapter' },
         { title: 'Hard Cover', slug: 'hard-cover' },
         { title: 'Laptop Ram', slug: 'laptop-ram' },
         { title: 'Laptop Cooling Pad', slug: 'laptop-cooling-pad' },
@@ -146,6 +152,16 @@ export const MAIN_CATEGORY_GROUPS: Record<'en' | 'ar' | 'ckb', CategoryGroup[]> 
       ],
     },
     {
+      title: 'شبكات',
+      slug: null,
+      subCategories: [
+        { title: 'راوتر', slug: 'router' },
+        { title: 'محول', slug: 'adapter' },
+        { title: 'كابلات', slug: 'cable' },
+        { title: 'ملحقات شبكة أخرى', slug: 'network' },
+      ],
+    },
+    {
       title: 'أخرى',
       slug: null,
       subCategories: [
@@ -156,10 +172,6 @@ export const MAIN_CATEGORY_GROUPS: Record<'en' | 'ar' | 'ckb', CategoryGroup[]> 
         { title: 'قبضة تحكم', slug: 'controller' },
         { title: 'مقود ألعاب', slug: 'steering-wheel' },
         { title: 'نظارة واقع افتراضي VR', slug: 'vr' },
-        { title: 'راوتر', slug: 'router' },
-        { title: 'شبكات', slug: 'network' },
-        { title: 'كابلات', slug: 'cable' },
-        { title: 'محول', slug: 'adapter' },
         { title: 'غطاء حماية', slug: 'hard-cover' },
         { title: 'رام لابتوب', slug: 'laptop-ram' },
         { title: 'قاعدة تبريد لابتوب', slug: 'laptop-cooling-pad' },
@@ -225,6 +237,16 @@ export const MAIN_CATEGORY_GROUPS: Record<'en' | 'ar' | 'ckb', CategoryGroup[]> 
       ],
     },
     {
+      title: 'نێتۆرک',
+      slug: null,
+      subCategories: [
+        { title: 'ڕاوتەر', slug: 'router' },
+        { title: 'ئەداپتەر', slug: 'adapter' },
+        { title: 'کێبڵ', slug: 'cable' },
+        { title: 'ئامێری نێتۆرک تر', slug: 'network' },
+      ],
+    },
+    {
       title: 'ئەوانی تر',
       slug: null,
       subCategories: [
@@ -235,10 +257,6 @@ export const MAIN_CATEGORY_GROUPS: Record<'en' | 'ar' | 'ckb', CategoryGroup[]> 
         { title: 'کۆنترۆڵەر', slug: 'controller' },
         { title: 'سوکان', slug: 'steering-wheel' },
         { title: 'جاوی VR', slug: 'vr' },
-        { title: 'ڕاوتەر', slug: 'router' },
-        { title: 'ئامێری نێتۆرک', slug: 'network' },
-        { title: 'کێبڵ', slug: 'cable' },
-        { title: 'ئەداپتەر', slug: 'adapter' },
         { title: 'بەرگی پارێزەر', slug: 'hard-cover' },
         { title: 'ڕامی لابتۆپ', slug: 'laptop-ram' },
         { title: 'پادی فێنککەرەوەی لابتۆپ', slug: 'laptop-cooling-pad' },
