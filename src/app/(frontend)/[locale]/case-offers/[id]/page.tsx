@@ -200,7 +200,7 @@ export default async function CaseOfferDetailPage({ params }: OfferPageProps) {
         flexDirection: 'column',
         minHeight: '100vh',
         direction: isRtl ? 'rtl' : 'ltr',
-        backgroundColor: '#fff',
+        backgroundColor: '#f3f3f3', // 🟢 Changed page background to light gray
       }}
     >
       <main style={{ flex: '1', padding: '2rem max(1.5rem, calc((100% - 1800px)/2))' }}>
@@ -219,16 +219,26 @@ export default async function CaseOfferDetailPage({ params }: OfferPageProps) {
             technicalSpecs={undefined}
           />
 
-          {/* Interactive Sidebar with Pricing and "Add to Cart" functionality */}
-          <ProductInfoSidebar
-            product={mockProductForCart}
-            currentLocale={currentLocale}
-            isRtl={isRtl}
-            finalPrice={finalPrice}
-            originalPrice={originalPrice}
-            isDiscounted={isDiscounted}
-            iqdPrice={iqdPriceNum}
-          />
+          {/* Interactive Sidebar Wrapper to force White BG on info card */}
+          <div
+            style={{
+              backgroundColor: '#ffffff', // 🟢 Forces only the sidebar to have a clean white background
+              borderRadius: '12px', // Matching standard modern UI design
+              padding: '1.5rem',
+              height: 'fit-content',
+              boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
+            }}
+          >
+            <ProductInfoSidebar
+              product={mockProductForCart}
+              currentLocale={currentLocale}
+              isRtl={isRtl}
+              finalPrice={finalPrice}
+              originalPrice={originalPrice}
+              isDiscounted={isDiscounted}
+              iqdPrice={iqdPriceNum}
+            />
+          </div>
         </div>
 
         {/* Alternate build recommendations carousels */}
