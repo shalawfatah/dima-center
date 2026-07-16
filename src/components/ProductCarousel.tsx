@@ -8,10 +8,10 @@ import Image from 'next/image'
 import { ProductCarouselProps, ProductItem } from '@/types/types'
 import styles from '@/styles/product_carousel.module.css'
 
-// 🎯 Extend the component props interface to accept custom sizing
+// 🎯 Extended the component props interface to accept custom sizing safely
 interface ExtendedProductCarouselProps extends ProductCarouselProps {
-  cardWidth?: number // Optional, defaults to client's compact width (220)
-  cardHeight?: number // Optional, defaults to client's compact height (300)
+  cardWidth?: number // Optional, defaults to 220
+  cardHeight?: number // Optional, defaults to 300
 }
 
 export default function ProductCarousel({
@@ -20,8 +20,8 @@ export default function ProductCarousel({
   isRtl,
   onAddToCart,
   linkResolver,
-  cardWidth = 220, // Default fallback
-  cardHeight = 300, // Default fallback
+  cardWidth = 220, // Default fallback width
+  cardHeight = 300, // Default fallback height
 }: ExtendedProductCarouselProps) {
   const [emblaRef, emblaApi] = useEmblaCarousel({
     loop: false,
@@ -55,6 +55,7 @@ export default function ProductCarousel({
       return (
         slug === 'monitor' ||
         slug === 'monitors' ||
+        slug === 'titleen' ||
         titleEn === 'monitor' ||
         titleEn === 'monitors' ||
         nameEn === 'monitor' ||
@@ -327,7 +328,6 @@ export default function ProductCarousel({
     <span className={styles['pc-iqd-badge']}>{amount.toLocaleString()} IQD د.ع</span>
   )
 
-  // Root wrapper styles containing font settings
   const rootVars = {
     '--pc-title-font': titleFont,
     '--pc-text-font': textFont,
@@ -358,7 +358,7 @@ export default function ProductCarousel({
                 href={getProductPath(product)}
                 className={`${styles['product-carousel-slide']} ${styles['pc-slide-link']}`}
                 draggable={false}
-                // 🎯 FORCE strict inline parameters to let Embla know the dynamic sizing metrics
+                // 🎯 Dynamically binds explicit values down into CSS architecture variables
                 style={
                   {
                     '--pc-card-width': `${cardWidth}px`,
@@ -378,8 +378,8 @@ export default function ProductCarousel({
                   <div className={styles['pc-image-container']}>
                     {imageUrl ? (
                       <Image
-                        width={cardWidth} // 🎯 Adapt width matching size parameters
-                        height={cardHeight} // 🎯 Adapt height matching size parameters
+                        width={cardWidth}
+                        height={cardHeight}
                         src={imageUrl}
                         alt={imageAlt || currentTitle}
                         className={styles['product-parallax-img']}

@@ -277,6 +277,8 @@ export default async function StorefrontHome({ params, searchParams }: PageProps
               isRtl={isRtl}
               currentLocale={currentLocale}
               products={caseOffers.map(formatCaseOfferForCarousel)}
+              cardHeight={330}
+              cardWidth={230}
             />
           </section>
         )}
