@@ -112,3 +112,22 @@ export interface PcBuilderClientProps {
   currentLocale: string
   isRtl: boolean
 }
+
+export const submitLabel: Record<string, string> = {
+  ar: 'اطلب هذا التجميع عبر واتساب 🛒',
+  ckb: 'داواکردنی ئەم کۆمپیوتەرە بە واتسئەپ 🛒',
+  en: 'Order This Build via WhatsApp 🛒',
+}
+
+export const phoneErrorLabel: Record<string, string> = {
+  ar: 'يرجى إدخال رقم هاتفك لإتمام طلب التجميع!',
+  ckb: 'تکایە ژمارەی مۆبایلەکەت بنووسە بۆ ناردنی داواکارییەکە!',
+  en: 'Please enter your phone number to complete the build order!',
+}
+
+// 🎯 Translated WhatsApp pricing notices
+export const whatsappPriceNotice: Record<string, string> = {
+  en: 'This is not the final price. To get a lower, final price, send your order through our WhatsApp.',
+  ckb: 'ئەمە نرخی کۆتایی نیە، بۆ نرخی کەمتر و کۆتایی بەرهەمەکەت بنێرە بۆ وەتسئەپەکەمان.',
+  ar: 'هذا ليس السعر النهائي، للحصول على سعر نهائي أقل، يرجى إرسال طلبك عبر الواتساب الخاص بنا.',
+}

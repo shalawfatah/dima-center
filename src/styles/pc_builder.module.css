@@ -1,3 +1,5 @@
+/* pc_builder.module.css */
+
 .pc-builder-container {
   max-width: 1800px;
   margin: 2rem auto;
@@ -94,6 +96,18 @@
 .pc-builder-chosen-price {
   color: #10b981;
 }
+
+/* Discounted item price display (was inline in the component-card list) */
+.pc-builder-price-original {
+  text-decoration: line-through;
+  color: #888;
+  margin-right: 4px;
+}
+.pc-builder-price-final {
+  font-weight: bold;
+  color: #22c55e;
+}
+
 .pc-builder-empty-slot {
   margin-top: 0.15rem;
   color: #cbd5e1;
@@ -194,15 +208,68 @@
   font-weight: 800;
   color: #10b981;
 }
+
+/* Total price sidebar wrapper (was inline flex column) */
+.pc-builder-total-price-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+.pc-builder-total-original {
+  text-decoration: line-through;
+  color: #888;
+  font-size: 0.9em;
+}
+
+/* WhatsApp notice banner (was inline).
+   NOTE: original comment said "Dark forest/emerald green text" but the
+   color used is #C04000 (burnt orange/red), not green. Kept as-is since
+   the intended color wasn't clear — swap to a green like #15803d if the
+   comment reflected the real intent. */
+.pc-builder-whatsapp-notice {
+  background-color: rgba(37, 211, 102, 0.08);
+  border: 1px dashed rgba(37, 211, 102, 0.3);
+  border-radius: 8px;
+  padding: 0.75rem;
+  font-size: 16px;
+  color: #c04000;
+  line-height: 1.4;
+  margin-top: 1.25rem;
+  font-weight: 500;
+}
+
+/* Order form (was inline) */
+.pc-builder-order-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-top: 0.75rem;
+}
+.pc-builder-phone-input {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  border: 1px solid #cbd5e1;
+  font-size: 14px;
+  outline: none;
+  box-sizing: border-box;
+}
+
 .pc-builder-submit-btn {
   width: 100%;
   padding: 12px;
-  background: #ffcb6b;
-  color: #000;
+  background: #25d366; /* WhatsApp brand green (was set via inline style) */
+  color: #fff;
   border: none;
   border-radius: 6px;
   font-weight: 600;
+  cursor: pointer;
 }
+.pc-builder-submit-btn.disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
 .pc-builder-auth-notice {
   background: #f8fafc;
   border: 1px solid #e2e8f0;
@@ -388,4 +455,56 @@
     width: 100%;
     justify-content: space-between;
   }
+}
+
+.pc-builder-main-stepper {
+  display: inline-flex;
+  align-items: center;
+  background-color: #f8fafc;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  padding: 2px;
+  margin-inline-end: 8px;
+}
+
+.pc-builder-slot-qty-btn {
+  background: transparent;
+  border: none;
+  width: 28px;
+  height: 28px;
+  font-size: 16px;
+  font-weight: 700;
+  color: #334155;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  transition: background-color 0.15s;
+}
+
+.pc-builder-slot-qty-btn:hover:not(:disabled) {
+  background-color: #e2e8f0;
+}
+
+.pc-builder-slot-qty-btn:disabled {
+  opacity: 0.25;
+  cursor: not-allowed;
+}
+
+.pc-builder-slot-qty-num {
+  font-size: 14px;
+  font-weight: 700;
+  color: #0f172a;
+  min-width: 24px;
+  text-align: center;
+}
+
+.pc-builder-qty-display {
+  padding: 0 8px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #1e293b;
+  min-width: 24px;
+  text-align: center;
 }

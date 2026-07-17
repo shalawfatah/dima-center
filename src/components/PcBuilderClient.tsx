@@ -3,7 +3,14 @@
 import { useState, useEffect } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { useLocalStorageState } from '../utils/pc_build_local_storage'
-import { COMPONENT_SLOTS, dict, PcBuilderClientProps } from '@/utils/pc_build_items'
+import {
+  COMPONENT_SLOTS,
+  dict,
+  PcBuilderClientProps,
+  phoneErrorLabel,
+  submitLabel,
+  whatsappPriceNotice,
+} from '@/utils/pc_build_items'
 import Image from 'next/image'
 import { fallbackCatalog } from '@/utils/fallback_catalog'
 import { GeneralSettingsData } from '@/types/types'
@@ -25,38 +32,11 @@ const getDiscountedPrice = (product: any): number => {
   return originalPrice
 }
 
-// 🎯 Quick Iraqi phone utility
 function normalizeIraqiNumber(number: string): string {
   let digits = number.replace(/\D/g, '')
-  if (digits.startsWith('0')) digits = digits.slice(1) // drop leading 0
-  if (!digits.startsWith('964')) digits = '964' + digits // add country code
+  if (digits.startsWith('0')) digits = digits.slice(1)
+  if (!digits.startsWith('964')) digits = '964' + digits
   return digits
-}
-
-// Localized UI form labels
-const phonePlaceholder: Record<string, string> = {
-  ar: 'رقم الواتساب (مثال: 07701234567)',
-  ckb: 'ژمارەی واتسئەپ (نموونە: 07701234567)',
-  en: 'WhatsApp Number (e.g., 07701234567)',
-}
-
-const submitLabel: Record<string, string> = {
-  ar: 'اطلب هذا التجميع عبر واتساب 🛒',
-  ckb: 'داواکردنی ئەم کۆمپیوتەرە بە واتسئەپ 🛒',
-  en: 'Order This Build via WhatsApp 🛒',
-}
-
-const phoneErrorLabel: Record<string, string> = {
-  ar: 'يرجى إدخال رقم هاتفك لإتمام طلب التجميع!',
-  ckb: 'تکایە ژمارەی مۆبایلەکەت بنووسە بۆ ناردنی داواکارییەکە!',
-  en: 'Please enter your phone number to complete the build order!',
-}
-
-// 🎯 Translated WhatsApp pricing notices
-const whatsappPriceNotice: Record<string, string> = {
-  en: 'This is not the final price. To get a lower, final price, send your order through our WhatsApp.',
-  ckb: 'ئەمە نرخی کۆتایی نیە، بۆ نرخی کەمتر و کۆتایی بەرهەمەکەت بنێرە بۆ وەتسئەپەکەمان.',
-  ar: 'هذا ليس السعر النهائي، للحصول على سعر نهائي أقل، يرجى إرسال طلبك عبر الواتساب الخاص بنا.',
 }
 
 export default function PcBuilderClient({
@@ -82,7 +62,6 @@ export default function PcBuilderClient({
 
   const dynamicExchangeRate = generals?.exchangeRate ?? 1500
 
-  // 🔄 Handle URL Syncing on Mount
   useEffect(() => {
     let partsParam = searchParams.get('parts')
 
@@ -91,9 +70,7 @@ export default function PcBuilderClient({
       partsParam = nativeParams.get('parts')
     }
 
-    if (!partsParam) {
-      return
-    }
+    if (!partsParam) return
 
     try {
       const incomingParts = partsParam.split(',').reduce(
@@ -107,7 +84,8 @@ export default function PcBuilderClient({
             )
 
             if (matchedProduct) {
-              acc[slotKey] = matchedProduct
+              // Ensure dynamic configurations contain a base quantity
+              acc[slotKey] = { ...matchedProduct, quantity: matchedProduct.quantity || 1 }
             }
           }
           return acc
@@ -128,8 +106,12 @@ export default function PcBuilderClient({
   const openModal = (slotKey: string) => setActiveModalSlot(slotKey)
   const closeModal = () => setActiveModalSlot(null)
 
+  // Sets fresh selection with an initial fallback quantity of 1
   const selectComponent = (slotKey: string, product: any) => {
-    setSelections((prev) => ({ ...prev, [slotKey]: product }))
+    setSelections((prev) => ({
+      ...prev,
+      [slotKey]: { ...product, quantity: product.quantity || 1 },
+    }))
     closeModal()
   }
 
@@ -141,17 +123,33 @@ export default function PcBuilderClient({
     })
   }
 
+  // Adjust selections item amount from slot UI
+  const updateSlotQuantity = (slotKey: string, delta: number) => {
+    setSelections((prev) => {
+      const currentItem = prev[slotKey]
+      if (!currentItem) return prev
+      const currentQty = currentItem.quantity || 1
+      const nextQty = currentQty + delta
+      if (nextQty < 1) return prev
+
+      return {
+        ...prev,
+        [slotKey]: { ...currentItem, quantity: nextQty },
+      }
+    })
+  }
+
+  // Multiplies the item price with its actual selected quantities
   const totalPrice = Object.values(selections).reduce(
-    (sum, item) => sum + getDiscountedPrice(item),
+    (sum, item) => sum + getDiscountedPrice(item) * (item.quantity || 1),
     0,
   )
   const totalOriginalPrice = Object.values(selections).reduce(
-    (sum, item) => sum + (Number(item.price) || 0),
+    (sum, item) => sum + (Number(item.price) || 0) * (item.quantity || 1),
     0,
   )
 
-  // 🎯 Gathers selections, builds a custom formatted invoice list, and opens WhatsApp
-  const handleWhatsAppBuildOrder = (e: React.SubmitEvent) => {
+  const handleWhatsAppBuildOrder = (e: React.FormEvent) => {
     e.preventDefault()
 
     if (!buyerNumber.trim()) {
@@ -164,20 +162,25 @@ export default function PcBuilderClient({
       return
     }
 
-    // 1. Build the spec breakdown text
     const specLines: string[] = []
     COMPONENT_SLOTS.forEach((slot) => {
       const chosen = selections[slot.key]
       if (chosen) {
-        const finalPrice = getDiscountedPrice(chosen)
+        const qty = chosen.quantity || 1
+        const unitPrice = getDiscountedPrice(chosen)
+        const lineTotal = unitPrice * qty
         const itemTitle = getLocalizedTitle(chosen)
-        specLines.push(`⚙️ *${slot.label}:* ${itemTitle} ($${finalPrice.toLocaleString()})`)
+
+        // Formats quantities beautifully in the WhatsApp summary message
+        const qtyPrefix = qty > 1 ? `(${qty}x) ` : ''
+        specLines.push(
+          `⚙️ *${slot.label}:* ${qtyPrefix}${itemTitle} ($${lineTotal.toLocaleString()})`,
+        )
       }
     })
 
     const finalIqd = (totalPrice * dynamicExchangeRate).toLocaleString()
 
-    // 2. Draft the beautiful WhatsApp message
     const waMessageText =
       `🖥️ *New PC Build Order Request: "${buildName}"*\n\n` +
       `*Selected Hardware Spec Breakdown:*\n` +
@@ -193,7 +196,6 @@ export default function PcBuilderClient({
         .map((s) => `${s.key}:${selections[s.key].id}`)
         .join(',')
 
-    // 3. Fire WhatsApp redirection
     const sellerNumber = '9647701414269'
     const cleanSellerNumber = normalizeIraqiNumber(sellerNumber)
     const encodedMessage = encodeURIComponent(waMessageText)
@@ -260,6 +262,7 @@ export default function PcBuilderClient({
     : '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
 
   const t = dict[currentLocale] || dict['en']
+  const hasSelections = Object.keys(selections).length > 0
 
   return (
     <div
@@ -290,9 +293,17 @@ export default function PcBuilderClient({
           {COMPONENT_SLOTS.map((slot) => {
             const chosenItem = selections[slot.key]
             const itemImageUrl = chosenItem?.featuredImage?.url || chosenItem?.meta?.image?.url
-            const originalPrice = chosenItem ? Number(chosenItem.price) || 0 : 0
-            const finalItemPrice = chosenItem ? getDiscountedPrice(chosenItem) : 0
+            const qty = chosenItem?.quantity || 1
+
+            // Dynamic Calculations using the calculated selection quantity counters
+            const originalPrice = chosenItem ? (Number(chosenItem.price) || 0) * qty : 0
+            const finalItemPrice = chosenItem ? getDiscountedPrice(chosenItem) * qty : 0
             const hasItemDiscount = chosenItem ? !!chosenItem.hasDiscount : false
+
+            // Checks slugs explicitly for RAM or Storage configurations ('ram', 'storage', 'ssd', 'hdd', 'm-2')
+            const isMultiSlot = ['ram', 'storage', 'ssd', 'hdd', 'memory', 'm-2', 'm2'].includes(
+              slot.key.toLowerCase() || slot.categorySlug.toLowerCase(),
+            )
 
             return (
               <div
@@ -326,20 +337,15 @@ export default function PcBuilderClient({
                     <span className={styles['pc-builder-slot-label']}>{slot.label}</span>
                     {chosenItem ? (
                       <div className={styles['pc-builder-chosen-title']}>
+                        {qty > 1 && <strong style={{ color: '#ffb83c' }}>{qty}x </strong>}
                         {getLocalizedTitle(chosenItem)}{' '}
                         <span className={styles['pc-builder-chosen-price']}>
                           {hasItemDiscount ? (
                             <>
-                              <span
-                                style={{
-                                  textDecoration: 'line-through',
-                                  color: '#888',
-                                  marginRight: '4px',
-                                }}
-                              >
+                              <span className={styles['pc-builder-price-original']}>
                                 (${originalPrice})
                               </span>
-                              <span style={{ fontWeight: 'bold', color: '#22c55e' }}>
+                              <span className={styles['pc-builder-price-final']}>
                                 (${finalItemPrice})
                               </span>
                             </>
@@ -353,7 +359,33 @@ export default function PcBuilderClient({
                     )}
                   </div>
                 </div>
+
                 <div className={styles['pc-builder-actions-group']}>
+                  {/* STEPPER ADDED HERE: Visible on the slot row AFTER picking an allowed multi-unit item */}
+                  {chosenItem && isMultiSlot && (
+                    <div
+                      className={styles['pc-builder-main-stepper']}
+                      onClick={(e) => e.stopPropagation()} // Stop modal from triggering
+                    >
+                      <button
+                        type="button"
+                        onClick={() => updateSlotQuantity(slot.key, -1)}
+                        className={styles['pc-builder-slot-qty-btn']}
+                        disabled={qty <= 1}
+                      >
+                        -
+                      </button>
+                      <span className={styles['pc-builder-slot-qty-num']}>{qty}</span>
+                      <button
+                        type="button"
+                        onClick={() => updateSlotQuantity(slot.key, 1)}
+                        className={styles['pc-builder-slot-qty-btn']}
+                      >
+                        +
+                      </button>
+                    </div>
+                  )}
+
                   {chosenItem && (
                     <button
                       onClick={(e) => {
@@ -403,11 +435,9 @@ export default function PcBuilderClient({
 
             <div className={styles['pc-builder-price-row']}>
               <span className={styles['pc-builder-price-label']}>{t.totalPrice}</span>
-              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
+              <div className={styles['pc-builder-total-price-wrap']}>
                 {totalOriginalPrice > totalPrice && (
-                  <span
-                    style={{ textDecoration: 'line-through', color: '#888', fontSize: '0.9em' }}
-                  >
+                  <span className={styles['pc-builder-total-original']}>
                     ${totalOriginalPrice.toLocaleString()}
                   </span>
                 )}
@@ -417,61 +447,23 @@ export default function PcBuilderClient({
               </div>
             </div>
 
-            {/* 🎯 Localized green/red styled notice banner above submit form */}
-            <div
-              style={{
-                backgroundColor: 'rgba(37, 211, 102, 0.08)', // Light WhatsApp Green tint
-                border: '1px dashed rgba(37, 211, 102, 0.3)',
-                borderRadius: '8px',
-                padding: '0.75rem',
-                fontSize: '16px',
-                color: '#C04000', // Dark forest/emerald green text
-                lineHeight: '1.4',
-                marginTop: '1.25rem',
-                fontWeight: '500',
-              }}
-            >
+            <div className={styles['pc-builder-whatsapp-notice']}>
               ℹ️ {whatsappPriceNotice[currentLocale] || whatsappPriceNotice.en}
             </div>
 
-            <form
-              onSubmit={handleWhatsAppBuildOrder}
-              style={{
-                display: 'flex',
-                flexDirection: 'column',
-                gap: '0.75rem',
-                marginTop: '0.75rem',
-              }}
-            >
+            <form onSubmit={handleWhatsAppBuildOrder} className={styles['pc-builder-order-form']}>
               <input
                 type="tel"
-                placeholder={phonePlaceholder[currentLocale] || phonePlaceholder.en}
                 value={buyerNumber}
                 onChange={(e) => setBuyerNumber(e.target.value)}
                 required
-                style={{
-                  width: '100%',
-                  padding: '0.75rem 1rem',
-                  borderRadius: '8px',
-                  border: '1px solid #cbd5e1',
-                  fontSize: '14px',
-                  outline: 'none',
-                  boxSizing: 'border-box',
-                }}
+                className={styles['pc-builder-phone-input']}
               />
               <button
                 type="submit"
-                disabled={Object.keys(selections).length === 0}
-                className={styles['pc-builder-submit-btn']}
-                style={{
-                  width: '100%',
-                  background: '#25D366', // WhatsApp Brand Green
-                  color: '#fff',
-                  border: 'none',
-                  cursor: Object.keys(selections).length === 0 ? 'not-allowed' : 'pointer',
-                  opacity: Object.keys(selections).length === 0 ? 0.6 : 1,
-                  fontFamily: fontFam,
-                }}
+                disabled={!hasSelections}
+                className={`${styles['pc-builder-submit-btn']} ${!hasSelections ? styles.disabled : ''}`}
+                style={{ fontFamily: fontFam }}
               >
                 {submitLabel[currentLocale] || submitLabel.en}
               </button>

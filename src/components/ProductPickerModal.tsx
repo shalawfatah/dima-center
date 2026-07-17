@@ -35,14 +35,10 @@ export default function ProductPickerModal({
   if (!currentSlotConfig) return null
 
   const filteredProducts = products.filter((prod) => {
-    // 1. Dynamic fallback support for both 'cat' and 'category' property namespaces
     const prodCategory = prod.cat !== undefined ? prod.cat : prod.category
-
     if (!prodCategory) return false
 
     const targetSlug = currentSlotConfig.categorySlug.toLowerCase()
-
-    // Robust case-insensitive and structural matching helper
     const isSlugMatch = (backendVal: string, frontendSlug: string) => {
       const cleanB = backendVal.toLowerCase().trim()
       const cleanF = frontendSlug.toLowerCase().trim()
@@ -54,13 +50,10 @@ export default function ProductPickerModal({
       )
     }
 
-    // Handle fully populated Payload category objects
     if (typeof prodCategory === 'object' && prodCategory !== null) {
       const bSlug = prodCategory.slug || prodCategory.id || ''
       return isSlugMatch(String(bSlug), targetSlug)
     }
-
-    // Handle plain string identifiers / literal fallback data structures
     return isSlugMatch(String(prodCategory), targetSlug)
   })
 
@@ -119,7 +112,6 @@ export default function ProductPickerModal({
                     <span className={styles['pc-builder-product-price']}>${prod.price}</span>
 
                     <div className={styles['pc-builder-inline-icons-group']}>
-                      {/* Deep Link (New Tab) */}
                       <Link
                         href={`/${currentLocale}/products/${prod.id}`}
                         target="_blank"
@@ -144,7 +136,6 @@ export default function ProductPickerModal({
                         </svg>
                       </Link>
 
-                      {/* Add to Cart */}
                       <button
                         type="button"
                         title="Add to Cart"
