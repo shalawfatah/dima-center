@@ -1,20 +1,15 @@
 'use client'
 
 import { useRouter, useSearchParams, usePathname } from 'next/navigation'
-import { useState, useEffect, useRef, SubmitEvent } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import Image from 'next/image'
 import styles from '@/styles/search.module.css'
 
 const searchCache: Record<string, any[]> = {}
 
-// ⚡ DATABASE FETCH FUNCTION (Hits your custom Payload CMS API Route)
 async function fetchSearchResults(query: string, locale: string) {
   const cacheKey = `${query.toLowerCase()}_${locale}`
-
-  // 1. Check local memory cache first for immediate retrieval
-  if (searchCache[cacheKey]) {
-    return searchCache[cacheKey]
-  }
+  if (searchCache[cacheKey]) return searchCache[cacheKey]
 
   try {
     const res = await fetch(`/api/search?q=${encodeURIComponent(query)}&locale=${locale}`)
@@ -22,8 +17,6 @@ async function fetchSearchResults(query: string, locale: string) {
 
     const data = await res.json()
     const mappedData = Array.isArray(data) ? data : []
-
-    // 2. Store results in cache for subsequent keystrokes
     searchCache[cacheKey] = mappedData
     return mappedData
   } catch (err) {
@@ -32,7 +25,6 @@ async function fetchSearchResults(query: string, locale: string) {
   }
 }
 
-// 🟢 Reusable, Minimalist 2D Flat SVG Search Icon Component
 function SearchIcon({ color = '#f3f3f3', size = 16 }: { color?: string; size?: number }) {
   return (
     <svg
@@ -71,11 +63,9 @@ export default function SearchBar({ locale: initialLocale }: { locale: string })
   const locale = ['en', 'ar', 'ckb'].includes(segments[1]) ? segments[1] : initialLocale || 'en'
   const isRtl = locale === 'ar' || locale === 'ckb'
 
-  // 🎯 Instant search logic using local cache + fast debouncing
   useEffect(() => {
     const trimmed = searchTerm.trim()
 
-    // Reduced threshold to 1 character so search starts immediately
     if (trimmed.length < 1) {
       setResults([])
       setShowDropdown(false)
@@ -84,7 +74,6 @@ export default function SearchBar({ locale: initialLocale }: { locale: string })
 
     const cacheKey = `${trimmed.toLowerCase()}_${locale}`
 
-    // 🏎️ INSTANT PATH: If we have the results cached locally, render them immediately
     if (searchCache[cacheKey]) {
       setResults(searchCache[cacheKey])
       setShowDropdown(true)
@@ -92,19 +81,18 @@ export default function SearchBar({ locale: initialLocale }: { locale: string })
       return
     }
 
-    // 🌐 NETWORK PATH: If not in cache, fetch with a rapid 150ms debounce (down from 500ms)
     setIsLoading(true)
+    // Raised debounce window to 250ms to stabilize input state mutations and server roundtrips
     const delayDebounceFn = setTimeout(async () => {
       const data = await fetchSearchResults(trimmed, locale)
       setResults(data)
       setShowDropdown(true)
       setIsLoading(false)
-    }, 150)
+    }, 250)
 
     return () => clearTimeout(delayDebounceFn)
   }, [searchTerm, locale])
 
-  // Close dropdown if clicked outside of component container
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
@@ -115,7 +103,7 @@ export default function SearchBar({ locale: initialLocale }: { locale: string })
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [])
 
-  const handleSearchSubmit = (e: SubmitEvent) => {
+  const handleSearchSubmit = (e: React.SubmitEvent<HTMLFormElement>) => {
     e.preventDefault()
     if (!searchTerm.trim()) return
     triggerSearchRedirect(searchTerm.trim())
@@ -139,7 +127,6 @@ export default function SearchBar({ locale: initialLocale }: { locale: string })
     ckb: 'گەڕان بۆ پرۆسێسەر، کارتی شاشە، لاپتۆپ...',
   }
 
-  // Common Results Dropdown UI component
   const RenderSearchResults = () => {
     if (!showDropdown || searchTerm.trim().length < 1) return null
 
@@ -150,17 +137,21 @@ export default function SearchBar({ locale: initialLocale }: { locale: string })
         ) : results.length > 0 ? (
           <ul className={styles.resultsList}>
             {results.map((item) => {
-              const displayName = item.title || item.name || ''
+              // --- FIX FOR OBJECTS AS CHILD ERROR ---
+              // Extract the raw title field which might be a string or a localized object
+              const rawTitle = item.title || item.name || ''
 
-              // Safe fallbacks for Payload CMS dynamic schemas (camelCase & snake_case)
+              // If it's an object containing language keys, grab the current locale,
+              // fallback to English, or find any available fallback key.
+              const displayName =
+                typeof rawTitle === 'object' && rawTitle !== null
+                  ? rawTitle[locale] || rawTitle['en'] || Object.values(rawTitle)[0] || ''
+                  : rawTitle
+              // --------------------------------------
+
               const rawImage = item.featuredImage || item.featured_image
               const imageUrl =
-                typeof rawImage === 'object' && rawImage !== null
-                  ? rawImage.url
-                  : typeof rawImage === 'string'
-                    ? rawImage
-                    : null
-
+                typeof rawImage === 'object' && rawImage !== null ? rawImage.url : null
               const price = item.price
 
               return (
@@ -172,12 +163,10 @@ export default function SearchBar({ locale: initialLocale }: { locale: string })
                   }}
                   className={styles.resultsItem}
                 >
-                  {/* Left Side: Just the text title */}
                   <div className={styles.resultsLeftCol}>
                     <span className={styles.resultTitle}>{displayName}</span>
                   </div>
 
-                  {/* Right Side: Price + Thumbnail image side-by-side */}
                   <div className={styles.resultsRightCol}>
                     {price !== undefined && (
                       <span className={styles.resultPrice}>
@@ -223,7 +212,6 @@ export default function SearchBar({ locale: initialLocale }: { locale: string })
         {isMobileOpen ? '✕' : <SearchIcon color="#f3f3f3" size={18} />}
       </button>
 
-      {/* MOBILE OVERLAY DROPDOWN */}
       <div className={`${styles.searchMobileOverlay} ${isMobileOpen ? styles.isActive : ''}`}>
         <form
           onSubmit={handleSearchSubmit}
@@ -267,7 +255,6 @@ export default function SearchBar({ locale: initialLocale }: { locale: string })
         <RenderSearchResults />
       </div>
 
-      {/* DESKTOP SEARCH BAR */}
       <form onSubmit={handleSearchSubmit} className={styles.searchFormDesktop}>
         <input
           type="text"

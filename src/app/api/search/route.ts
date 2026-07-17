@@ -7,7 +7,6 @@ export async function GET(request: Request) {
   const query = searchParams.get('q') || ''
   const locale = searchParams.get('locale') || 'en'
 
-  // Trigger database query as long as 1 character is present
   if (query.trim().length < 1) {
     return NextResponse.json([])
   }
@@ -17,13 +16,16 @@ export async function GET(request: Request) {
 
     const result = await payload.find({
       collection: 'products',
-      locale: locale as any,
+      // Using 'all' ensures localized string formats return properly to your mapping functions
+      locale: 'all',
       where: {
-        title: {
-          like: query,
-        },
+        or: [
+          { 'title.en': { contains: query } },
+          { 'title.ar': { contains: query } },
+          { 'title.ckb': { contains: query } },
+        ],
       },
-      limit: 6, // Snappy dropdown sizing
+      limit: 6,
     })
 
     return NextResponse.json(result.docs)
