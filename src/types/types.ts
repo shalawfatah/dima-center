@@ -38,3 +38,15 @@ export interface PCBuilderSectionProps {
   currentLocale: string
   isRtl: boolean
 }
+
+export interface CartItem {
+  id: string
+  title: string
+  price: number
+  quantity: number
+  imageUrl?: string
+}
+
+export interface CartClientComponentProps {
+  currentLocale: string
+}
