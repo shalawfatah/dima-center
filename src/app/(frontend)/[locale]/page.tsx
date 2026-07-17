@@ -61,7 +61,7 @@ export default async function StorefrontHome({ params, searchParams }: PageProps
     return `/${currentLocale}/${routeSegment}/${id}`
   }
 
-  // --- Active Selected Category Filter View (Unchanged fallback) ---
+  // --- Active Selected Category Filter View ---
   if (activeCategory) {
     const flatEn = getFlatCategories('en')
     const flatAr = getFlatCategories('ar')
@@ -73,7 +73,9 @@ export default async function StorefrontHome({ params, searchParams }: PageProps
 
     const res = await payload.find({
       collection: 'products',
-      where: { 'category.slug': { equals: activeCategory } },
+      where: {
+        and: [{ 'category.slug': { equals: activeCategory } }, { stock: { greater_than: 0 } }],
+      },
       limit: 100,
     })
 
@@ -160,13 +162,16 @@ export default async function StorefrontHome({ params, searchParams }: PageProps
   try {
     const fetchedDiscounts = await payload.find({
       collection: 'products',
-      where: { hasDiscount: { equals: true } },
+      where: {
+        and: [{ hasDiscount: { equals: true } }, { stock: { greater_than: 0 } }],
+      },
       limit: 20,
     })
     productsWithDiscount = fetchedDiscounts.docs
   } catch (err) {
     const fallbackData = await payload.find({
       collection: 'products',
+      where: { stock: { greater_than: 0 } },
       limit: 50,
     })
     productsWithDiscount = fallbackData.docs.filter(
@@ -203,7 +208,9 @@ export default async function StorefrontHome({ params, searchParams }: PageProps
       // 1. Monitor (Independent Major Category)
       const res = await payload.find({
         collection: 'products',
-        where: { 'category.slug': { equals: 'monitor' } },
+        where: {
+          and: [{ 'category.slug': { equals: 'monitor' } }, { stock: { greater_than: 0 } }],
+        },
         limit: 20,
       })
       homepageSections.push({
@@ -222,7 +229,9 @@ export default async function StorefrontHome({ params, searchParams }: PageProps
 
         const res = await payload.find({
           collection: 'products',
-          where: { 'category.slug': { equals: subEn.slug } },
+          where: {
+            and: [{ 'category.slug': { equals: subEn.slug } }, { stock: { greater_than: 0 } }],
+          },
           limit: 20,
         })
 
@@ -242,7 +251,9 @@ export default async function StorefrontHome({ params, searchParams }: PageProps
       if (group.slug) {
         const res = await payload.find({
           collection: 'products',
-          where: { 'category.slug': { equals: group.slug } },
+          where: {
+            and: [{ 'category.slug': { equals: group.slug } }, { stock: { greater_than: 0 } }],
+          },
           limit: 20,
         })
         products = res.docs
@@ -250,7 +261,9 @@ export default async function StorefrontHome({ params, searchParams }: PageProps
         const subSlugs = group.subCategories.map((sub) => sub.slug)
         const res = await payload.find({
           collection: 'products',
-          where: { 'category.slug': { in: subSlugs } },
+          where: {
+            and: [{ 'category.slug': { in: subSlugs } }, { stock: { greater_than: 0 } }],
+          },
           limit: 20,
         })
         products = res.docs
@@ -284,9 +297,7 @@ export default async function StorefrontHome({ params, searchParams }: PageProps
     const otherRes = await payload.find({
       collection: 'products',
       where: {
-        'category.slug': {
-          not_in: flatEnSlugs,
-        },
+        and: [{ 'category.slug': { not_in: flatEnSlugs } }, { stock: { greater_than: 0 } }],
       },
       limit: 20,
     })

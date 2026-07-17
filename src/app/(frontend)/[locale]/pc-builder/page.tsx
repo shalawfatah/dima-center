@@ -27,9 +27,12 @@ export default async function PcBuilderPage({ params }: PcBuilderPageProps) {
   // 🔐 Check user session status securely on the server
   const { user } = await payload.auth({ headers: await headers() })
 
-  // Fetch all active products to act as components
+  // Fetch all active products to act as components (Only items with stock > 0)
   const productsData = await payload.find({
     collection: 'products',
+    where: {
+      stock: { greater_than: 0 },
+    },
     limit: 0,
     pagination: false,
     locale: locale as 'en' | 'ar' | 'ckb',
