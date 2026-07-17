@@ -57,13 +57,24 @@ export default function PromoCarouselClient({
           {promotions.map((promo: any) => {
             const imageUrl = promo.image && typeof promo.image === 'object' ? promo.image.url : null
 
-            let targetUrl = promo.linkUrl || '#'
+            // Determine dynamic links based on promotion type
+            let targetUrl = promo.linkUrl || null
+            let shouldLink = false
+
             if (promo.type === 'product' && promo.relatedProduct) {
               const prodId =
                 typeof promo.relatedProduct === 'object'
                   ? promo.relatedProduct.id
                   : promo.relatedProduct
               targetUrl = `/${currentLocale}/products/${prodId}`
+              shouldLink = true
+            } else if (promo.type === 'offer' && promo.relatedOffer) {
+              const offerId =
+                typeof promo.relatedOffer === 'object' ? promo.relatedOffer.id : promo.relatedOffer
+              targetUrl = `/${currentLocale}/case-offers/${offerId}`
+              shouldLink = true
+            } else if (promo.linkUrl) {
+              shouldLink = true
             }
 
             const slideContent = (
@@ -78,7 +89,7 @@ export default function PromoCarouselClient({
                       height={400}
                       draggable={false}
                       className={styles.bgImage}
-                      style={{ height: 'auto' }} // Keeps Next.js from throwing aspect ratio warnings
+                      style={{ height: 'auto' }}
                     />
                     <div className={styles.overlay} />
                   </div>
@@ -89,10 +100,10 @@ export default function PromoCarouselClient({
                   {promo.type !== 'generic' && (
                     <span
                       className={`${styles.badge} ${
-                        promo.type === 'product' ? styles.badgeProduct : styles.badgeGeneric
+                        promo.type === 'product' ? styles.badgeProduct : styles.badgeOffer
                       }`}
                     >
-                      {promo.type}
+                      {promo.type === 'offer' ? 'Offer' : promo.type}
                     </span>
                   )}
                   <h2 className={styles.title}>{promo.title}</h2>
@@ -101,7 +112,8 @@ export default function PromoCarouselClient({
               </div>
             )
 
-            return promo.type === 'product' || promo.linkUrl ? (
+            // Render clickable Link ONLY for product / offer types or custom links
+            return shouldLink && targetUrl ? (
               <Link key={promo.id} href={targetUrl} className={styles.slide} draggable={false}>
                 {slideContent}
               </Link>

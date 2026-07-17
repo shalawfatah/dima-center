@@ -90,6 +90,7 @@ export default function OrderButton({ product, currentLocale }: OrderButtonProps
           width: '100%',
           padding: '0.9rem',
           backgroundColor: '#25D366', // WhatsApp Green
+          fontFamily: 'Rudaw',
           color: '#fff',
           border: 'none',
           borderRadius: '8px',

@@ -34,7 +34,7 @@ export const Promotions: CollectionConfig = {
       options: [
         { label: 'Generic / News', value: 'generic' },
         { label: 'Product Feature', value: 'product' },
-        { label: 'Event', value: 'event' },
+        { label: 'Offer', value: 'offer' }, // Changed 'event' to 'offer'
       ],
     },
     {
@@ -42,9 +42,19 @@ export const Promotions: CollectionConfig = {
       type: 'relationship',
       relationTo: 'products',
       hasMany: false,
-      // ⚡ Elegant UX: Only show this field if the type is 'product'
+      // Only show this field if the type is 'product'
       admin: {
         condition: (data) => data?.type === 'product',
+      },
+    },
+    {
+      name: 'relatedOffer',
+      type: 'relationship',
+      relationTo: 'case-offers',
+      hasMany: false,
+      // Only show this field if the type is 'offer'
+      admin: {
+        condition: (data) => data?.type === 'offer',
       },
     },
     {
@@ -53,8 +63,8 @@ export const Promotions: CollectionConfig = {
       label: 'Custom Link URL',
       admin: {
         description:
-          'Optional URL if this links to an external site or specific page instead of a product.',
-        condition: (data) => data?.type !== 'product',
+          'Optional URL if this links to an external site or specific page instead of a product or offer.',
+        condition: (data) => data?.type === 'generic', // Only show for generic types if they need an external override
       },
     },
     {

@@ -253,35 +253,14 @@ export interface Promotion {
   title: string;
   description?: string | null;
   image: number | Media;
-  type?: ('generic' | 'product' | 'event') | null;
+  type?: ('generic' | 'product' | 'offer') | null;
   relatedProduct?: (number | null) | Product;
+  relatedOffer?: (number | null) | CaseOffer;
   /**
-   * Optional URL if this links to an external site or specific page instead of a product.
+   * Optional URL if this links to an external site or specific page instead of a product or offer.
    */
   linkUrl?: string | null;
   isActive?: boolean | null;
-  updatedAt: string;
-  createdAt: string;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "pc-builds".
- */
-export interface PcBuild {
-  id: number;
-  name: string;
-  user: number | User;
-  totalPrice: number;
-  components?: {
-    cpu?: (number | null) | Product;
-    gpu?: (number | null) | Product;
-    motherboard?: (number | null) | Product;
-    ram?: (number | null) | Product;
-    storage?: (number | null) | Product;
-    psu?: (number | null) | Product;
-    case?: (number | null) | Product;
-    cooler?: (number | null) | Product;
-  };
   updatedAt: string;
   createdAt: string;
 }
@@ -320,6 +299,28 @@ export interface CaseOffer {
    * Optional promotional price (leave blank if not discounted)
    */
   discountedPrice?: number | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "pc-builds".
+ */
+export interface PcBuild {
+  id: number;
+  name: string;
+  user: number | User;
+  totalPrice: number;
+  components?: {
+    cpu?: (number | null) | Product;
+    gpu?: (number | null) | Product;
+    motherboard?: (number | null) | Product;
+    ram?: (number | null) | Product;
+    storage?: (number | null) | Product;
+    psu?: (number | null) | Product;
+    case?: (number | null) | Product;
+    cooler?: (number | null) | Product;
+  };
   updatedAt: string;
   createdAt: string;
 }
@@ -529,6 +530,7 @@ export interface PromotionsSelect<T extends boolean = true> {
   image?: T;
   type?: T;
   relatedProduct?: T;
+  relatedOffer?: T;
   linkUrl?: T;
   isActive?: T;
   updatedAt?: T;
