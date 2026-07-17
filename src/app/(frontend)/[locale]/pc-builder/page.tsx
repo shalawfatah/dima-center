@@ -1,14 +1,11 @@
 import { getPayload } from 'payload'
 import config from '@/payload.config'
-import { headers } from 'next/headers'
 import PcBuilderClient from '@/components/PcBuilderClient'
-
 import type { Metadata } from 'next'
 import { getStorefrontMetadata } from '@/utils/seo'
 
 interface PageProps {
   params: Promise<{ locale: string }>
-  searchParams: Promise<{ category?: string; [key: string]: any }>
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
@@ -16,31 +13,58 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   return getStorefrontMetadata({ locale: resolvedParams.locale })
 }
 
-interface PcBuilderPageProps {
-  params: Promise<{ locale: string }>
-}
+// Statically optimize compilation rules
+export const revalidate = 3600 // Cache for 1 hour, revalidate in background
 
-export default async function PcBuilderPage({ params }: PcBuilderPageProps) {
+export default async function PcBuilderPage({ params }: PageProps) {
   const { locale } = await params
   const payload = await getPayload({ config })
 
-  // 🔐 Check user session status securely on the server
-  const { user } = await payload.auth({ headers: await headers() })
-
-  // Fetch all active products to act as components (Only items with stock > 0)
+  // Fetch only necessary data fields to speed up build generation
   const productsData = await payload.find({
     collection: 'products',
     where: {
       stock: { greater_than: 0 },
+    },
+    select: {
+      id: true,
+      title: true,
+      price: true,
+      priceIQD: true,
+      hasDiscount: true,
+      discountType: true,
+      discountValue: true,
+      category: true,
+      cat: true,
+      featuredImage: true,
+      meta: true,
     },
     limit: 0,
     pagination: false,
     locale: locale as 'en' | 'ar' | 'ckb',
   })
 
-  // Group products by categories or simply pass them directly
-  const products = productsData.docs
+  // Fetch corporate currency constants safely
+  const generalsData = await payload
+    .findGlobal({
+      slug: 'general-settings',
+      locale: locale as 'en' | 'ar' | 'ckb',
+    })
+    .catch(() => null)
+
   const isRtl = locale === 'ar' || locale === 'ckb'
 
-  return <PcBuilderClient products={products} user={user} currentLocale={locale} isRtl={isRtl} />
+  // ✅ FIX TYPE ERROR: Sanitize database 'null' properties to meet Client Component expectations
+  const sanitizedGenerals = generalsData
+    ? JSON.parse(JSON.stringify(generalsData, (_, value) => (value === null ? undefined : value)))
+    : undefined
+
+  return (
+    <PcBuilderClient
+      products={productsData.docs}
+      generals={sanitizedGenerals}
+      currentLocale={locale}
+      isRtl={isRtl}
+    />
+  )
 }

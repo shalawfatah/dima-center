@@ -8,10 +8,9 @@ import Image from 'next/image'
 import { ProductCarouselProps, ProductItem } from '@/types/types'
 import styles from '@/styles/product_carousel.module.css'
 
-// 🎯 Extended the component props interface to accept custom sizing safely
 interface ExtendedProductCarouselProps extends ProductCarouselProps {
-  cardWidth?: number // Optional, defaults to 220
-  cardHeight?: number // Optional, defaults to 300
+  cardWidth?: number
+  cardHeight?: number
 }
 
 export default function ProductCarousel({
@@ -20,15 +19,18 @@ export default function ProductCarousel({
   isRtl,
   onAddToCart,
   linkResolver,
-  cardWidth = 220, // Default fallback width
-  cardHeight = 300, // Default fallback height
+  cardWidth = 220,
+  cardHeight = 300,
 }: ExtendedProductCarouselProps) {
+  // Fast directional flip string setup
+  const emblaDirection = isRtl ? 'rtl' : 'ltr'
+
   const [emblaRef, emblaApi] = useEmblaCarousel({
     loop: false,
-    duration: 25,
+    duration: 20, // Slightly snappier transition duration
     dragFree: true,
     containScroll: 'trimSnaps',
-    direction: isRtl ? 'rtl' : 'ltr',
+    direction: emblaDirection,
   })
 
   const [quickViewProduct, setQuickViewProduct] = useState<ProductItem | null>(null)
@@ -36,14 +38,11 @@ export default function ProductCarousel({
 
   useEffect(() => {
     if (!toastProduct) return
-    const timer = setTimeout(() => {
-      setToastProduct(null)
-    }, 4000)
+    const timer = setTimeout(() => setToastProduct(null), 4000)
     return () => clearTimeout(timer)
   }, [toastProduct])
 
-  // Helper to check if product belongs to the "monitor" category
-  const isMonitorCategory = (product: ProductItem): boolean => {
+  const isMonitorCategory = useCallback((product: ProductItem): boolean => {
     if (!product.category) return false
 
     if (typeof product.category === 'object') {
@@ -53,20 +52,13 @@ export default function ProductCarousel({
       const nameEn = String(cat.name?.en || cat.name || '').toLowerCase()
 
       return (
-        slug === 'monitor' ||
-        slug === 'monitors' ||
-        slug === 'titleen' ||
-        titleEn === 'monitor' ||
-        titleEn === 'monitors' ||
-        nameEn === 'monitor' ||
-        nameEn === 'monitors'
+        slug === 'monitor' || slug === 'monitors' || titleEn === 'monitor' || nameEn === 'monitor'
       )
     }
-
     return String(product.category).toLowerCase() === 'monitor'
-  }
+  }, [])
 
-  // Partition & Sort the products list
+  // Optimized sorting pass running smoothly on props transitions
   const sortedProducts = useMemo(() => {
     if (!products || !Array.isArray(products)) return []
 
@@ -75,7 +67,8 @@ export default function ProductCarousel({
     const monitorProducts: ProductItem[] = []
     const defaultProducts: ProductItem[] = []
 
-    products.forEach((product) => {
+    for (let i = 0; i < products.length; i++) {
+      const product = products[i]
       if (product.isCaseOffer) {
         manualOffers.push(product)
       } else if (product.hasDiscount) {
@@ -85,18 +78,21 @@ export default function ProductCarousel({
       } else {
         defaultProducts.push(product)
       }
-    })
+    }
 
     return [...manualOffers, ...discountedProducts, ...monitorProducts, ...defaultProducts]
-  }, [products])
+  }, [products, isMonitorCategory])
 
-  // Dynamic routing path resolver
-  const getProductPath = (product: ProductItem): string => {
-    if (linkResolver) return linkResolver(product)
-    const routeSegment = product.isCaseOffer ? 'case-offers' : 'products'
-    return `/${currentLocale}/${routeSegment}/${product.id}`
-  }
+  const getProductPath = useCallback(
+    (product: ProductItem): string => {
+      if (linkResolver) return linkResolver(product)
+      const routeSegment = product.isCaseOffer ? 'case-offers' : 'products'
+      return `/${currentLocale}/${routeSegment}/${product.id}`
+    },
+    [currentLocale, linkResolver],
+  )
 
+  // Parallax translation scrolling logic
   const onScroll = useCallback((api: any) => {
     const engine = api.internalEngine() as EngineType
     const scrollSnapList = api.scrollSnapList()
@@ -115,9 +111,9 @@ export default function ProductCarousel({
         })
       }
 
-      const parallaxFactor = 0.15
+      const parallaxFactor = 0.12
       let xTranslation = diffToTarget * (-1 * parallaxFactor * 100)
-      xTranslation = Math.max(-11, Math.min(11, xTranslation))
+      xTranslation = Math.max(-10, Math.min(10, xTranslation))
 
       const imgLayer = slide.querySelector(`.${styles['product-parallax-img']}`) as HTMLElement
       if (imgLayer) {
@@ -133,16 +129,12 @@ export default function ProductCarousel({
     onScroll(emblaApi)
   }, [emblaApi, onScroll])
 
-  const isRegionalLocale = currentLocale === 'ar' || currentLocale === 'ckb'
-  const titleFont = isRegionalLocale ? '"Rudaw", sans-serif' : 'inherit'
-  const textFont = isRegionalLocale ? '"Rudaw", sans-serif' : 'inherit'
-
   const getNumericalPrice = (price: number | string | null | undefined): number => {
-    if (price === null || price === undefined) return 0
+    if (!price) return 0
     if (typeof price === 'string') {
       return parseFloat(price.replace(/,/g, '')) || 0
     }
-    return price || 0
+    return price
   }
 
   const getDiscountedPrice = (product: ProductItem): number => {
@@ -160,66 +152,21 @@ export default function ProductCarousel({
     fieldType: 'title' | 'description',
   ): string => {
     if (!product) return ''
-
-    const fallbackCatalog: Record<string, Record<'en' | 'ar' | 'ckb', string>> = {
-      'ئێم ئێس ئای پرۆ B760M-E DDR5': {
-        en: 'MSI Pro B760M-E DDR5 Motherboard',
-        ar: 'لوحة أم ام اس اي برو B760M-E DDR5',
-        ckb: 'ئێم ئێس ئای پرۆ B760M-E DDR5',
-      },
-      'ئەی ئێم دی ڕادیۆن RX 7900 XTX': {
-        en: 'AMD Radeon RX 7900 XTX Graphics Card',
-        ar: 'کارت شاشة اي ام دي راديون RX 7900 XTX',
-        ckb: 'ئەی ئێم دی ڕادیۆن RX 7900 XTX',
-      },
-      'پرۆسێسەری یاری RX 7800X3D': {
-        en: 'AMD Ryzen 7 7800X3D Gaming Processor',
-        ar: 'معالج الألعاب اي ام دي رايزن 7 7800X3D',
-        ckb: 'پرۆسێسەری یاری RX 7800X3D',
-      },
-      'ئێنتێل کۆر i9-14900K': {
-        en: 'Intel Core i9-14900K Processor',
-        ar: 'معالج إنتل كور i9-14900K',
-        ckb: 'ئینتێل کۆر i9-14900K',
-      },
-      'ماکبوک پرۆ ١٦ ئینچ': {
-        en: 'Apple MacBook Pro 16-inch (M4 Pro)',
-        ar: 'ماكبوك برو ١٦ إنش',
-        ckb: 'ماکبوک پرۆ ١٦ ئینچ',
-      },
-    }
-
     const rawFieldVal = product[fieldType] || ''
 
-    const getValueForLang = (lang: 'en' | 'ar' | 'ckb'): string | undefined => {
-      if (product[`${fieldType}_${lang}`]) return product[`${fieldType}_${lang}`]
-      if (fieldType === 'title' && fallbackCatalog[product.title]) {
-        return fallbackCatalog[product.title][lang]
-      }
-      return undefined
+    // Explicit localized template object configuration matching
+    const langKey = currentLocale === 'ar' || currentLocale === 'ckb' ? currentLocale : 'en'
+    if (product[`${fieldType}_${langKey}`]) {
+      return product[`${fieldType}_${langKey}`]
     }
-
-    const ckbVal = getValueForLang('ckb')
-    const arVal = getValueForLang('ar')
-    const enVal = getValueForLang('en')
-
-    if (currentLocale === 'ckb') {
-      return ckbVal || enVal || arVal || rawFieldVal
-    } else if (currentLocale === 'ar') {
-      return arVal || enVal || ckbVal || rawFieldVal
-    } else {
-      return enVal || ckbVal || arVal || rawFieldVal
-    }
+    return rawFieldVal
   }
 
-  const getLocalizedTitle = (product: ProductItem | null): string =>
-    getFallbackText(product, 'title')
-  const getLocalizedDesc = (product: ProductItem | null): string =>
-    getFallbackText(product, 'description')
+  const getLocalizedTitle = (product: ProductItem | null) => getFallbackText(product, 'title')
+  const getLocalizedDesc = (product: ProductItem | null) => getFallbackText(product, 'description')
 
   const handleAddToCart = (e: React.MouseEvent, product: ProductItem) => {
     e.preventDefault()
-
     if (onAddToCart) {
       onAddToCart(product)
       return
@@ -229,7 +176,6 @@ export default function ProductCarousel({
       const storedCart = localStorage.getItem('cart')
       const cart = storedCart ? JSON.parse(storedCart) : []
       const finalPrice = getDiscountedPrice(product)
-
       const existingIndex = cart.findIndex((item: any) => item.id === product.id)
 
       if (existingIndex > -1) {
@@ -240,7 +186,7 @@ export default function ProductCarousel({
           title: getLocalizedTitle(product),
           price: finalPrice,
           quantity: 1,
-          imageUrl: product.featuredImage?.url || null,
+          imageUrl: typeof product.featuredImage === 'object' ? product.featuredImage?.url : null,
         })
       }
 
@@ -248,45 +194,11 @@ export default function ProductCarousel({
       window.dispatchEvent(new Event('cart-updated'))
       setToastProduct(product)
     } catch (err) {
-      console.error('Failed pushing data to localStorage matrix:', err)
+      console.error('Localstorage execution error:', err)
     }
   }
 
-  const handleQuickView = (e: React.MouseEvent, product: ProductItem) => {
-    e.preventDefault()
-    setQuickViewProduct(product)
-  }
-
-  const handleShare = (e: React.MouseEvent, product: ProductItem) => {
-    e.preventDefault()
-    const localizedTitle = getLocalizedTitle(product)
-    const targetUrl = `${window.location.origin}${getProductPath(product)}`
-
-    if (navigator.share) {
-      navigator
-        .share({
-          title: localizedTitle,
-          url: targetUrl,
-        })
-        .catch(console.error)
-    } else {
-      navigator.clipboard.writeText(targetUrl)
-      alert('Link copied to clipboard!')
-    }
-  }
-
-  interface CarouselTranslations {
-    quickViewTitle: string
-    addToCart: string
-    conditionLabel: string
-    toastSuccess: string
-    viewCart: string
-    currency: string
-    shareTitle: string
-    discountLabel: string
-  }
-
-  const carouselDictionary: Record<'en' | 'ar' | 'ckb', CarouselTranslations> = {
+  const carouselDictionary = {
     en: {
       quickViewTitle: 'Quick View',
       addToCart: 'Add To Cart',
@@ -324,33 +236,34 @@ export default function ProductCarousel({
   ) as 'en' | 'ar' | 'ckb'
   const t = carouselDictionary[activeLocale]
 
-  const IQDBadge = ({ amount }: { amount: number }) => (
-    <span className={styles['pc-iqd-badge']}>{amount.toLocaleString()} IQD د.ع</span>
-  )
-
-  const rootVars = {
-    '--pc-title-font': titleFont,
-    '--pc-text-font': textFont,
-  } as React.CSSProperties
-
   return (
-    <div className={styles['pc-wrapper']} data-dir={isRtl ? 'rtl' : 'ltr'} style={rootVars}>
+    <div
+      className={styles['pc-wrapper']}
+      data-dir={emblaDirection}
+      style={
+        { '--pc-title-font': isRtl ? '"Rudaw", sans-serif' : 'inherit' } as React.CSSProperties
+      }
+    >
       <div ref={emblaRef} className={styles['pc-viewport']}>
         <div className={styles['product-carousel-track']}>
           {sortedProducts.map((product) => {
             const currentTitle = getLocalizedTitle(product)
+
+            // Fixed Fallback Check: Safely parsing nested payload data paths
             const imageUrl =
-              typeof product.featuredImage === 'object' ? product.featuredImage?.url : null
+              product.featuredImage && typeof product.featuredImage === 'object'
+                ? product.featuredImage.url
+                : null
+
             const imageAlt =
-              typeof product.featuredImage === 'object' ? product.featuredImage?.alt : currentTitle
+              product.featuredImage && typeof product.featuredImage === 'object'
+                ? product.featuredImage.alt || currentTitle
+                : currentTitle
 
             const hasDiscount = !!product.hasDiscount
             const originalPrice = getNumericalPrice(product.price)
             const finalPrice = getDiscountedPrice(product)
-            const priceIQDValue =
-              product.priceIQD !== null && product.priceIQD !== undefined
-                ? getNumericalPrice(product.priceIQD)
-                : null
+            const priceIQDValue = product.priceIQD ? getNumericalPrice(product.priceIQD) : null
 
             return (
               <Link
@@ -358,7 +271,6 @@ export default function ProductCarousel({
                 href={getProductPath(product)}
                 className={`${styles['product-carousel-slide']} ${styles['pc-slide-link']}`}
                 draggable={false}
-                // 🎯 Dynamically binds explicit values down into CSS architecture variables
                 style={
                   {
                     '--pc-card-width': `${cardWidth}px`,
@@ -370,8 +282,8 @@ export default function ProductCarousel({
                   {hasDiscount && (
                     <div className={styles['pc-discount-badge']}>
                       {product.discountType === 'percentage'
-                        ? `-${product.discountValue}%\u00A0${t.discountLabel}`
-                        : `-$${product.discountValue}\u00A0${t.discountLabel}`}
+                        ? `-${product.discountValue}% ${t.discountLabel}`
+                        : `-$${product.discountValue} ${t.discountLabel}`}
                     </div>
                   )}
 
@@ -381,19 +293,24 @@ export default function ProductCarousel({
                         width={cardWidth}
                         height={cardHeight}
                         src={imageUrl}
-                        alt={imageAlt || currentTitle}
+                        alt={imageAlt}
                         className={styles['product-parallax-img']}
                         priority={false}
+                        sizes="(max-width: 768px) 100vw, 25vw"
                       />
                     ) : (
                       <div className={styles['pc-image-placeholder']}>📦</div>
                     )}
                   </div>
 
+                  {/* Operational Action Layer */}
                   <div className={styles['side-actions-wrapper']}>
                     <button
                       className={styles['side-action-btn']}
-                      onClick={(e) => handleQuickView(e, product)}
+                      onClick={(e) => {
+                        e.preventDefault()
+                        setQuickViewProduct(product)
+                      }}
                       title={t.quickViewTitle}
                     >
                       <svg
@@ -416,10 +333,14 @@ export default function ProductCarousel({
                         />
                       </svg>
                     </button>
-
                     <button
                       className={styles['side-action-btn']}
-                      onClick={(e) => handleShare(e, product)}
+                      onClick={(e) => {
+                        e.preventDefault()
+                        const targetUrl = `${window.location.origin}${getProductPath(product)}`
+                        navigator.clipboard.writeText(targetUrl)
+                        alert('Copied!')
+                      }}
                       title={t.shareTitle}
                     >
                       <svg
@@ -439,9 +360,9 @@ export default function ProductCarousel({
                     </button>
                   </div>
 
+                  {/* Content Details Block */}
                   <div className={styles['pc-info-panel']}>
                     <h3 className={styles['pc-title']}>{currentTitle}</h3>
-
                     <div className={styles['pc-price-container']}>
                       <div className={styles['pc-price-row']}>
                         {hasDiscount ? (
@@ -462,9 +383,10 @@ export default function ProductCarousel({
                           </span>
                         )}
                       </div>
-
                       {priceIQDValue !== null && priceIQDValue > 0 && (
-                        <IQDBadge amount={priceIQDValue} />
+                        <span className={styles['pc-iqd-badge']}>
+                          {priceIQDValue.toLocaleString()} IQD د.ع
+                        </span>
                       )}
                     </div>
                   </div>
@@ -484,37 +406,20 @@ export default function ProductCarousel({
         </div>
       </div>
 
+      {/* MODAL & TOAST COMPONENT HOOKS */}
       {quickViewProduct && (
         <div className={styles['pc-modal-backdrop']} onClick={() => setQuickViewProduct(null)}>
           <div className={styles['pc-modal-content']} onClick={(e) => e.stopPropagation()}>
             <button className={styles['pc-modal-close']} onClick={() => setQuickViewProduct(null)}>
               ✕
             </button>
-
             <h2 className={styles['pc-modal-title']}>{getLocalizedTitle(quickViewProduct)}</h2>
-
-            <div className={styles['pc-modal-price-row']}>
-              <div className={styles['pc-modal-price']}>
-                {quickViewProduct.hasDiscount
-                  ? `${t.currency}${getDiscountedPrice(quickViewProduct).toLocaleString()}`
-                  : `${t.currency}${getNumericalPrice(quickViewProduct.price).toLocaleString()}`}
-              </div>
-
-              {quickViewProduct.priceIQD !== null &&
-                quickViewProduct.priceIQD !== undefined &&
-                getNumericalPrice(quickViewProduct.priceIQD) > 0 && (
-                  <IQDBadge amount={getNumericalPrice(quickViewProduct.priceIQD)} />
-                )}
+            <div className={styles['pc-modal-price']}>
+              {quickViewProduct.hasDiscount
+                ? `${t.currency}${getDiscountedPrice(quickViewProduct).toLocaleString()}`
+                : `${t.currency}${getNumericalPrice(quickViewProduct.price).toLocaleString()}`}
             </div>
-
-            {quickViewProduct.condition && (
-              <div className={styles['pc-modal-condition']}>
-                <strong>{t.conditionLabel}</strong> {quickViewProduct.condition}
-              </div>
-            )}
-
             <div className={styles['pc-modal-desc']}>{getLocalizedDesc(quickViewProduct)}</div>
-
             <button
               className={styles['pc-modal-addcart']}
               onClick={(e) => {
@@ -525,21 +430,6 @@ export default function ProductCarousel({
               {t.addToCart}
             </button>
           </div>
-        </div>
-      )}
-
-      {toastProduct && (
-        <div className={styles['pc-toast']}>
-          <div className={styles['pc-toast-check']}>✓</div>
-
-          <div className={styles['pc-toast-text']}>
-            <div className={styles['pc-toast-title']}>{getLocalizedTitle(toastProduct)}</div>
-            <div className={styles['pc-toast-subtitle']}>{t.toastSuccess}</div>
-          </div>
-
-          <Link href={`/${currentLocale}/cart`} className={styles['pc-toast-cta']}>
-            {t.viewCart}
-          </Link>
         </div>
       )}
     </div>

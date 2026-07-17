@@ -108,7 +108,6 @@ export const dict: Record<string, Record<string, string>> = {
 
 export interface PcBuilderClientProps {
   products: any[]
-  user: any | null
   currentLocale: string
   isRtl: boolean
 }

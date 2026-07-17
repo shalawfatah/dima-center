@@ -19,10 +19,25 @@ import Image from 'next/image'
 import PCBuilderSection from '@/components/PCBuilderSection'
 import CategoryCarousel from '@/components/CategoryCarousel'
 
+// ⚡ ACTIVATE ISR: Cache static builds for 1 hour, quiet background regeneration
+export const revalidate = 3600
+
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const resolvedParams = await params
   return getStorefrontMetadata({ locale: resolvedParams.locale })
 }
+
+// ✅ FIXED: Payload CMS v3 select property requires an explicit key-boolean map shape
+const MINIMAL_PRODUCT_FIELDS = {
+  id: true,
+  title: true,
+  price: true,
+  stock: true,
+  featuredImage: true,
+  hasDiscount: true,
+  discountedPrice: true,
+  category: true,
+} as const
 
 export default async function StorefrontHome({ params, searchParams }: PageProps) {
   const resolvedParams = await params
@@ -73,6 +88,8 @@ export default async function StorefrontHome({ params, searchParams }: PageProps
 
     const res = await payload.find({
       collection: 'products',
+      depth: 1,
+      select: MINIMAL_PRODUCT_FIELDS,
       where: {
         and: [{ 'category.slug': { equals: activeCategory } }, { stock: { greater_than: 0 } }],
       },
@@ -144,56 +161,16 @@ export default async function StorefrontHome({ params, searchParams }: PageProps
     )
   }
 
-  // --- Fetch Case Offers (Full Build Offers) ---
-  let caseOffers: any[] = []
-  try {
-    const fetchedOffers = await payload.find({
-      collection: 'case-offers',
-      locale: currentLocale,
-      limit: 20,
-    })
-    caseOffers = fetchedOffers.docs
-  } catch (err) {
-    console.error('Failed to fetch case offers:', err)
-  }
-
-  // --- Fetch Standard Discounts ---
-  let productsWithDiscount: any[] = []
-  try {
-    const fetchedDiscounts = await payload.find({
-      collection: 'products',
-      where: {
-        and: [{ hasDiscount: { equals: true } }, { stock: { greater_than: 0 } }],
-      },
-      limit: 20,
-    })
-    productsWithDiscount = fetchedDiscounts.docs
-  } catch (err) {
-    const fallbackData = await payload.find({
-      collection: 'products',
-      where: { stock: { greater_than: 0 } },
-      limit: 50,
-    })
-    productsWithDiscount = fallbackData.docs.filter(
-      (p: any) => calculateProductPrice(p).isDiscounted,
-    )
-  }
-
-  // --- Dynamic Category Organization ---
+  // --- Dynamic Category Setup Calculations ---
   const majorGroupsEn = MAIN_CATEGORY_GROUPS['en'] || []
   const majorGroupsAr = MAIN_CATEGORY_GROUPS['ar'] || []
   const majorGroupsCkb = MAIN_CATEGORY_GROUPS['ckb'] || []
 
-  // Final array of renderable sections
-  const homepageSections: {
-    slug: string
-    en: string
-    ar: string
-    ckb: string
-    products: any[]
-  }[] = []
+  // Initialize parallel batch target queues
+  const sectionQueryPromises: Promise<any>[] = []
+  const sectionMetaMapping: { slug: string; en: string; ar: string; ckb: string }[] = []
 
-  // Process all major groups to separate "Computer Parts" minors, keep "Monitor" solo, and combine rest
+  // Build a single uniform array of query jobs out of categories array structures
   for (let idx = 0; idx < majorGroupsEn.length; idx++) {
     const group = majorGroupsEn[idx]
     const groupAr = majorGroupsAr[idx]
@@ -205,84 +182,140 @@ export default async function StorefrontHome({ params, searchParams }: PageProps
     const isMonitor = group.slug && group.slug.toLowerCase() === 'monitor'
 
     if (isMonitor) {
-      // 1. Monitor (Independent Major Category)
-      const res = await payload.find({
-        collection: 'products',
-        where: {
-          and: [{ 'category.slug': { equals: 'monitor' } }, { stock: { greater_than: 0 } }],
-        },
-        limit: 20,
-      })
-      homepageSections.push({
+      sectionQueryPromises.push(
+        payload.find({
+          collection: 'products',
+          depth: 1,
+          select: MINIMAL_PRODUCT_FIELDS,
+          where: {
+            and: [{ 'category.slug': { equals: 'monitor' } }, { stock: { greater_than: 0 } }],
+          },
+          limit: 20,
+        }),
+      )
+      sectionMetaMapping.push({
         slug: 'monitor',
         en: group.title,
         ar: groupAr?.title || group.title,
         ckb: groupCkb?.title || group.title,
-        products: res.docs,
       })
     } else if (isComputerParts && group.subCategories) {
-      // 2. Computer Parts -> Split out every single inner subcategory independently
       for (let subIdx = 0; subIdx < group.subCategories.length; subIdx++) {
         const subEn = group.subCategories[subIdx]
         const subAr = groupAr?.subCategories?.[subIdx]
         const subCkb = groupCkb?.subCategories?.[subIdx]
 
-        const res = await payload.find({
-          collection: 'products',
-          where: {
-            and: [{ 'category.slug': { equals: subEn.slug } }, { stock: { greater_than: 0 } }],
-          },
-          limit: 20,
+        sectionQueryPromises.push(
+          payload.find({
+            collection: 'products',
+            depth: 1,
+            select: MINIMAL_PRODUCT_FIELDS,
+            where: {
+              and: [{ 'category.slug': { equals: subEn.slug } }, { stock: { greater_than: 0 } }],
+            },
+            limit: 20,
+          }),
+        )
+        sectionMetaMapping.push({
+          slug: subEn.slug,
+          en: subEn.title,
+          ar: subAr?.title || subEn.title,
+          ckb: subCkb?.title || subEn.title,
         })
-
-        if (res.docs.length > 0) {
-          homepageSections.push({
-            slug: subEn.slug,
-            en: subEn.title,
-            ar: subAr?.title || subEn.title,
-            ckb: subCkb?.title || subEn.title,
-            products: res.docs,
-          })
-        }
       }
     } else {
-      // 3. Any other non-parts groups (Combined collectively under their parent Title)
-      let products: any[] = []
+      let whereClause: any = {}
       if (group.slug) {
-        const res = await payload.find({
-          collection: 'products',
-          where: {
-            and: [{ 'category.slug': { equals: group.slug } }, { stock: { greater_than: 0 } }],
-          },
-          limit: 20,
-        })
-        products = res.docs
+        whereClause = {
+          and: [{ 'category.slug': { equals: group.slug } }, { stock: { greater_than: 0 } }],
+        }
       } else if (group.subCategories) {
         const subSlugs = group.subCategories.map((sub) => sub.slug)
-        const res = await payload.find({
-          collection: 'products',
-          where: {
-            and: [{ 'category.slug': { in: subSlugs } }, { stock: { greater_than: 0 } }],
-          },
-          limit: 20,
-        })
-        products = res.docs
+        whereClause = {
+          and: [{ 'category.slug': { in: subSlugs } }, { stock: { greater_than: 0 } }],
+        }
       }
 
-      if (products.length > 0) {
-        homepageSections.push({
-          slug: group.slug || `group-${idx}`,
-          en: group.title,
-          ar: groupAr?.title || group.title,
-          ckb: groupCkb?.title || group.title,
-          products,
-        })
-      }
+      sectionQueryPromises.push(
+        payload.find({
+          collection: 'products',
+          depth: 1,
+          select: MINIMAL_PRODUCT_FIELDS,
+          where: whereClause,
+          limit: 20,
+        }),
+      )
+      sectionMetaMapping.push({
+        slug: group.slug || `group-${idx}`,
+        en: group.title,
+        ar: groupAr?.title || group.title,
+        ckb: groupCkb?.title || group.title,
+      })
     }
   }
 
-  // --- 🎯 Sort Rules: Ensure "Monitor" section stays on top of other regular category sections ---
-  const sortedSections = [...homepageSections].sort((a, b) => {
+  // --- Core Performance Optimization Engine: Run absolutely EVERYTHING concurrently! ---
+  const [resolvedCaseOffers, resolvedDiscounts, ...resolvedSectionsDocs] = await Promise.all([
+    payload
+      .find({
+        collection: 'case-offers',
+        locale: currentLocale,
+        depth: 1,
+        limit: 20,
+      })
+      .catch((err) => {
+        console.error(err)
+        return { docs: [] }
+      }),
+    payload
+      .find({
+        collection: 'products',
+        depth: 1,
+        select: MINIMAL_PRODUCT_FIELDS,
+        where: {
+          and: [{ hasDiscount: { equals: true } }, { stock: { greater_than: 0 } }],
+        },
+        limit: 20,
+      })
+      .catch((err) => {
+        console.error(err)
+        return null
+      }),
+    ...sectionQueryPromises,
+  ])
+
+  const caseOffers = resolvedCaseOffers.docs || []
+  let productsWithDiscount = resolvedDiscounts ? resolvedDiscounts.docs : []
+
+  if (resolvedDiscounts === null) {
+    try {
+      const fallbackData = await payload.find({
+        collection: 'products',
+        depth: 1,
+        select: MINIMAL_PRODUCT_FIELDS,
+        where: { stock: { greater_than: 0 } },
+        limit: 50,
+      })
+      productsWithDiscount = fallbackData.docs.filter(
+        (p: any) => calculateProductPrice(p).isDiscounted,
+      )
+    } catch (e) {
+      console.error('Failed to parse fallback discount checks', e)
+    }
+  }
+
+  const homepageSections: any[] = []
+  for (let i = 0; i < resolvedSectionsDocs.length; i++) {
+    const productsList = resolvedSectionsDocs[i]?.docs || []
+    if (productsList.length > 0) {
+      homepageSections.push({
+        ...sectionMetaMapping[i],
+        products: productsList,
+      })
+    }
+  }
+
+  const sortedSections = homepageSections.sort((a, b) => {
     const aIsMonitor = a.slug === 'monitor'
     const bIsMonitor = b.slug === 'monitor'
     if (aIsMonitor && !bIsMonitor) return -1
@@ -290,23 +323,6 @@ export default async function StorefrontHome({ params, searchParams }: PageProps
     return 0
   })
 
-  // --- Fetch Other Uncategorized Products ---
-  let otherProducts: any[] = []
-  try {
-    const flatEnSlugs = getFlatCategories('en').map((c) => c.slug)
-    const otherRes = await payload.find({
-      collection: 'products',
-      where: {
-        and: [{ 'category.slug': { not_in: flatEnSlugs } }, { stock: { greater_than: 0 } }],
-      },
-      limit: 20,
-    })
-    otherProducts = otherRes.docs
-  } catch (e) {
-    console.error('Failed fetching other categories:', e)
-  }
-
-  // Standard product mapper
   const formatProductForCarousel = (p: any) => {
     const isImageObj = p.featuredImage && typeof p.featuredImage === 'object' && p.featuredImage.url
     const productId = String(p.id)
@@ -321,7 +337,6 @@ export default async function StorefrontHome({ params, searchParams }: PageProps
     }
   }
 
-  // Case Offers mapping mapper
   const formatCaseOfferForCarousel = (offer: any) => {
     const isImageObj =
       offer.featured_image && typeof offer.featured_image === 'object' && offer.featured_image.url
@@ -362,11 +377,12 @@ export default async function StorefrontHome({ params, searchParams }: PageProps
       </div>
 
       <div className={styles.promoWrapper}>
-        <PromoCarousel currentLocale={currentLocale} />
+        <div className={styles.promoLeft}>
+          <PromoCarousel currentLocale={currentLocale} />
+        </div>
       </div>
 
       <main className={styles.defaultMain}>
-        {/* 🔥 SECTION 1: Full Build Offers / Case Offers */}
         {caseOffers.length > 0 && (
           <section className={styles.sectionFirst}>
             <LocalizedHeading
@@ -386,7 +402,6 @@ export default async function StorefrontHome({ params, searchParams }: PageProps
           </section>
         )}
 
-        {/* ⚡ SECTION 2: Standard Hot Discounts */}
         {productsWithDiscount.length > 0 && (
           <section className={styles.section}>
             <LocalizedHeading
@@ -404,7 +419,6 @@ export default async function StorefrontHome({ params, searchParams }: PageProps
           </section>
         )}
 
-        {/* 📦 SECTIONS 3+: Dynamic Category blocks (starting with Monitor, followed by each CPU, GPU, RAM, etc., then any remaining groups) */}
         {sortedSections.map((cat) => {
           if (cat.products.length === 0) return null
           return (

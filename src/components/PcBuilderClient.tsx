@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo, useCallback } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { useLocalStorageState } from '../utils/pc_build_local_storage'
 import {
@@ -46,6 +46,7 @@ export default function PcBuilderClient({
   generals,
 }: PcBuilderClientProps & { generals?: GeneralSettingsData }) {
   const searchParams = useSearchParams()
+  const [mounted, setMounted] = useState(false)
 
   const [buildName, setBuildName] = useLocalStorageState<string>(
     'pc_build_name',
@@ -62,7 +63,13 @@ export default function PcBuilderClient({
 
   const dynamicExchangeRate = generals?.exchangeRate ?? 1500
 
+  // Signal layout mounting sequence to prevent layout flashes
   useEffect(() => {
+    setMounted(true)
+  }, [])
+
+  useEffect(() => {
+    if (!mounted) return
     let partsParam = searchParams.get('parts')
 
     if (!partsParam && typeof window !== 'undefined') {
@@ -84,7 +91,6 @@ export default function PcBuilderClient({
             )
 
             if (matchedProduct) {
-              // Ensure dynamic configurations contain a base quantity
               acc[slotKey] = { ...matchedProduct, quantity: matchedProduct.quantity || 1 }
             }
           }
@@ -99,14 +105,25 @@ export default function PcBuilderClient({
         window.history.replaceState(null, '', nextUrl)
       }
     } catch (error) {
-      console.error('System failed to process incoming transferred parts blueprint:', error)
+      console.error('System failed to process blueprint:', error)
     }
-  }, [searchParams, products, setSelections, currentLocale])
+  }, [searchParams, products, setSelections, currentLocale, mounted])
 
   const openModal = (slotKey: string) => setActiveModalSlot(slotKey)
   const closeModal = () => setActiveModalSlot(null)
 
-  // Sets fresh selection with an initial fallback quantity of 1
+  const getLocalizedTitle = useCallback(
+    (product: any): string => {
+      if (!product) return ''
+      const rawTitle = product.title || ''
+      if (fallbackCatalog[rawTitle]) {
+        return fallbackCatalog[rawTitle][currentLocale as 'en' | 'ar' | 'ckb'] || rawTitle
+      }
+      return rawTitle
+    },
+    [currentLocale],
+  )
+
   const selectComponent = (slotKey: string, product: any) => {
     setSelections((prev) => ({
       ...prev,
@@ -123,7 +140,6 @@ export default function PcBuilderClient({
     })
   }
 
-  // Adjust selections item amount from slot UI
   const updateSlotQuantity = (slotKey: string, delta: number) => {
     setSelections((prev) => {
       const currentItem = prev[slotKey]
@@ -139,19 +155,24 @@ export default function PcBuilderClient({
     })
   }
 
-  // Multiplies the item price with its actual selected quantities
-  const totalPrice = Object.values(selections).reduce(
-    (sum, item) => sum + getDiscountedPrice(item) * (item.quantity || 1),
-    0,
-  )
-  const totalOriginalPrice = Object.values(selections).reduce(
-    (sum, item) => sum + (Number(item.price) || 0) * (item.quantity || 1),
-    0,
-  )
+  // Calculate prices using useMemo to avoid recalculating on unrelated state updates
+  const { totalPrice, totalOriginalPrice } = useMemo(() => {
+    if (!mounted) return { totalPrice: 0, totalOriginalPrice: 0 }
+    const values = Object.values(selections)
+    return {
+      totalPrice: values.reduce(
+        (sum, item) => sum + getDiscountedPrice(item) * (item.quantity || 1),
+        0,
+      ),
+      totalOriginalPrice: values.reduce(
+        (sum, item) => sum + (Number(item.price) || 0) * (item.quantity || 1),
+        0,
+      ),
+    }
+  }, [selections, mounted])
 
   const handleWhatsAppBuildOrder = (e: React.FormEvent) => {
     e.preventDefault()
-
     if (!buyerNumber.trim()) {
       alert(phoneErrorLabel[currentLocale] || phoneErrorLabel.en)
       return
@@ -170,8 +191,6 @@ export default function PcBuilderClient({
         const unitPrice = getDiscountedPrice(chosen)
         const lineTotal = unitPrice * qty
         const itemTitle = getLocalizedTitle(chosen)
-
-        // Formats quantities beautifully in the WhatsApp summary message
         const qtyPrefix = qty > 1 ? `(${qty}x) ` : ''
         specLines.push(
           `⚙️ *${slot.label}:* ${qtyPrefix}${itemTitle} ($${lineTotal.toLocaleString()})`,
@@ -180,7 +199,6 @@ export default function PcBuilderClient({
     })
 
     const finalIqd = (totalPrice * dynamicExchangeRate).toLocaleString()
-
     const waMessageText =
       `🖥️ *New PC Build Order Request: "${buildName}"*\n\n` +
       `*Selected Hardware Spec Breakdown:*\n` +
@@ -197,26 +215,11 @@ export default function PcBuilderClient({
         .join(',')
 
     const sellerNumber = '9647701414269'
-    const cleanSellerNumber = normalizeIraqiNumber(sellerNumber)
     const encodedMessage = encodeURIComponent(waMessageText)
-    const waLink = `https://wa.me/${cleanSellerNumber}?text=${encodedMessage}`
-
-    window.open(waLink, '_blank')
-  }
-
-  const getLocalizedTitle = (product: any): string => {
-    if (!product) return ''
-    const rawTitle = product.title || ''
-    if (fallbackCatalog[rawTitle]) {
-      return fallbackCatalog[rawTitle][currentLocale as 'en' | 'ar' | 'ckb'] || rawTitle
-    }
-    return rawTitle
-  }
-
-  const getExchangeLabel = () => {
-    if (currentLocale === 'ckb') return 'کۆی گشتی نرخ (IQD)'
-    if (currentLocale === 'ar') return 'إجمالي السعر (IQD)'
-    return 'Total Price (IQD)'
+    window.open(
+      `https://wa.me/${normalizeIraqiNumber(sellerNumber)}?text=${encodedMessage}`,
+      '_blank',
+    )
   }
 
   const handleAddToCartDefault = (prod: any) => {
@@ -256,13 +259,11 @@ export default function PcBuilderClient({
     }
   }
 
+  const t = dict[currentLocale] || dict['en']
   const isRegionalLocale = ['ar', 'ku', 'ckb'].includes(currentLocale)
   const fontFam = isRegionalLocale
     ? '"Rudaw", "Inter", "Noto Sans Arabic", -apple-system, sans-serif'
     : '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
-
-  const t = dict[currentLocale] || dict['en']
-  const hasSelections = Object.keys(selections).length > 0
 
   return (
     <div
@@ -291,16 +292,14 @@ export default function PcBuilderClient({
       <div className={styles['pc-builder-layout-grid']}>
         <div className={styles['pc-builder-slots-list']}>
           {COMPONENT_SLOTS.map((slot) => {
-            const chosenItem = selections[slot.key]
+            // Guard selections configuration output until mounted safely
+            const chosenItem = mounted ? selections[slot.key] : null
             const itemImageUrl = chosenItem?.featuredImage?.url || chosenItem?.meta?.image?.url
             const qty = chosenItem?.quantity || 1
 
-            // Dynamic Calculations using the calculated selection quantity counters
             const originalPrice = chosenItem ? (Number(chosenItem.price) || 0) * qty : 0
             const finalItemPrice = chosenItem ? getDiscountedPrice(chosenItem) * qty : 0
             const hasItemDiscount = chosenItem ? !!chosenItem.hasDiscount : false
-
-            // Checks slugs explicitly for RAM or Storage configurations ('ram', 'storage', 'ssd', 'hdd', 'm-2')
             const isMultiSlot = ['ram', 'storage', 'ssd', 'hdd', 'memory', 'm-2', 'm2'].includes(
               slot.key.toLowerCase() || slot.categorySlug.toLowerCase(),
             )
@@ -320,7 +319,6 @@ export default function PcBuilderClient({
                         src={itemImageUrl}
                         alt={getLocalizedTitle(chosenItem)}
                         className="object-cover w-full h-full"
-                        style={{ height: 'auto' }}
                       />
                     ) : (
                       <Image
@@ -329,7 +327,6 @@ export default function PcBuilderClient({
                         src={(slot as any).defaultImage || `/categories/${slot.key}.png`}
                         alt={slot.label}
                         className="object-cover opacity-60 w-4/5 h-4/5"
-                        style={{ height: 'auto' }}
                       />
                     )}
                   </div>
@@ -361,11 +358,10 @@ export default function PcBuilderClient({
                 </div>
 
                 <div className={styles['pc-builder-actions-group']}>
-                  {/* STEPPER ADDED HERE: Visible on the slot row AFTER picking an allowed multi-unit item */}
                   {chosenItem && isMultiSlot && (
                     <div
                       className={styles['pc-builder-main-stepper']}
-                      onClick={(e) => e.stopPropagation()} // Stop modal from triggering
+                      onClick={(e) => e.stopPropagation()}
                     >
                       <button
                         type="button"
@@ -420,14 +416,20 @@ export default function PcBuilderClient({
               <label className={styles['pc-builder-input-label']}>{t.configName}</label>
               <input
                 type="text"
-                value={buildName}
+                value={mounted ? buildName : ''}
                 onChange={(e) => setBuildName(e.target.value)}
                 className={styles['pc-builder-text-input']}
               />
             </div>
 
             <div className={styles['pc-builder-exchange-container']}>
-              <span className={styles['pc-builder-exchange-label']}>{getExchangeLabel()}</span>
+              <span className={styles['pc-builder-exchange-label']}>
+                {currentLocale === 'ckb'
+                  ? 'کۆی گشتی نرخ (IQD)'
+                  : currentLocale === 'ar'
+                    ? 'إجمالي السعر (IQD)'
+                    : 'Total Price (IQD)'}
+              </span>
               <span className={styles['pc-builder-exchange-value']}>
                 {(totalPrice * dynamicExchangeRate).toLocaleString()} د.ع
               </span>
@@ -461,8 +463,8 @@ export default function PcBuilderClient({
               />
               <button
                 type="submit"
-                disabled={!hasSelections}
-                className={`${styles['pc-builder-submit-btn']} ${!hasSelections ? styles.disabled : ''}`}
+                disabled={!mounted || Object.keys(selections).length === 0}
+                className={`${styles['pc-builder-submit-btn']} ${!mounted || Object.keys(selections).length === 0 ? styles.disabled : ''}`}
                 style={{ fontFamily: fontFam }}
               >
                 {submitLabel[currentLocale] || submitLabel.en}
