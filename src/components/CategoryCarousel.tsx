@@ -2,6 +2,7 @@
 
 import { useMemo, useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation' // Added for programmatic button routing
 import { MAIN_CATEGORY_GROUPS } from '@/utils/categories'
 import styles from '@/styles/category_carousel.module.css'
 
@@ -10,6 +11,7 @@ interface CategoryDropdownNavProps {
 }
 
 export default function CategoryDropdownNav({ currentLocale }: CategoryDropdownNavProps) {
+  const router = useRouter() // Initialize router
   const [activeDropdown, setActiveDropdown] = useState<number | null>(null)
   const [isHamOpen, setIsHamOpen] = useState<boolean>(false)
   const navRef = useRef<HTMLDivElement>(null)
@@ -67,11 +69,15 @@ export default function CategoryDropdownNav({ currentLocale }: CategoryDropdownN
 
         {/* Desktop Navigation Items Wrapper */}
         <div className={styles['desktop-nav-items']}>
-          {/* Full Build Offers (Always direct Link on the edge) */}
+          {/* FIXED: Changed from Link to button for bulletproof alignment */}
           <div className={styles['nav-item-wrapper']}>
-            <Link href={`/${activeLocale}/case-offers`} className={styles['direct-link-btn']}>
+            <button
+              type="button"
+              onClick={() => router.push(`/${activeLocale}/case-offers`)}
+              className={styles['direct-link-btn']}
+            >
               {caseOffersTitle}
-            </Link>
+            </button>
           </div>
 
           {/* Dynamic Category List */}
@@ -81,12 +87,14 @@ export default function CategoryDropdownNav({ currentLocale }: CategoryDropdownN
             if (isIndependent) {
               return (
                 <div key={index} className={styles['nav-item-wrapper']}>
-                  <Link
-                    href={`/${activeLocale}?category=${category.slug}`}
+                  {/* FIXED: Changed from Link to button to match styling exactly */}
+                  <button
+                    type="button"
+                    onClick={() => router.push(`/${activeLocale}?category=${category.slug}`)}
                     className={styles['direct-link-btn']}
                   >
                     {category.title}
-                  </Link>
+                  </button>
                 </div>
               )
             }

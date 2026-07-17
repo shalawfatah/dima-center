@@ -50,3 +50,19 @@ export interface CartItem {
 export interface CartClientComponentProps {
   currentLocale: string
 }
+
+export interface OrderButtonProps {
+  product: {
+    title: string
+    price: string
+    url: string
+  }
+  currentLocale: string
+}
+
+export interface RelatedProductCardProps {
+  item: any
+  currentLocale: string
+  isRtl: boolean
+  exchangeRate: number
+}

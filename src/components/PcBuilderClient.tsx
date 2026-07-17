@@ -151,7 +151,7 @@ export default function PcBuilderClient({
   )
 
   // 🎯 Gathers selections, builds a custom formatted invoice list, and opens WhatsApp
-  const handleWhatsAppBuildOrder = (e: React.FormEvent) => {
+  const handleWhatsAppBuildOrder = (e: React.SubmitEvent) => {
     e.preventDefault()
 
     if (!buyerNumber.trim()) {
@@ -317,7 +317,7 @@ export default function PcBuilderClient({
                         width={50}
                         src={(slot as any).defaultImage || `/categories/${slot.key}.png`}
                         alt={slot.label}
-                        className="object-contain opacity-60 w-4/5 h-4/5"
+                        className="object-cover opacity-60 w-4/5 h-4/5"
                         style={{ height: 'auto' }}
                       />
                     )}

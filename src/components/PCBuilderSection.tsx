@@ -13,7 +13,6 @@ export default function PCBuilderSection({ currentLocale, isRtl }: PCBuilderSect
 
   return (
     <section className={styles.section} dir={isRtl ? 'rtl' : 'ltr'}>
-      {/* Grid Texture */}
       <svg
         aria-hidden="true"
         className={styles.grid}
@@ -28,10 +27,8 @@ export default function PCBuilderSection({ currentLocale, isRtl }: PCBuilderSect
         <rect width="800" height="120" fill="url(#pcb-grid)" />
       </svg>
 
-      {/* Circuit Visual Flourish (background) */}
       <div className={styles.visual} style={isRtl ? { right: 'auto', left: -40 } : undefined}>
         <svg viewBox="0 0 300 100" width="100%" height="100%" className={styles.visualSvg}>
-          {/* CPU frame */}
           <rect
             x="130"
             y="25"
@@ -52,7 +49,6 @@ export default function PCBuilderSection({ currentLocale, isRtl }: PCBuilderSect
             strokeWidth="1"
           />
 
-          {/* Simplified trace layout */}
           <path d="M130 40 H70 V15" fill="none" stroke="#ffb83c" strokeWidth="1" opacity="0.3" />
           <path d="M130 60 H60 V85" fill="none" stroke="#ffb83c" strokeWidth="1" opacity="0.3" />
           <path d="M180 40 H240 V20" fill="none" stroke="#ffb83c" strokeWidth="1" opacity="0.3" />
@@ -67,19 +63,6 @@ export default function PCBuilderSection({ currentLocale, isRtl }: PCBuilderSect
 
       <div className={styles.wrapper}>
         <div className={styles.content}>
-          <div className={styles.metaRow}>
-            <span className={styles.eyebrow} style={{ fontFamily: textFont }}>
-              {copy.eyebrow}
-            </span>
-
-            {/* Inline Meta Chips */}
-            {copy.chips.map((chip) => (
-              <span key={chip} className={styles.chip} style={{ fontFamily: textFont }}>
-                • {chip}
-              </span>
-            ))}
-          </div>
-
           <div className={styles.headerRow}>
             <h2 className={styles.heading} style={{ fontFamily: titleFont }}>
               {copy.heading}

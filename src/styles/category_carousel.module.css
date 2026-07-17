@@ -1,26 +1,28 @@
 /* Container Layout without Sliders */
 .nav-wrapper {
   position: relative;
-  margin: 0 auto;
-  background-color: #ffb83c;
-  margin: 0 1.1rem;
-  border-radius: 0.4rem;
-  padding: 0.1rem 1rem; /* Slim compact height */
   z-index: 999;
-  font-family: 'Rudaw', sans-serif; /* Applied Rudaw globally */
+  font-family: 'Rudaw', sans-serif;
+
+  /* Fits orange background perfectly to content and centers it horizontally */
+  width: max-content;
+  max-width: calc(100% - 2.2rem);
+  margin: 0 auto;
+
+  background-color: #ffb83c;
+  border-radius: 0.4rem;
+  padding: 0.4rem 1rem;
 }
 
 .nav-container {
   display: flex;
   align-items: center;
-  justify-content: flex-start;
-  width: 100%;
+  justify-content: center;
 }
 
-/* Hamburger button placed explicitly left on mobile */
+/* Hamburger button - STRICKLY hidden on desktop */
 .ham-menu-btn {
-  display: none; /* Hidden on desktop */
-  font-family: 'Rudaw', sans-serif;
+  display: none !important;
   background: transparent;
   color: #000000;
   border: none;
@@ -34,14 +36,16 @@
 /* Flex desktop wrapper containing navigation items */
 .desktop-nav-items {
   display: flex;
+  flex-direction: row; /* Forces horizontal alignment strictly */
   align-items: center;
+  justify-content: center;
   gap: 1.5rem;
-  flex-grow: 1;
+  flex-grow: 0;
 }
 
 /* Individual list-item container context */
 .nav-item-wrapper {
-  position: relative;
+  position: relative; /* CRITICAL: Must be relative so dropdowns position relative to this link! */
 }
 
 /* ---------- Unified Direct Links & Dropdown Buttons ---------- */
@@ -49,20 +53,21 @@
 .dropdown-trigger-btn {
   font-family: 'Rudaw', sans-serif;
   background: transparent;
-  color: #000000;
+  color: #000000 !important; /* Force black text */
   border: none;
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
-  padding: 4px 10px;
+  padding: 6px 12px;
   border-radius: 6px;
   text-decoration: none;
 
   /* Unified layout alignment */
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   box-sizing: border-box;
-  white-space: nowrap; /* Forces text to stay on one line */
+  white-space: nowrap;
 
   transition:
     background-color 0.2s ease,
@@ -76,14 +81,16 @@
   background-color: rgba(0, 0, 0, 0.08);
 }
 
-/* Add the layout gap only to buttons containing chevrons */
+/* Issue 2 Fix: Add wider gap specifically for buttons containing chevrons */
 .dropdown-trigger-btn {
-  gap: 6px;
+  gap: 10px; /* Increased gap to push arrow away from text */
+  color: #000;
 }
 
 .dropdown-caret {
-  font-size: 9px;
+  font-size: 10px; /* Balanced caret size */
   opacity: 0.8;
+  display: inline-block;
   transition: transform 0.2s ease;
 }
 
@@ -94,34 +101,37 @@
 /* ---------- Subcategory Dropdown Panel (Desktop) ---------- */
 .dropdown-menu {
   position: absolute;
-  top: 110%;
+  top: 100%; /* Sits cleanly below the parent link */
   left: 0;
-  background-color: #ffffff;
+  background-color: #ffffff !important; /* Force white background window */
   border: 1px solid #e2e8f0;
   border-radius: 8px;
   box-shadow:
     0 10px 15px -3px rgba(0, 0, 0, 0.1),
     0 4px 6px -2px rgba(0, 0, 0, 0.05);
-  min-width: 180px;
-  padding: 4px 0;
+  min-width: 190px;
+  padding: 6px 0;
   z-index: 1000;
-  display: flex;
-  flex-direction: column;
+  display: flex !important;
+  flex-direction: column !important; /* Force items to stack vertically */
 }
 
+/* RTL Direction compatibility */
 [style*='direction: rtl'] .dropdown-menu {
   left: auto;
   right: 0;
 }
 
+/* Issue 3 Fix: Explicitly styling the dropdown links so text isn't white */
 .dropdown-item-link {
   font-family: 'Rudaw', sans-serif;
-  padding: 8px 16px;
-  color: #1e293b;
+  padding: 10px 16px;
+  color: #1e293b !important; /* Force highly-visible dark text */
   text-decoration: none;
   font-size: 13px;
   font-weight: 500;
   text-align: start;
+  display: block; /* Force item to be a block occupying its own line */
   transition:
     background-color 0.15s ease,
     color 0.15s ease;
@@ -129,7 +139,7 @@
 
 .dropdown-item-link:hover {
   background-color: #f1f5f9;
-  color: var(--brand-primary, #0070f3);
+  color: var(--brand-primary, #0070f3) !important;
 }
 
 /* ---------- Mobile Dropdown Drawer/Panel ---------- */
@@ -157,48 +167,53 @@
   display: block;
 }
 
-.mobile-group-section {
-  padding: 6px 16px;
-  border-top: 1px solid #f1f5f9;
-}
-
+/* ADD THESE — currently missing, so these elements inherit an unwanted color */
 .mobile-group-title {
+  padding: 10px 16px 4px;
+  color: #000000;
   font-weight: 700;
-  color: #64748b;
-  font-size: 12px;
-  margin-bottom: 4px;
+  font-size: 14px;
 }
 
 .mobile-sub-link {
-  display: block;
-  padding: 6px 12px;
-  color: #1e293b;
+  padding: 8px 16px 8px 28px;
+  color: #000000;
   text-decoration: none;
+  font-weight: 500;
   font-size: 13px;
+  display: block;
 }
 
-/* Responsive Hide Rules */
+.mobile-sub-link:hover {
+  background-color: #f1f5f9;
+}
+
+/* Responsive Rules */
 @media (max-width: 900px) {
-  /* Hide standard category listings */
+  /* Shrink-wrap container does not apply on mobile screens */
+  .nav-wrapper {
+    width: auto;
+    margin: 0 1.1rem;
+  }
+
+  /* Hide standard desktop category listings */
   .desktop-nav-items {
     display: none !important;
   }
 
-  /* Make sure the container makes space for absolute layout button */
   .nav-container {
     min-height: 2rem;
   }
 
-  /* Force hamburger button to the far left, ignoring parent RTL/LTR direction flow */
+  /* Show mobile hamburger menu exclusively under 900px */
   .ham-menu-btn {
-    display: inline-flex;
+    display: inline-flex !important;
     position: absolute;
     left: 1rem;
     top: 50%;
     transform: translateY(-50%);
   }
 
-  /* Display mobile panel when open state triggers */
   .mobile-dropdown-panel {
     display: flex;
   }

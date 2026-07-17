@@ -1,0 +1,91 @@
+.container {
+  position: relative;
+  display: inline-block;
+}
+
+.trigger {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  padding: 4px 8px;
+  border-radius: 20px;
+  cursor: pointer;
+  outline: none;
+  color: #fff;
+}
+
+.iconWrapper {
+  font-size: 16px;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+}
+
+.globeIcon {
+  display: inline-block;
+  vertical-align: middle;
+}
+
+.chevron {
+  color: #94a3b8;
+  transition: transform 0.2s ease;
+}
+
+.chevronOpen {
+  transform: rotate(180deg);
+}
+
+.dropdown {
+  position: absolute;
+  top: calc(100% + 6px);
+  background-color: #1e293b;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  z-index: 9999;
+  border-radius: 12px;
+  min-width: 150px;
+  overflow: hidden;
+  padding: 4px;
+}
+
+.dropdownLtr {
+  right: 0;
+  left: auto;
+}
+
+.dropdownRtl {
+  left: 0;
+  right: auto;
+}
+
+.langLink {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  text-decoration: none;
+  font-size: 14px;
+  color: #cbd5e1;
+  font-weight: 500;
+  border-radius: 8px;
+  flex-direction: row;
+  background-color: transparent;
+}
+
+.langLink:hover {
+  background-color: rgba(255, 255, 255, 0.08);
+}
+
+.langLinkActive {
+  color: #3b82f6;
+  font-weight: 600;
+}
+
+.langFlag {
+  font-size: 16px;
+}
+
+.langLabel {
+  flex: 1;
+}

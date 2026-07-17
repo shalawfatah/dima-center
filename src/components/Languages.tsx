@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
+import styles from '@/styles/languages.module.css'
 
 interface LanguagesProps {
   currentLocale: string
@@ -33,24 +34,10 @@ export default function Languages({ currentLocale }: LanguagesProps) {
   const isRtl = currentLocale === 'ar' || currentLocale === 'ckb'
 
   return (
-    <div ref={dropdownRef} style={{ position: 'relative', display: 'inline-block' }}>
-      <button
-        onClick={() => setIsOpen(!isOpen)}
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: '6px',
-          background: 'rgba(255, 255, 255, 0.1)',
-          border: '1px solid rgba(255, 255, 255, 0.2)',
-          padding: '4px 8px',
-          borderRadius: '20px',
-          cursor: 'pointer',
-          outline: 'none',
-          color: '#fff',
-        }}
-      >
+    <div ref={dropdownRef} className={styles.container}>
+      <button onClick={() => setIsOpen(!isOpen)} className={styles.trigger}>
         {/* 🌐 Dynamically switch between the globe icon and the flag */}
-        <span style={{ fontSize: '16px', lineHeight: '1', display: 'flex', alignItems: 'center' }}>
+        <span className={styles.iconWrapper}>
           {isOpen ? (
             currentLang.flag
           ) : (
@@ -64,7 +51,7 @@ export default function Languages({ currentLocale }: LanguagesProps) {
               strokeWidth="2"
               strokeLinecap="round"
               strokeLinejoin="round"
-              style={{ display: 'inline-block', verticalAlign: 'middle' }}
+              className={styles.globeIcon}
             >
               <circle cx="12" cy="12" r="10" />
               <path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20" />
@@ -81,56 +68,25 @@ export default function Languages({ currentLocale }: LanguagesProps) {
           fill="none"
           stroke="currentColor"
           strokeWidth="3"
-          style={{
-            transform: isOpen ? 'rotate(180deg)' : 'rotate(0deg)',
-            transition: 'transform 0.2s ease',
-            color: '#94a3b8',
-          }}
+          className={`${styles.chevron} ${isOpen ? styles.chevronOpen : ''}`}
         >
           <path d="m6 9 6 6 6-6" />
         </svg>
       </button>
 
       {isOpen && (
-        <div
-          style={{
-            position: 'absolute',
-            top: 'calc(100% + 6px)',
-            right: isRtl ? 'auto' : 0,
-            left: isRtl ? 0 : 'auto',
-            backgroundColor: '#1e293b',
-            border: '1px solid rgba(255, 255, 255, 0.15)',
-            zIndex: 9999,
-            borderRadius: '12px',
-            minWidth: '150px',
-            overflow: 'hidden',
-            padding: '4px',
-          }}
-        >
+        <div className={`${styles.dropdown} ${isRtl ? styles.dropdownRtl : styles.dropdownLtr}`}>
           {languages.map((lang) => (
             <Link
               key={lang.code}
               href={`/${lang.code}`}
               onClick={() => setIsOpen(false)}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '10px',
-                padding: '10px 14px',
-                textDecoration: 'none',
-                fontSize: '14px',
-                color: currentLocale === lang.code ? '#3b82f6' : '#cbd5e1',
-                fontWeight: currentLocale === lang.code ? '600' : '500',
-                borderRadius: '8px',
-                flexDirection: 'row',
-              }}
-              onMouseEnter={(e) =>
-                (e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.08)')
-              }
-              onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
+              className={`${styles.langLink} ${
+                currentLocale === lang.code ? styles.langLinkActive : ''
+              }`}
             >
-              <span style={{ fontSize: '16px' }}>{lang.flag}</span>
-              <span style={{ flex: 1 }}>{lang.label}</span>
+              <span className={styles.langFlag}>{lang.flag}</span>
+              <span className={styles.langLabel}>{lang.label}</span>
             </Link>
           ))}
         </div>

@@ -24,7 +24,7 @@ export default function LoginComponent() {
     ? '"Rudaw", "Inter", "Noto Sans Arabic", -apple-system, sans-serif'
     : '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif'
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.SubmitEvent) => {
     e.preventDefault()
     setError('')
     setEmail(email.trim()) // Extra safety clean

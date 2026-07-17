@@ -88,7 +88,7 @@ export default function CartClientComponent({ currentLocale }: CartClientCompone
   const totalAmount = cartItems.reduce((acc, item) => acc + item.price * item.quantity, 0)
 
   // 🎯 Handles gathering all cart items, building the text list, and redirecting.
-  const handleWhatsAppCheckout = (e: React.FormEvent) => {
+  const handleWhatsAppCheckout = (e: React.SubmitEvent) => {
     e.preventDefault()
 
     if (!buyerNumber.trim()) {

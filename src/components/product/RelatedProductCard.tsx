@@ -3,13 +3,8 @@ import Image from 'next/image'
 import { calculateProductPrice } from '@/utils/price'
 import DiscountBadge from './DiscountBadge'
 import ProductPriceDisplay from './ProductPriceDisplay'
-
-interface RelatedProductCardProps {
-  item: any
-  currentLocale: string
-  isRtl: boolean
-  exchangeRate: number
-}
+import { RelatedProductCardProps } from '@/types/types'
+import styles from '@/styles/related_product_card.module.css'
 
 export default function RelatedProductCard({
   item,
@@ -24,24 +19,12 @@ export default function RelatedProductCard({
     ...item,
     hasDiscount: item.hasDiscount ?? false,
   } as any)
-
   const usdPrice = Number(priceSpecs.finalPrice)
   const iqdPrice = usdPrice * exchangeRate
 
   return (
-    <Link
-      href={`/${currentLocale}/products/${item.id}`}
-      style={{ textDecoration: 'none', color: 'inherit' }}
-    >
-      <div
-        style={{
-          border: '1px solid #eee',
-          borderRadius: '8px',
-          padding: '1rem',
-          background: '#fff',
-          position: 'relative',
-        }}
-      >
+    <Link href={`/${currentLocale}/products/${item.id}`} className={styles.cardLink}>
+      <div className={styles.card}>
         {priceSpecs.isDiscounted && (
           <DiscountBadge
             badgeText={priceSpecs.badgeText ?? ''}
@@ -52,52 +35,21 @@ export default function RelatedProductCard({
           />
         )}
 
-        <div
-          style={{
-            width: '100%',
-            height: '140px',
-            background: '#fcfcfc',
-            borderRadius: '6px',
-            overflow: 'hidden',
-            marginBottom: '0.75rem',
-          }}
-        >
+        <div className={styles.imageWrapper}>
           {itemImgUrl ? (
             <Image
               width={400}
               height={400}
               src={itemImgUrl}
               alt={item.title ?? 'image'}
-              style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+              className={styles.image}
             />
           ) : (
-            <div
-              style={{
-                height: '100%',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                color: '#ddd',
-                fontSize: '12px',
-              }}
-            >
-              📦 No Image
-            </div>
+            <div className={styles.imagePlaceholder}>📦 No Image</div>
           )}
         </div>
-        <h4
-          style={{
-            fontFamily: '"Rudaw", sans-serif',
-            color: '#1e293b',
-            fontSize: '14px',
-            margin: '0 0 0.5rem 0',
-            whiteSpace: 'nowrap',
-            overflow: 'hidden',
-            textOverflow: 'ellipsis',
-          }}
-        >
-          {item.title}
-        </h4>
+
+        <h4 className={styles.title}>{item.title}</h4>
 
         <ProductPriceDisplay
           variant="card"

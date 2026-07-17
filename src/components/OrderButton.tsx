@@ -1,40 +1,15 @@
 'use client'
 
-import React, { useState } from 'react'
+import { useState, type SubmitEvent } from 'react'
 import { createOrder } from '@/utils/createOrder'
-
-interface OrderButtonProps {
-  product: {
-    title: string
-    price: string
-    url: string
-  }
-  currentLocale: string
-}
-
-// Localized UI labels
-const phonePlaceholder: Record<string, string> = {
-  ar: 'رقم الواتساب (مثال: 07701234567)',
-  ckb: 'ژمارەی واتسئەپ (نموونە: 07701234567)',
-  en: 'WhatsApp Number (e.g., 07701234567)',
-}
-
-const submitLabel: Record<string, string> = {
-  ar: 'اطلب عبر واتساب 🛒',
-  ckb: 'داواکردن لە ڕێگەی واتسئەپ 🛒',
-  en: 'Order via WhatsApp 🛒',
-}
-
-const inputErrorLabel: Record<string, string> = {
-  ar: 'يرجى إدخال رقم هاتفك لإتمام الطلب!',
-  ckb: 'تکایە ژمارەی مۆبایلەکەت بنووسە بۆ داواکردن!',
-  en: 'Please enter your phone number to complete the order!',
-}
+import { inputErrorLabel, phonePlaceholder, submitLabel } from '@/utils/order_btn_translations'
+import { OrderButtonProps } from '@/types/types'
+import styles from '@/styles/order_button.module.css'
 
 export default function OrderButton({ product, currentLocale }: OrderButtonProps) {
   const [buyerNumber, setBuyerNumber] = useState('')
 
-  const handleOrder = (e: React.FormEvent) => {
+  const handleOrder = (e: SubmitEvent) => {
     e.preventDefault()
 
     if (!buyerNumber.trim()) {
@@ -42,14 +17,10 @@ export default function OrderButton({ product, currentLocale }: OrderButtonProps
       return
     }
 
-    // 1. Grab current quantity from the sidebar input
     const qtyInput = document.getElementById('qty-counter') as HTMLInputElement | null
     const quantity = qtyInput ? parseInt(qtyInput.value, 10) || 1 : 1
-
-    // 2. Append the quantity to the product price string dynamically
     const dynamicPrice = `${product.price} [Qty: ${quantity}]`
 
-    // 3. Generate WhatsApp Link
     const waLink = createOrder(
       {
         title: product.title,
@@ -59,49 +30,20 @@ export default function OrderButton({ product, currentLocale }: OrderButtonProps
       buyerNumber,
     )
 
-    // 4. Open WhatsApp
     window.open(waLink, '_blank')
   }
 
   return (
-    <form
-      onSubmit={handleOrder}
-      style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', marginTop: '0.5rem' }}
-    >
+    <form onSubmit={handleOrder} className={styles.orderForm}>
       <input
         type="tel"
         placeholder={phonePlaceholder[currentLocale] || phonePlaceholder.en}
         value={buyerNumber}
         onChange={(e) => setBuyerNumber(e.target.value)}
         required
-        style={{
-          width: '100%',
-          padding: '0.75rem 1rem',
-          borderRadius: '8px',
-          border: '1px solid #cbd5e1',
-          fontSize: '15px',
-          outline: 'none',
-          boxSizing: 'border-box',
-        }}
+        className={styles.phoneInput}
       />
-      <button
-        type="submit"
-        style={{
-          width: '100%',
-          padding: '0.9rem',
-          backgroundColor: '#25D366', // WhatsApp Green
-          fontFamily: 'Rudaw',
-          color: '#fff',
-          border: 'none',
-          borderRadius: '8px',
-          fontSize: '16px',
-          fontWeight: 'bold',
-          cursor: 'pointer',
-          transition: 'background-color 0.2s ease',
-        }}
-        onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#1fbc54')}
-        onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = '#25D366')}
-      >
+      <button type="submit" className={styles.submitButton}>
         {submitLabel[currentLocale] || submitLabel.en}
       </button>
     </form>

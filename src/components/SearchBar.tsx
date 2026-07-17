@@ -1,7 +1,7 @@
 'use client'
 
 import { useRouter, useSearchParams, usePathname } from 'next/navigation'
-import { useState, FormEvent, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, SubmitEvent } from 'react'
 import Image from 'next/image'
 import styles from '@/styles/search.module.css'
 
@@ -115,7 +115,7 @@ export default function SearchBar({ locale: initialLocale }: { locale: string })
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [])
 
-  const handleSearchSubmit = (e: FormEvent) => {
+  const handleSearchSubmit = (e: SubmitEvent) => {
     e.preventDefault()
     if (!searchTerm.trim()) return
     triggerSearchRedirect(searchTerm.trim())
