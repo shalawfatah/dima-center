@@ -219,6 +219,7 @@ export default function CartClientComponent({ currentLocale }: CartClientCompone
               color: '#fff',
               padding: '0.75rem 2rem',
               borderRadius: '8px',
+              fontFamily: 'Rudaw',
               fontWeight: '600',
               textDecoration: 'none',
             }}
