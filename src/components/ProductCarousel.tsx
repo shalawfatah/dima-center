@@ -260,11 +260,11 @@ export default function ProductCarousel({
                       <Image
                         width={cardWidth}
                         height={cardHeight}
+                        sizes="(max-width: 640px) 50vw, 220px"
                         src={imageUrl}
                         alt={imageAlt}
                         className={styles['product-parallax-img']}
                         priority={false}
-                        sizes="(max-width: 768px) 100vw, 25vw"
                       />
                     ) : (
                       <div className={styles['pc-image-placeholder']}>📦</div>

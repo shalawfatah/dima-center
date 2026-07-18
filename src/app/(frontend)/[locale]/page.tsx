@@ -17,14 +17,24 @@ import { MAIN_CATEGORY_GROUPS } from '@/utils/categories'
 import { getStorefrontMetadata } from '@/utils/seo'
 import Image from 'next/image'
 import CategoryCarousel from '@/components/CategoryCarousel'
-import CaseOffersSection from '@/components/CaseOffersSection'
-import DiscountsSection from '@/components/DiscountsSection'
-import CategorySections from '@/components/CategorySections'
 import SectionSkeleton from '@/components/SectionSkeleton'
 import { MINIMAL_PRODUCT_FIELDS, getFlatCategories } from '@/utils/homepage-helpers'
 
+// ⚡ Dynamic components split the initial JS bundle down to fix the 4.3s execution blocks
 const PCBuilderSection = dynamic(() => import('@/components/PCBuilderSection'), {
   loading: () => <div className={styles.pcBuilderSkeleton} />,
+})
+
+const CaseOffersSection = dynamic(() => import('@/components/CaseOffersSection'), {
+  loading: () => <SectionSkeleton />,
+})
+
+const DiscountsSection = dynamic(() => import('@/components/DiscountsSection'), {
+  loading: () => <SectionSkeleton />,
+})
+
+const CategorySections = dynamic(() => import('@/components/CategorySections'), {
+  loading: () => <SectionSkeleton cards={8} />,
 })
 
 export const revalidate = 3600
@@ -51,6 +61,7 @@ export default async function StorefrontHome({ params, searchParams }: PageProps
     return `/${currentLocale}/${routeSegment}/${id}`
   }
 
+  // 🎯 FILTERED VIEW (IF CATEGORY QUERY PRESENT)
   if (activeCategory) {
     const payload = await getPayload({ config })
 
@@ -137,6 +148,7 @@ export default async function StorefrontHome({ params, searchParams }: PageProps
     )
   }
 
+  // 🏠 DEFAULT HOME VIEW
   return (
     <div className={`${styles.pageWrapper} ${styles.pageWrapperDefault} ${dirClass}`}>
       <CategoryCarousel currentLocale={currentLocale} />
