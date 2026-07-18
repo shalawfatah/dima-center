@@ -87,17 +87,17 @@ export default function ProductPickerModal({
                       {modalProductImg ? (
                         <Image
                           src={modalProductImg}
-                          height={100}
                           sizes="100px"
-                          width={100}
+                          width="100"
+                          height="100"
                           alt={getLocalizedTitle(prod)}
                           style={{ objectFit: 'contain' }}
                         />
                       ) : (
                         <Image
-                          height={45}
-                          width={45}
                           sizes="45px"
+                          width="45"
+                          height="45"
                           src={`/categories/${currentSlotConfig.key}.png`}
                           alt={currentSlotConfig.label}
                           style={{ objectFit: 'contain' }}

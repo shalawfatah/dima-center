@@ -360,16 +360,17 @@ export default function PcBuilderClient({
                     {itemImageUrl ? (
                       <Image
                         sizes="100px"
-                        fill
+                        width="100"
+                        height="100"
                         src={itemImageUrl}
                         alt={getLocalizedTitle(chosenItem)}
                         style={{ objectFit: 'contain' }}
                       />
                     ) : (
                       <Image
-                        height={50}
                         sizes="50px"
-                        width={50}
+                        width="100"
+                        height="100"
                         style={{ objectFit: 'contain' }}
                         src={
                           (slot as any).defaultImage || `/categories/${slot.key.toLowerCase()}.png`
