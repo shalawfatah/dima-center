@@ -359,10 +359,8 @@ export default function PcBuilderClient({
                   <div className={styles['pc-builder-thumb-box']}>
                     {itemImageUrl ? (
                       <Image
-                        height={100}
-                        width={100}
                         sizes="100px"
-                        loading="eager"
+                        fill
                         src={itemImageUrl}
                         alt={getLocalizedTitle(chosenItem)}
                         style={{ objectFit: 'contain' }}

@@ -259,6 +259,7 @@ export default async function SearchResultsPage({ params, searchParams }: Search
                     <div
                       style={{
                         width: '80px',
+                        position: 'relative',
                         height: '80px',
                         background: '#f4f6f8',
                         borderRadius: '8px',
@@ -268,8 +269,6 @@ export default async function SearchResultsPage({ params, searchParams }: Search
                     >
                       {imageUrl ? (
                         <Image
-                          height={80}
-                          width={80}
                           fill
                           sizes="80px"
                           src={imageUrl}
