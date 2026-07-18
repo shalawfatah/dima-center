@@ -82,7 +82,6 @@ export default function SearchBar({ locale: initialLocale }: { locale: string })
     }
 
     setIsLoading(true)
-    // Raised debounce window to 250ms to stabilize input state mutations and server roundtrips
     const delayDebounceFn = setTimeout(async () => {
       const data = await fetchSearchResults(trimmed, locale)
       setResults(data)
@@ -103,7 +102,7 @@ export default function SearchBar({ locale: initialLocale }: { locale: string })
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [])
 
-  const handleSearchSubmit = (e: React.SubmitEvent<HTMLFormElement>) => {
+  const handleSearchSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     if (!searchTerm.trim()) return
     triggerSearchRedirect(searchTerm.trim())
@@ -137,17 +136,18 @@ export default function SearchBar({ locale: initialLocale }: { locale: string })
         ) : results.length > 0 ? (
           <ul className={styles.resultsList}>
             {results.map((item) => {
-              // --- FIX FOR OBJECTS AS CHILD ERROR ---
-              // Extract the raw title field which might be a string or a localized object
               const rawTitle = item.title || item.name || ''
 
-              // If it's an object containing language keys, grab the current locale,
-              // fallback to English, or find any available fallback key.
+              // Safe dynamic multi-language key fallback checking
               const displayName =
                 typeof rawTitle === 'object' && rawTitle !== null
-                  ? rawTitle[locale] || rawTitle['en'] || Object.values(rawTitle)[0] || ''
+                  ? rawTitle[locale] ||
+                    rawTitle['ckb'] ||
+                    rawTitle['en'] ||
+                    rawTitle['ar'] ||
+                    Object.values(rawTitle)[0] ||
+                    ''
                   : rawTitle
-              // --------------------------------------
 
               const rawImage = item.featuredImage || item.featured_image
               const imageUrl =
@@ -158,8 +158,10 @@ export default function SearchBar({ locale: initialLocale }: { locale: string })
                 <li
                   key={item.id}
                   onClick={() => {
-                    setSearchTerm(displayName)
-                    triggerSearchRedirect(displayName)
+                    // FIX: Direct item selection pushes explicitly to the product page instead of the search grid
+                    router.push(`/${locale}/products/${item.id}`)
+                    setIsMobileOpen(false)
+                    setShowDropdown(false)
                   }}
                   className={styles.resultsItem}
                 >

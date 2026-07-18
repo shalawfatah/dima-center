@@ -1,3 +1,4 @@
+// app/api/search/route.ts
 import { NextResponse } from 'next/server'
 import { getPayload } from 'payload'
 import config from '@payload-config'
@@ -16,16 +17,18 @@ export async function GET(request: Request) {
 
     const result = await payload.find({
       collection: 'products',
-      // Using 'all' ensures localized string formats return properly to your mapping functions
-      locale: 'all',
+      locale: 'all', // Returns all localizations as sub-properties
       where: {
         or: [
           { 'title.en': { contains: query } },
           { 'title.ar': { contains: query } },
           { 'title.ckb': { contains: query } },
+          { 'description.en': { contains: query } },
+          { 'description.ar': { contains: query } },
+          { 'description.ckb': { contains: query } },
         ],
       },
-      limit: 6,
+      limit: 8,
     })
 
     return NextResponse.json(result.docs)

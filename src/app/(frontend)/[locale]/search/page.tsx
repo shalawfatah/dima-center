@@ -60,16 +60,14 @@ export default async function SearchResultsPage({ params, searchParams }: Search
   const query = resolvedSearchParams.q?.trim() || ''
   const isRtl = currentLocale === 'ar' || currentLocale === 'ckb'
 
-  // Initialize scoped mutable array reference to clear compilation bounds
   let matchedProducts: any[] = []
 
   if (query) {
     const payload = await getPayload({ config })
 
-    // 1. Fetch data across all localized dictionary arrays simultaneously
     const searchData = await payload.find({
       collection: 'products',
-      locale: 'all', // Instructs Payload to return localized strings as objects: { en: '...', ckb: '...' }
+      locale: 'all',
       where: {
         or: [
           { 'title.en': { contains: query } },
@@ -85,21 +83,34 @@ export default async function SearchResultsPage({ params, searchParams }: Search
 
     const q = query.toLowerCase()
 
-    // 2. Flatten data models to guarantee dynamic localization values match the interface context
     matchedProducts = searchData.docs
       .map((doc: any) => {
-        // Manual fallback check: check target language first, then check fallback strings
-        const displayTitle =
-          doc.title?.[currentLocale] || doc.title?.ckb || doc.title?.en || doc.title?.ar || ''
+        const rawTitle = doc.title || doc.name || ''
+        let displayTitle = ''
 
-        let rawDescription =
-          doc.description?.[currentLocale] ||
-          doc.description?.ckb ||
-          doc.description?.en ||
-          doc.description?.ar ||
-          ''
+        if (typeof rawTitle === 'object' && rawTitle !== null) {
+          displayTitle =
+            rawTitle[currentLocale] ||
+            rawTitle['ckb'] ||
+            rawTitle['en'] ||
+            rawTitle['ar'] ||
+            Object.values(rawTitle)[0] ||
+            ''
+        } else {
+          displayTitle = String(rawTitle)
+        }
+
+        let rawDescription = doc.description || ''
+        if (typeof rawDescription === 'object' && rawDescription !== null && !rawDescription.root) {
+          rawDescription =
+            rawDescription[currentLocale] ||
+            rawDescription['ckb'] ||
+            rawDescription['en'] ||
+            rawDescription['ar'] ||
+            ''
+        }
+
         let textSnippet = ''
-
         try {
           if (typeof rawDescription === 'string') {
             textSnippet = rawDescription
@@ -112,17 +123,37 @@ export default async function SearchResultsPage({ params, searchParams }: Search
           textSnippet = ''
         }
 
+        // DEFENSIVE FIX: Resolve object parameters nesting on category relationships
+        let finalCategoryString = ''
+        if (doc.category) {
+          if (typeof doc.category === 'object' && doc.category !== null) {
+            const rawCatTitle = doc.category.title || doc.category.name || ''
+            if (typeof rawCatTitle === 'object' && rawCatTitle !== null) {
+              finalCategoryString =
+                rawCatTitle[currentLocale] ||
+                rawCatTitle['ckb'] ||
+                rawCatTitle['en'] ||
+                rawCatTitle['ar'] ||
+                Object.values(rawCatTitle)[0] ||
+                ''
+            } else {
+              finalCategoryString = String(rawCatTitle)
+            }
+          } else {
+            finalCategoryString = String(doc.category)
+          }
+        }
+
         return {
           id: doc.id,
           price: doc.price,
           condition: doc.condition,
-          category: doc.category,
+          category: finalCategoryString, // Now guaranteed safe text string
           featuredImage: doc.featuredImage,
           title: displayTitle,
           descriptionSnippet: textSnippet,
         }
       })
-      // 3. Re-sort priorities cleanly on the server layer based on direct matching
       .sort((a, b) => {
         const aTitle = String(a.title).toLowerCase()
         const bTitle = String(b.title).toLowerCase()
@@ -177,14 +208,6 @@ export default async function SearchResultsPage({ params, searchParams }: Search
               const hasImage = product.featuredImage && typeof product.featuredImage === 'object'
               const imageUrl = hasImage ? product.featuredImage.url : null
               const displayTitle = product.title
-
-              let displayCategory = ''
-              if (product.category) {
-                displayCategory =
-                  typeof product.category === 'object'
-                    ? product.category.title || product.category.name || ''
-                    : String(product.category)
-              }
 
               return (
                 <Link
@@ -242,16 +265,18 @@ export default async function SearchResultsPage({ params, searchParams }: Search
                     </div>
 
                     <div style={{ flex: 1 }}>
-                      <span
-                        style={{
-                          fontSize: '11px',
-                          textTransform: 'uppercase',
-                          color: '#0070f3',
-                          fontWeight: '700',
-                        }}
-                      >
-                        {displayCategory}
-                      </span>
+                      {product.category && (
+                        <span
+                          style={{
+                            fontSize: '11px',
+                            textTransform: 'uppercase',
+                            color: '#0070f3',
+                            fontWeight: '700',
+                          }}
+                        >
+                          {product.category}
+                        </span>
+                      )}
                       <h3 style={{ fontSize: '1.15rem', margin: '2px 0 6px 0', fontWeight: '600' }}>
                         {displayTitle}
                       </h3>
