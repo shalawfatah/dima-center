@@ -1,10 +1,16 @@
+/* ==========================================================================
+   Original Homepage Layout & Carousel Elements (Preserved Exactly)
+   ========================================================================== */
+
 html {
   background: #f3f3f3;
 }
+
 .carouselSection {
   width: 100%;
   position: relative;
 }
+
 .sectionFirst {
   padding: 0 1.5rem;
 }
@@ -12,6 +18,7 @@ html {
 .section {
   padding: 0 1.5rem;
 }
+
 .viewport {
   overflow: hidden;
   width: 100%;
@@ -149,4 +156,125 @@ html {
   padding: 0;
   cursor: pointer;
   transition: all 0.2s ease;
+}
+
+/* ==========================================================================
+   Category Filtered Grid Views (Added Cleanly Below)
+   ========================================================================== */
+
+.pageWrapperFiltered {
+  width: 100%;
+  padding: 2rem max(1.5rem, calc((100% - 1400px) / 2));
+  background-color: #f3f3f3;
+  min-height: 100vh;
+}
+
+.filteredHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 2rem;
+  border-bottom: 2px solid #e2e8f0;
+  padding-bottom: 1rem;
+  width: 100%;
+}
+
+.showAllLink {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #df8026;
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.showAllLink:hover {
+  color: #b8621b;
+}
+
+.productGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 1.5rem;
+  width: 100%;
+  margin-top: 1rem;
+}
+
+.productCardLink {
+  text-decoration: none;
+  color: inherit;
+  display: block;
+}
+
+.productCard {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 320px;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.productCard:hover {
+  transform: translateY(-4px);
+  box-shadow:
+    0 10px 15px -3px rgba(0, 0, 0, 0.05),
+    0 4px 6px -2px rgba(0, 0, 0, 0.05);
+}
+
+.productImageWrapper {
+  position: relative;
+  width: 100%;
+  height: 180px;
+  background-color: #f8fafc;
+  border-radius: 6px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 1rem;
+}
+
+.productImage {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.productImagePlaceholder {
+  font-size: 2rem;
+}
+
+.productTitle {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #1e293b;
+  margin: 0 0 0.5rem 0;
+  line-height: 1.4;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  height: 2.8rem;
+}
+
+.productPrice {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #000000;
+  margin-top: auto;
+}
+
+.emptyState {
+  text-align: center;
+  padding: 4rem 2rem;
+  background: #ffffff;
+  border-radius: 8px;
+  border: 1px dashed #cbd5e1;
+  color: #64748b;
+  font-size: 1.1rem;
 }
