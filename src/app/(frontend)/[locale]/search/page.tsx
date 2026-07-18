@@ -175,7 +175,9 @@ export default async function SearchResultsPage({ params, searchParams }: Search
       }}
     >
       <main style={{ flex: '1', padding: '3rem max(1.5rem, calc((100% - 1800px)/2))' }}>
-        <h1 style={{ fontSize: '1.75rem', fontWeight: '700', marginBottom: '1.5rem' }}>
+        <h1
+          style={{ fontSize: '1.75rem', fontWeight: '700', marginBottom: '1.5rem', color: '#000' }}
+        >
           {currentLocale === 'ar'
             ? 'نتائج البحث عن:'
             : currentLocale === 'ckb'
