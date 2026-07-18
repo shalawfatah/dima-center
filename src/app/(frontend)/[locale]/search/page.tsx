@@ -264,19 +264,17 @@ export default async function SearchResultsPage({ params, searchParams }: Search
                         borderRadius: '8px',
                         overflow: 'hidden',
                         flexShrink: 0,
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
                       }}
                     >
                       {imageUrl ? (
                         <Image
                           height={80}
                           width={80}
-                          loading="eager"
+                          fill
+                          sizes="80px"
                           src={imageUrl}
                           alt={displayTitle}
-                          style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+                          style={{ objectFit: 'contain' }}
                         />
                       ) : (
                         <span style={{ fontSize: '20px' }}>📦</span>

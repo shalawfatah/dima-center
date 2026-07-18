@@ -361,21 +361,22 @@ export default function PcBuilderClient({
                       <Image
                         height={100}
                         width={100}
+                        sizes="100px"
                         loading="eager"
                         src={itemImageUrl}
                         alt={getLocalizedTitle(chosenItem)}
-                        className="object-cover w-full h-full"
+                        style={{ objectFit: 'contain' }}
                       />
                     ) : (
                       <Image
                         height={50}
+                        sizes="50px"
                         width={50}
-                        loading="eager"
+                        style={{ objectFit: 'contain' }}
                         src={
                           (slot as any).defaultImage || `/categories/${slot.key.toLowerCase()}.png`
                         }
                         alt={slot.label}
-                        className="object-cover opacity-60 w-4/5 h-4/5"
                       />
                     )}
                   </div>

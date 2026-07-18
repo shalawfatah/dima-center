@@ -88,19 +88,19 @@ export default function ProductPickerModal({
                         <Image
                           src={modalProductImg}
                           height={100}
+                          sizes="100px"
                           width={100}
-                          loading="eager"
                           alt={getLocalizedTitle(prod)}
-                          className="object-cover w-full h-full"
+                          style={{ objectFit: 'contain' }}
                         />
                       ) : (
                         <Image
                           height={45}
                           width={45}
-                          loading="eager"
+                          sizes="45px"
                           src={`/categories/${currentSlotConfig.key}.png`}
                           alt={currentSlotConfig.label}
-                          className="object-contain opacity-50 w-4/5 h-4/5"
+                          style={{ objectFit: 'contain' }}
                         />
                       )}
                     </div>
