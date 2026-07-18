@@ -58,6 +58,9 @@ function findCategorySlugFromQuery(query: string): string | null {
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url)
   const query = searchParams.get('q') || ''
+
+  // Extract the target locale from search component parameters, fallback to 'en'
+  const currentLocale = searchParams.get('locale') || 'en'
   const targetLimit = 8
 
   if (query.trim().length < 1) {
@@ -95,7 +98,6 @@ export async function GET(request: Request) {
         const remainingLimit = targetLimit - combinedDocs.length
 
         // Fetch products that possess this matching category relationship
-        // NOTE: Make sure 'category.slug' matches your collection schema relationship keys!
         const categorySearch = await payload.find({
           collection: 'products',
           locale: 'all',
@@ -117,7 +119,19 @@ export async function GET(request: Request) {
       }
     }
 
-    return NextResponse.json(combinedDocs)
+    // 3. Format payload output structural objects so it matches the SearchBar layout constraints exactly
+    const sanitizedResults = combinedDocs.map((doc: any) => {
+      return {
+        id: doc.id,
+        // Keeps the full localized title object structure intact so multi-language fallback parsing works
+        title: doc.title,
+        name: doc.name,
+        price: doc.price,
+        featuredImage: doc.featuredImage || doc.featured_image || null,
+      }
+    })
+
+    return NextResponse.json(sanitizedResults)
   } catch (error) {
     console.error('Payload CMS database search error:', error)
     return NextResponse.json(

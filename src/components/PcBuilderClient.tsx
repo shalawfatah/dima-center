@@ -369,7 +369,10 @@ export default function PcBuilderClient({
                       <Image
                         height={50}
                         width={50}
-                        src={(slot as any).defaultImage || `/categories/${slot.key}.png`}
+                        // 🟢 Fix: Added .toLowerCase() to match the lowercase file name
+                        src={
+                          (slot as any).defaultImage || `/categories/${slot.key.toLowerCase()}.png`
+                        }
                         alt={slot.label}
                         className="object-cover opacity-60 w-4/5 h-4/5"
                       />

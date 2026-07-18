@@ -28,7 +28,6 @@ export default function ProductPickerModal({
   labels,
   getLocalizedTitle,
   onSelect,
-  onAddToCart,
   onClose,
 }: ProductPickerModalProps) {
   const currentSlotConfig = COMPONENT_SLOTS.find((s) => s.key === activeModalSlot)
