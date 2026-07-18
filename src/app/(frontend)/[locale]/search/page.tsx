@@ -269,7 +269,8 @@ export default async function SearchResultsPage({ params, searchParams }: Search
                     >
                       {imageUrl ? (
                         <Image
-                          fill
+                          height={80}
+                          width={80}
                           sizes="80px"
                           src={imageUrl}
                           alt={displayTitle}
