@@ -1,11 +1,11 @@
+import { Suspense } from 'react'
 import { getPayload } from 'payload'
 import config from '@/payload.config'
-import { calculateProductPrice } from '@/utils/price'
+import dynamic from 'next/dynamic'
 import PromoCarousel from '@/components/PromoCarousel'
-import ProductCarousel from '@/components/ProductCarousel'
 import LocalizedHeading from '@/components/LocalizedHeading'
 import Link from 'next/link'
-import styles from './page.module.css'
+import styles from '@/styles/homepage.module.css'
 
 interface PageProps {
   params: Promise<{ locale: string }>
@@ -16,28 +16,23 @@ import type { Metadata } from 'next'
 import { MAIN_CATEGORY_GROUPS } from '@/utils/categories'
 import { getStorefrontMetadata } from '@/utils/seo'
 import Image from 'next/image'
-import PCBuilderSection from '@/components/PCBuilderSection'
 import CategoryCarousel from '@/components/CategoryCarousel'
+import CaseOffersSection from '@/components/CaseOffersSection'
+import DiscountsSection from '@/components/DiscountsSection'
+import CategorySections from '@/components/CategorySections'
+import SectionSkeleton from '@/components/SectionSkeleton'
+import { MINIMAL_PRODUCT_FIELDS, getFlatCategories } from '@/utils/homepage-helpers'
 
-// ⚡ ACTIVATE ISR: Cache static builds for 1 hour, quiet background regeneration
+const PCBuilderSection = dynamic(() => import('@/components/PCBuilderSection'), {
+  loading: () => <div className={styles.pcBuilderSkeleton} />,
+})
+
 export const revalidate = 3600
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const resolvedParams = await params
   return getStorefrontMetadata({ locale: resolvedParams.locale })
 }
-
-// ✅ FIXED: Payload CMS v3 select property requires an explicit key-boolean map shape
-const MINIMAL_PRODUCT_FIELDS = {
-  id: true,
-  title: true,
-  price: true,
-  stock: true,
-  featuredImage: true,
-  hasDiscount: true,
-  discountedPrice: true,
-  category: true,
-} as const
 
 export default async function StorefrontHome({ params, searchParams }: PageProps) {
   const resolvedParams = await params
@@ -51,36 +46,17 @@ export default async function StorefrontHome({ params, searchParams }: PageProps
   const isRtl = currentLocale === 'ar' || currentLocale === 'ckb'
   const dirClass = isRtl ? styles.rtl : styles.ltr
 
-  const payload = await getPayload({ config })
-
-  // --- Helper: Flatten categories dynamically for active filtering searches ---
-  const getFlatCategories = (locale: 'en' | 'ar' | 'ckb') => {
-    const groups = MAIN_CATEGORY_GROUPS[locale] || []
-    const list: { title: string; slug: string }[] = []
-
-    groups.forEach((group) => {
-      if (group.slug) {
-        list.push({ title: group.title, slug: group.slug })
-      } else if (group.subCategories) {
-        group.subCategories.forEach((sub) => {
-          list.push({ title: sub.title, slug: sub.slug })
-        })
-      }
-    })
-    return list
-  }
-
-  // --- Dynamic Routing Link Generator ---
   const resolveProductHref = (id: string | number, isCaseOffer: boolean) => {
     const routeSegment = isCaseOffer ? 'case-offers' : 'products'
     return `/${currentLocale}/${routeSegment}/${id}`
   }
 
-  // --- Active Selected Category Filter View ---
   if (activeCategory) {
-    const flatEn = getFlatCategories('en')
-    const flatAr = getFlatCategories('ar')
-    const flatCkb = getFlatCategories('ckb')
+    const payload = await getPayload({ config })
+
+    const flatEn = getFlatCategories(MAIN_CATEGORY_GROUPS['en'] || [])
+    const flatAr = getFlatCategories(MAIN_CATEGORY_GROUPS['ar'] || [])
+    const flatCkb = getFlatCategories(MAIN_CATEGORY_GROUPS['ckb'] || [])
 
     const matchedCatEn = flatEn.find((c) => c.slug === activeCategory)
     const matchedCatAr = flatAr.find((c) => c.slug === activeCategory)
@@ -161,211 +137,6 @@ export default async function StorefrontHome({ params, searchParams }: PageProps
     )
   }
 
-  // --- Dynamic Category Setup Calculations ---
-  const majorGroupsEn = MAIN_CATEGORY_GROUPS['en'] || []
-  const majorGroupsAr = MAIN_CATEGORY_GROUPS['ar'] || []
-  const majorGroupsCkb = MAIN_CATEGORY_GROUPS['ckb'] || []
-
-  // Initialize parallel batch target queues
-  const sectionQueryPromises: Promise<any>[] = []
-  const sectionMetaMapping: { slug: string; en: string; ar: string; ckb: string }[] = []
-
-  // Build a single uniform array of query jobs out of categories array structures
-  for (let idx = 0; idx < majorGroupsEn.length; idx++) {
-    const group = majorGroupsEn[idx]
-    const groupAr = majorGroupsAr[idx]
-    const groupCkb = majorGroupsCkb[idx]
-
-    const isComputerParts =
-      group.title.toLowerCase().includes('computer parts') ||
-      group.title.toLowerCase().includes('parts')
-    const isMonitor = group.slug && group.slug.toLowerCase() === 'monitor'
-
-    if (isMonitor) {
-      sectionQueryPromises.push(
-        payload.find({
-          collection: 'products',
-          depth: 1,
-          select: MINIMAL_PRODUCT_FIELDS,
-          where: {
-            and: [{ 'category.slug': { equals: 'monitor' } }, { stock: { greater_than: 0 } }],
-          },
-          limit: 20,
-        }),
-      )
-      sectionMetaMapping.push({
-        slug: 'monitor',
-        en: group.title,
-        ar: groupAr?.title || group.title,
-        ckb: groupCkb?.title || group.title,
-      })
-    } else if (isComputerParts && group.subCategories) {
-      for (let subIdx = 0; subIdx < group.subCategories.length; subIdx++) {
-        const subEn = group.subCategories[subIdx]
-        const subAr = groupAr?.subCategories?.[subIdx]
-        const subCkb = groupCkb?.subCategories?.[subIdx]
-
-        sectionQueryPromises.push(
-          payload.find({
-            collection: 'products',
-            depth: 1,
-            select: MINIMAL_PRODUCT_FIELDS,
-            where: {
-              and: [{ 'category.slug': { equals: subEn.slug } }, { stock: { greater_than: 0 } }],
-            },
-            limit: 20,
-          }),
-        )
-        sectionMetaMapping.push({
-          slug: subEn.slug,
-          en: subEn.title,
-          ar: subAr?.title || subEn.title,
-          ckb: subCkb?.title || subEn.title,
-        })
-      }
-    } else {
-      let whereClause: any = {}
-      if (group.slug) {
-        whereClause = {
-          and: [{ 'category.slug': { equals: group.slug } }, { stock: { greater_than: 0 } }],
-        }
-      } else if (group.subCategories) {
-        const subSlugs = group.subCategories.map((sub) => sub.slug)
-        whereClause = {
-          and: [{ 'category.slug': { in: subSlugs } }, { stock: { greater_than: 0 } }],
-        }
-      }
-
-      sectionQueryPromises.push(
-        payload.find({
-          collection: 'products',
-          depth: 1,
-          select: MINIMAL_PRODUCT_FIELDS,
-          where: whereClause,
-          limit: 20,
-        }),
-      )
-      sectionMetaMapping.push({
-        slug: group.slug || `group-${idx}`,
-        en: group.title,
-        ar: groupAr?.title || group.title,
-        ckb: groupCkb?.title || group.title,
-      })
-    }
-  }
-
-  // --- Core Performance Optimization Engine: Run absolutely EVERYTHING concurrently! ---
-  const [resolvedCaseOffers, resolvedDiscounts, ...resolvedSectionsDocs] = await Promise.all([
-    payload
-      .find({
-        collection: 'case-offers',
-        locale: currentLocale,
-        depth: 1,
-        limit: 20,
-      })
-      .catch((err) => {
-        console.error(err)
-        return { docs: [] }
-      }),
-    payload
-      .find({
-        collection: 'products',
-        depth: 1,
-        select: MINIMAL_PRODUCT_FIELDS,
-        where: {
-          and: [{ hasDiscount: { equals: true } }, { stock: { greater_than: 0 } }],
-        },
-        limit: 20,
-      })
-      .catch((err) => {
-        console.error(err)
-        return null
-      }),
-    ...sectionQueryPromises,
-  ])
-
-  const caseOffers = resolvedCaseOffers.docs || []
-  let productsWithDiscount = resolvedDiscounts ? resolvedDiscounts.docs : []
-
-  if (resolvedDiscounts === null) {
-    try {
-      const fallbackData = await payload.find({
-        collection: 'products',
-        depth: 1,
-        select: MINIMAL_PRODUCT_FIELDS,
-        where: { stock: { greater_than: 0 } },
-        limit: 50,
-      })
-      productsWithDiscount = fallbackData.docs.filter(
-        (p: any) => calculateProductPrice(p).isDiscounted,
-      )
-    } catch (e) {
-      console.error('Failed to parse fallback discount checks', e)
-    }
-  }
-
-  const homepageSections: any[] = []
-  for (let i = 0; i < resolvedSectionsDocs.length; i++) {
-    const productsList = resolvedSectionsDocs[i]?.docs || []
-    if (productsList.length > 0) {
-      homepageSections.push({
-        ...sectionMetaMapping[i],
-        products: productsList,
-      })
-    }
-  }
-
-  const sortedSections = homepageSections.sort((a, b) => {
-    const aIsMonitor = a.slug === 'monitor'
-    const bIsMonitor = b.slug === 'monitor'
-    if (aIsMonitor && !bIsMonitor) return -1
-    if (!aIsMonitor && bIsMonitor) return 1
-    return 0
-  })
-
-  const formatProductForCarousel = (p: any) => {
-    const isImageObj = p.featuredImage && typeof p.featuredImage === 'object' && p.featuredImage.url
-    const productId = String(p.id)
-    return {
-      ...p,
-      id: productId,
-      featuredImage: isImageObj
-        ? { url: p.featuredImage.url, alt: p.featuredImage.alt || '' }
-        : null,
-      isCaseOffer: false,
-      href: resolveProductHref(productId, false),
-    }
-  }
-
-  const formatCaseOfferForCarousel = (offer: any) => {
-    const isImageObj =
-      offer.featured_image && typeof offer.featured_image === 'object' && offer.featured_image.url
-
-    let rawUrl = isImageObj ? offer.featured_image.url : null
-    if (rawUrl && rawUrl.includes(' ')) {
-      rawUrl = rawUrl.replace(/ /g, '%20')
-    }
-
-    const originalPrice = Number(offer.price)
-    const promoPrice = offer.discountedPrice ? Number(offer.discountedPrice) : null
-    const hasPromo = !!promoPrice && promoPrice < originalPrice
-    const discountAmount = hasPromo ? originalPrice - promoPrice : 0
-    const offerId = String(offer.id)
-
-    return {
-      id: offerId,
-      title: offer.title,
-      featuredImage: rawUrl ? { url: rawUrl, alt: offer.featured_image.alt || offer.title } : null,
-      price: originalPrice,
-      hasDiscount: hasPromo,
-      discountType: 'fixed' as const,
-      discountValue: discountAmount,
-      discountedPrice: promoPrice,
-      isCaseOffer: true,
-      href: resolveProductHref(offerId, true),
-    }
-  }
-
   return (
     <div className={`${styles.pageWrapper} ${styles.pageWrapperDefault} ${dirClass}`}>
       <CategoryCarousel currentLocale={currentLocale} />
@@ -383,61 +154,17 @@ export default async function StorefrontHome({ params, searchParams }: PageProps
       </div>
 
       <main className={styles.defaultMain}>
-        {caseOffers.length > 0 && (
-          <section className={styles.sectionFirst}>
-            <LocalizedHeading
-              currentLocale={currentLocale}
-              en="Full Build Offers"
-              ar="عروض الكيسات الكاملة"
-              ckb="ئۆفەری کەیس"
-              style={{ fontSize: '1.4rem', marginBottom: '0.5rem' }}
-            />
-            <ProductCarousel
-              isRtl={isRtl}
-              currentLocale={currentLocale}
-              products={caseOffers.map(formatCaseOfferForCarousel)}
-              cardHeight={330}
-              cardWidth={230}
-            />
-          </section>
-        )}
+        <Suspense fallback={<SectionSkeleton />}>
+          <CaseOffersSection currentLocale={currentLocale} isRtl={isRtl} />
+        </Suspense>
 
-        {productsWithDiscount.length > 0 && (
-          <section className={styles.section}>
-            <LocalizedHeading
-              currentLocale={currentLocale}
-              en="Hot Discounts 🔥"
-              ar="خصومات كبرى 🔥"
-              ckb="داشکانە گەورەکان 🔥"
-              style={{ fontSize: '1.4rem', marginBottom: '0.5rem' }}
-            />
-            <ProductCarousel
-              isRtl={isRtl}
-              currentLocale={currentLocale}
-              products={productsWithDiscount.map(formatProductForCarousel)}
-            />
-          </section>
-        )}
+        <Suspense fallback={<SectionSkeleton />}>
+          <DiscountsSection currentLocale={currentLocale} isRtl={isRtl} />
+        </Suspense>
 
-        {sortedSections.map((cat) => {
-          if (cat.products.length === 0) return null
-          return (
-            <section key={cat.slug} className={styles.section}>
-              <LocalizedHeading
-                currentLocale={currentLocale}
-                en={cat.en}
-                ar={cat.ar}
-                ckb={cat.ckb}
-                style={{ fontSize: '1.4rem', marginBottom: '0.5rem' }}
-              />
-              <ProductCarousel
-                isRtl={isRtl}
-                currentLocale={currentLocale}
-                products={cat.products.map(formatProductForCarousel)}
-              />
-            </section>
-          )
-        })}
+        <Suspense fallback={<SectionSkeleton cards={8} />}>
+          <CategorySections currentLocale={currentLocale} isRtl={isRtl} />
+        </Suspense>
       </main>
     </div>
   )

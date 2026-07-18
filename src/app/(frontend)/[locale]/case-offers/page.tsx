@@ -3,7 +3,7 @@ import config from '@/payload.config'
 import Link from 'next/link'
 import Image from 'next/image'
 import LocalizedHeading from '@/components/LocalizedHeading'
-import styles from '../page.module.css' // Reuses your existing grid styles
+import styles from '@/styles/homepage.module.css' // Reuses your existing grid styles
 
 interface PageProps {
   params: Promise<{ locale: string }>

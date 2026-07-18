@@ -1,0 +1,39 @@
+.wrapper {
+  margin-bottom: 1.5rem;
+}
+
+.heading {
+  width: 200px;
+  height: 1.4rem;
+  border-radius: 4px;
+  background: #eee;
+  margin-bottom: 0.75rem;
+  animation: pulse 1.4s ease-in-out infinite;
+}
+
+.row {
+  display: flex;
+  gap: 12px;
+  overflow: hidden;
+}
+
+.card {
+  flex: 0 0 auto;
+  width: 200px;
+  height: 260px;
+  border-radius: 10px;
+  background: #eee;
+  animation: pulse 1.4s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.55;
+  }
+  100% {
+    opacity: 1;
+  }
+}

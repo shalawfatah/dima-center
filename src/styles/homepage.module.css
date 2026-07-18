@@ -1,0 +1,152 @@
+html {
+  background: #f3f3f3;
+}
+.carouselSection {
+  width: 100%;
+  position: relative;
+}
+.sectionFirst {
+  padding: 0 1.5rem;
+}
+
+.section {
+  padding: 0 1.5rem;
+}
+.viewport {
+  overflow: hidden;
+  width: 100%;
+  cursor: grab;
+  border-radius: 0.4rem;
+  padding: 4rem;
+}
+
+.track {
+  display: flex;
+  touch-action: pan-y;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+
+.slide {
+  flex: 0 0 100%;
+  width: 100%;
+  height: 400px;
+  position: relative;
+  overflow: hidden;
+  display: block;
+  text-decoration: none;
+}
+
+@media (max-width: 768px) {
+  .slide {
+    height: 280px;
+  }
+}
+
+.promoWrapper {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding: 1.5rem max(1rem, calc((100% - 1800px) / 2));
+  color: #fff;
+  position: relative;
+}
+
+.imageWrapper {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+}
+
+.bgImage {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+}
+
+.overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to top,
+    rgba(0, 0, 0, 0.75) 0%,
+    rgba(0, 0, 0, 0.4) 50%,
+    rgba(0, 0, 0, 0.1) 100%
+  );
+  z-index: 1;
+}
+
+.textContent {
+  max-width: 600px;
+  position: relative;
+  z-index: 2;
+}
+
+.badge {
+  font-family: 'Rudaw', sans-serif;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-weight: bold;
+  display: inline-block;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.badgeProduct {
+  background-color: #df8026;
+}
+
+.badgeGeneric {
+  background-color: #10b981;
+}
+
+.title {
+  font-family: 'Rudaw', sans-serif;
+  font-size: 2.25rem;
+  font-weight: 800;
+  margin-top: 0.5rem;
+  margin-bottom: 0.5rem;
+  line-height: 1.2;
+  text-shadow:
+    0 2px 8px rgba(0, 0, 0, 0.5),
+    0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+.description {
+  font-family: 'Sarchia', sans-serif;
+  font-size: 1rem;
+  color: #f1f5f9;
+  margin-bottom: 1rem;
+  line-height: 1.5;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
+}
+
+.dotsContainer {
+  position: absolute;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 8px;
+  z-index: 10;
+  background: rgba(0, 0, 0, 0.3);
+  padding: 6px 12px;
+  border-radius: 20px;
+  backdrop-filter: blur(4px);
+}
+
+.dotIndicator {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}

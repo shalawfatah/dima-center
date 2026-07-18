@@ -1,0 +1,32 @@
+export const carouselDictionary = {
+  en: {
+    quickViewTitle: 'Quick View',
+    addToCart: 'Add To Cart',
+    conditionLabel: 'Condition:',
+    toastSuccess: 'Added to cart successfully!',
+    viewCart: 'View Cart ➡️',
+    currency: '$',
+    shareTitle: 'Share',
+    discountLabel: 'discount',
+  },
+  ar: {
+    quickViewTitle: 'معاينة سريعة',
+    addToCart: 'إضافة إلى السلة',
+    conditionLabel: 'الحالة:',
+    toastSuccess: 'تمت الإضافة إلى السلة بنجاح!',
+    viewCart: 'عرض السلة ➡️',
+    currency: '$',
+    shareTitle: 'مشاركة',
+    discountLabel: 'خصم',
+  },
+  ckb: {
+    quickViewTitle: 'بینینی خێرا',
+    addToCart: 'خستنە نێو سەبەتە',
+    conditionLabel: 'بارودۆخ:',
+    toastSuccess: 'بە سەرکەوتوویی زیادکرا بۆ سەبەتە!',
+    viewCart: 'بینینی سەبەتە ➡️',
+    currency: '$',
+    shareTitle: 'شێکردنەوە',
+    discountLabel: 'داشکاندن',
+  },
+}
