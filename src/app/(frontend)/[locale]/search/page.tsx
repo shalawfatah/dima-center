@@ -67,17 +67,27 @@ export default async function SearchResultsPage({ params, searchParams }: Search
 
     const searchData = await payload.find({
       collection: 'products',
+      // FIX: Query 'all' locales so Payload leaves the raw localized data structure intact.
+      // This stops Payload from dropping ckb values when browsing in en or ar.
       locale: 'all',
       where: {
         or: [
+          // Explicit cross-locale text searches for product titles and descriptions
           { 'title.en': { contains: query } },
           { 'title.ar': { contains: query } },
           { 'title.ckb': { contains: query } },
           { 'description.en': { contains: query } },
           { 'description.ar': { contains: query } },
           { 'description.ckb': { contains: query } },
+
+          // Explicit cross-locale relational queries for categories
+          { 'category.title.en': { contains: query } },
+          { 'category.title.ar': { contains: query } },
+          { 'category.title.ckb': { contains: query } },
+          { 'category.slug': { contains: query } },
         ],
       },
+      depth: 2,
       limit: 50,
     })
 
@@ -88,6 +98,7 @@ export default async function SearchResultsPage({ params, searchParams }: Search
         const rawTitle = doc.title || doc.name || ''
         let displayTitle = ''
 
+        // FIX: Prioritize current runtime locale, then fallback directly to 'ckb', then others.
         if (typeof rawTitle === 'object' && rawTitle !== null) {
           displayTitle =
             rawTitle[currentLocale] ||
@@ -101,7 +112,7 @@ export default async function SearchResultsPage({ params, searchParams }: Search
         }
 
         let rawDescription = doc.description || ''
-        if (typeof rawDescription === 'object' && rawDescription !== null && !rawDescription.root) {
+        if (typeof rawDescription === 'object' && rawDescription !== null) {
           rawDescription =
             rawDescription[currentLocale] ||
             rawDescription['ckb'] ||
@@ -123,7 +134,6 @@ export default async function SearchResultsPage({ params, searchParams }: Search
           textSnippet = ''
         }
 
-        // DEFENSIVE FIX: Resolve object parameters nesting on category relationships
         let finalCategoryString = ''
         if (doc.category) {
           if (typeof doc.category === 'object' && doc.category !== null) {
@@ -148,7 +158,7 @@ export default async function SearchResultsPage({ params, searchParams }: Search
           id: doc.id,
           price: doc.price,
           condition: doc.condition,
-          category: finalCategoryString, // Now guaranteed safe text string
+          category: finalCategoryString,
           featuredImage: doc.featuredImage,
           title: displayTitle,
           descriptionSnippet: textSnippet,
@@ -176,7 +186,13 @@ export default async function SearchResultsPage({ params, searchParams }: Search
     >
       <main style={{ flex: '1', padding: '3rem max(1.5rem, calc((100% - 1800px)/2))' }}>
         <h1
-          style={{ fontSize: '1.75rem', fontWeight: '700', marginBottom: '1.5rem', color: '#000' }}
+          style={{
+            fontFamily: 'Rudaw',
+            fontSize: '1.75rem',
+            fontWeight: '700',
+            marginBottom: '1.5rem',
+            color: '#000',
+          }}
         >
           {currentLocale === 'ar'
             ? 'نتائج البحث عن:'
@@ -197,7 +213,7 @@ export default async function SearchResultsPage({ params, searchParams }: Search
               color: '#666',
             }}
           >
-            🔍{' '}
+            🔍 Telephone booth empty...{' '}
             {currentLocale === 'ar'
               ? 'لم نجد أي نتائج تطابق بحثك.'
               : currentLocale === 'ckb'
@@ -279,7 +295,14 @@ export default async function SearchResultsPage({ params, searchParams }: Search
                           {product.category}
                         </span>
                       )}
-                      <h3 style={{ fontSize: '1.15rem', margin: '2px 0 6px 0', fontWeight: '600' }}>
+                      <h3
+                        style={{
+                          fontSize: '1.15rem',
+                          margin: '2px 0 6px 0',
+                          fontWeight: '600',
+                          color: '#000',
+                        }}
+                      >
                         {displayTitle}
                       </h3>
                       <p
@@ -301,19 +324,21 @@ export default async function SearchResultsPage({ params, searchParams }: Search
                       <div style={{ fontSize: '1.4rem', fontWeight: '800', color: '#000' }}>
                         ${product.price}
                       </div>
-                      <span
-                        style={{
-                          fontSize: '11px',
-                          background: '#f0fdf4',
-                          color: '#16a34a',
-                          padding: '2px 6px',
-                          borderRadius: '4px',
-                          textTransform: 'uppercase',
-                          fontWeight: 'bold',
-                        }}
-                      >
-                        {product.condition?.replace('_', ' ')}
-                      </span>
+                      {product.condition && (
+                        <span
+                          style={{
+                            fontSize: '11px',
+                            background: '#f0fdf4',
+                            color: '#16a34a',
+                            padding: '2px 6px',
+                            borderRadius: '4px',
+                            textTransform: 'uppercase',
+                            fontWeight: 'bold',
+                          }}
+                        >
+                          {product.condition.replace('_', ' ')}
+                        </span>
+                      )}
                     </div>
                   </div>
                 </Link>

@@ -102,6 +102,7 @@ export default function ProductInfoSidebar({
             fontSize: '24px',
             fontWeight: 'bold',
             color: '#1a1a1a',
+            fontFamily: 'Rudaw',
             margin: '0 0 0.5rem 0',
             lineHeight: '1.3',
           }}

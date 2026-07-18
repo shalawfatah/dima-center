@@ -61,6 +61,9 @@ export default function PcBuilderClient({
   const [buyerNumber, setBuyerNumber] = useState('')
   const [message, setMessage] = useState({ type: '', text: '' })
 
+  // 🟢 NEW: State handling configuration for the custom confirmation modal window
+  const [showClearConfirmModal, setShowClearConfirmModal] = useState(false)
+
   const dynamicExchangeRate = generals?.exchangeRate ?? 1500
 
   // Signal layout mounting sequence to prevent layout flashes
@@ -140,6 +143,17 @@ export default function PcBuilderClient({
     })
   }
 
+  // 🟢 UPDATED: Triggers custom validation modal view instead of a system confirm window
+  const triggerClearAllRequest = () => {
+    if (Object.keys(selections).length === 0) return
+    setShowClearConfirmModal(true)
+  }
+
+  const confirmClearAllComponents = () => {
+    setSelections({})
+    setShowClearConfirmModal(false)
+  }
+
   const updateSlotQuantity = (slotKey: string, delta: number) => {
     setSelections((prev) => {
       const currentItem = prev[slotKey]
@@ -171,7 +185,7 @@ export default function PcBuilderClient({
     }
   }, [selections, mounted])
 
-  const handleWhatsAppBuildOrder = (e: React.SubmitEvent) => {
+  const handleWhatsAppBuildOrder = (e: React.FormEvent) => {
     e.preventDefault()
     if (!buyerNumber.trim()) {
       alert(phoneErrorLabel[currentLocale] || phoneErrorLabel.en)
@@ -289,10 +303,41 @@ export default function PcBuilderClient({
         </div>
       )}
 
+      {/* 🟢 UPDATED ACTION ZONE: Placed directly above the main builder list container */}
+      {mounted && Object.keys(selections).length > 0 && (
+        <div
+          style={{
+            display: 'flex',
+            justifyContent: isRtl ? 'flex-start' : 'flex-end',
+            marginBottom: '1rem',
+            width: '100%',
+          }}
+        >
+          <button
+            type="button"
+            onClick={triggerClearAllRequest}
+            className={`${styles['pc-builder-btn']} ${styles.clear}`}
+            style={{
+              padding: '0.625rem 1.25rem',
+              fontWeight: '600',
+              fontSize: '0.9rem',
+              fontFamily: fontFam,
+              borderRadius: '6px',
+              minWidth: '140px',
+            }}
+          >
+            {currentLocale === 'ckb'
+              ? 'پاشگەرزبوونەوە'
+              : currentLocale === 'ar'
+                ? 'إلغاء الكل'
+                : 'Clear All'}
+          </button>
+        </div>
+      )}
+
       <div className={styles['pc-builder-layout-grid']}>
         <div className={styles['pc-builder-slots-list']}>
           {COMPONENT_SLOTS.map((slot) => {
-            // Guard selections configuration output until mounted safely
             const chosenItem = mounted ? selections[slot.key] : null
             const itemImageUrl = chosenItem?.featuredImage?.url || chosenItem?.meta?.image?.url
             const qty = chosenItem?.quantity || 1
@@ -384,6 +429,7 @@ export default function PcBuilderClient({
 
                   {chosenItem && (
                     <button
+                      type="button"
                       onClick={(e) => {
                         e.stopPropagation()
                         removeComponent(slot.key)
@@ -394,6 +440,7 @@ export default function PcBuilderClient({
                     </button>
                   )}
                   <button
+                    type="button"
                     onClick={(e) => {
                       e.stopPropagation()
                       openModal(slot.key)
@@ -495,6 +542,101 @@ export default function PcBuilderClient({
           onAddToCart={handleAddToCartDefault}
           onClose={closeModal}
         />
+      )}
+
+      {/* 🟢 NEW: Custom Confirmation Overlay Modal (Replaces window.confirm system prompt) */}
+      {showClearConfirmModal && (
+        <div
+          style={{
+            position: 'fixed',
+            inset: 0,
+            zIndex: 9999,
+            backgroundColor: 'rgba(0, 0, 0, 0.6)',
+            backdropFilter: 'blur(4px)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '1rem',
+          }}
+          onClick={() => setShowClearConfirmModal(false)}
+        >
+          <div
+            style={{
+              backgroundColor: '#1e293b',
+              border: '1px solid #334155',
+              borderRadius: '12px',
+              padding: '1.75rem',
+              maxWidth: '440px',
+              width: '100%',
+              boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.3)',
+              textAlign: 'center',
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h4
+              style={{
+                margin: '0 0 0.75rem 0',
+                fontSize: '1.25rem',
+                fontWeight: '600',
+                color: '#f8fafc',
+                fontFamily: fontFam,
+              }}
+            >
+              {currentLocale === 'ckb'
+                ? 'پاشگەرزبوونەوە لە سەرجەم پارچەکان'
+                : currentLocale === 'ar'
+                  ? 'مسح جميع القطع المختارة'
+                  : 'Clear Current Build Selection'}
+            </h4>
+            <p
+              style={{
+                margin: '0 0 1.5rem 0',
+                fontSize: '0.95rem',
+                color: '#94a3b8',
+                lineHeight: '1.5',
+                fontFamily: fontFam,
+              }}
+            >
+              {currentLocale === 'ckb'
+                ? 'دڵنیای لە سڕینەوەی سەرجەم پارچەکان کە تا ئێستا هەڵت بژاردوون؟ ئەم کارە ناگەڕێتەوە دواوە.'
+                : currentLocale === 'ar'
+                  ? 'هل أنت متأكد من مسح جميع القطع التي قمت باختيارها؟ لا يمكن التراجع عن هذا الإجراء.'
+                  : 'Are you sure you want to completely remove all components from your custom setup? This action cannot be undone.'}
+            </p>
+            <div
+              style={{
+                display: 'flex',
+                gap: '0.75rem',
+                flexDirection: isRtl ? 'row-reverse' : 'row',
+              }}
+            >
+              <button
+                type="button"
+                onClick={confirmClearAllComponents}
+                className={`${styles['pc-builder-btn']} ${styles.clear}`}
+                style={{ flex: 1, padding: '0.75rem', fontWeight: '600', fontFamily: fontFam }}
+              >
+                {currentLocale === 'ckb'
+                  ? 'بەڵێ، بسڕەوە'
+                  : currentLocale === 'ar'
+                    ? 'نعم، امسح الكل'
+                    : 'Yes, Clear All'}
+              </button>
+              <button
+                type="button"
+                onClick={() => setShowClearConfirmModal(false)}
+                className={`${styles['pc-builder-btn']} ${styles.action}`}
+                style={{ flex: 1, padding: '0.75rem', fontWeight: '600', fontFamily: fontFam }}
+              >
+                {currentLocale === 'ckb'
+                  ? 'پاشگەزبوونەوە'
+                  : currentLocale === 'ar'
+                    ? 'إلغاء'
+                    : 'Cancel'}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   )

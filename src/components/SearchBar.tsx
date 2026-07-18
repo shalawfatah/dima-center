@@ -208,7 +208,7 @@ export default function SearchBar({ locale: initialLocale }: { locale: string })
     <div className={styles.searchComponentRoot} ref={containerRef}>
       <button
         type="button"
-        aira-label={'Search'}
+        aria-label="Search"
         className={styles.searchMobileToggleBtn}
         onClick={() => setIsMobileOpen(!isMobileOpen)}
       >
