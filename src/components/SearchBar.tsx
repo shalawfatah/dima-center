@@ -102,7 +102,7 @@ export default function SearchBar({ locale: initialLocale }: { locale: string })
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [])
 
-  const handleSearchSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSearchSubmit = (e: React.SubmitEvent) => {
     e.preventDefault()
     if (!searchTerm.trim()) return
     triggerSearchRedirect(searchTerm.trim())
@@ -208,6 +208,7 @@ export default function SearchBar({ locale: initialLocale }: { locale: string })
     <div className={styles.searchComponentRoot} ref={containerRef}>
       <button
         type="button"
+        aira-label={'Search'}
         className={styles.searchMobileToggleBtn}
         onClick={() => setIsMobileOpen(!isMobileOpen)}
       >

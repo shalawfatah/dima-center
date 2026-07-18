@@ -19,6 +19,12 @@ const totalLabel: Record<string, string> = {
   en: 'Total Amount:',
 }
 
+const conditionLabels: Record<string, Record<string, string>> = {
+  new: { en: 'New', ckb: 'نوێ', ar: 'جديد' },
+  used: { en: 'Used', ckb: 'بەکارهاتوو', ar: 'مستعمل' },
+  refurbished: { en: 'Refurbished', ckb: 'نوێکراوەتەوە', ar: 'مجدد' },
+}
+
 function getStockText(stock: number, currentLocale: string) {
   if (stock > 0) {
     if (currentLocale === 'ar') return `متوفر (${stock} قطع)`
@@ -54,6 +60,11 @@ export default function ProductInfoSidebar({
       ? Number(product.priceIQD)
       : iqdPrice
 
+  const conditionText =
+    conditionLabels[product.condition]?.[currentLocale] ||
+    conditionLabels[product.condition]?.en ||
+    product.condition
+
   return (
     <div
       style={{
@@ -66,7 +77,51 @@ export default function ProductInfoSidebar({
         top: '20px',
       }}
     >
-      {/* ... Keep upper content (Condition, Title, Description, Stock) ... */}
+      {/* 🎯 Restored Upper Content Block */}
+      <div style={{ marginBottom: '1.5rem' }}>
+        {product.condition && (
+          <span
+            style={{
+              display: 'inline-block',
+              padding: '0.25rem 0.75rem',
+              borderRadius: '20px',
+              fontSize: '12px',
+              fontWeight: '600',
+              textTransform: 'uppercase',
+              background: product.condition === 'new' ? '#e8f5e9' : '#fff3e0',
+              color: product.condition === 'new' ? '#2e7d32' : '#ef6c00',
+              marginBottom: '0.75rem',
+            }}
+          >
+            {conditionText}
+          </span>
+        )}
+
+        <h1
+          style={{
+            fontSize: '24px',
+            fontWeight: 'bold',
+            color: '#1a1a1a',
+            margin: '0 0 0.5rem 0',
+            lineHeight: '1.3',
+          }}
+        >
+          {product.title}
+        </h1>
+
+        {product.description && (
+          <p
+            style={{
+              fontSize: '14px',
+              color: '#666',
+              lineHeight: '1.6',
+              margin: '0',
+            }}
+          >
+            {product.description}
+          </p>
+        )}
+      </div>
 
       <div style={{ borderTop: '1px solid #f0f0f0', paddingTop: '1.5rem' }}>
         <div
@@ -85,10 +140,6 @@ export default function ProductInfoSidebar({
           </span>
         </div>
 
-        {/* 🎯 SWITCH TO A DIV CONTAINER: Since we are handling submission 
-          inside the client-component, we change <form> to a <div> container
-          to avoid standard page-reload HTML submits.
-        */}
         <div
           style={{
             display: 'flex',
@@ -149,7 +200,6 @@ export default function ProductInfoSidebar({
             />
           </div>
 
-          {/* 🎯 Updated component call with required pricing properties */}
           <ProductBuyActions
             product={product}
             finalPrice={finalPrice}

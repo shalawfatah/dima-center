@@ -35,7 +35,11 @@ export default function Languages({ currentLocale }: LanguagesProps) {
 
   return (
     <div ref={dropdownRef} className={styles.container}>
-      <button onClick={() => setIsOpen(!isOpen)} className={styles.trigger}>
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className={styles.trigger}
+        area-label={'Change language'}
+      >
         {/* 🌐 Dynamically switch between the globe icon and the flag */}
         <span className={styles.iconWrapper}>
           {isOpen ? (

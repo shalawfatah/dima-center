@@ -171,7 +171,7 @@ export default function PcBuilderClient({
     }
   }, [selections, mounted])
 
-  const handleWhatsAppBuildOrder = (e: React.FormEvent) => {
+  const handleWhatsAppBuildOrder = (e: React.SubmitEvent) => {
     e.preventDefault()
     if (!buyerNumber.trim()) {
       alert(phoneErrorLabel[currentLocale] || phoneErrorLabel.en)
@@ -413,9 +413,12 @@ export default function PcBuilderClient({
             <h3 className={styles['pc-builder-summary-heading']}>{t.summary}</h3>
 
             <div className={styles['pc-builder-field-group']}>
-              <label className={styles['pc-builder-input-label']}>{t.configName}</label>
+              <label htmlFor="pc-builder-build-name" className={styles['pc-builder-input-label']}>
+                {t.configName}
+              </label>
               <input
                 type="text"
+                id="pc-builder-build-name"
                 value={mounted ? buildName : ''}
                 onChange={(e) => setBuildName(e.target.value)}
                 className={styles['pc-builder-text-input']}
@@ -460,6 +463,13 @@ export default function PcBuilderClient({
                 onChange={(e) => setBuyerNumber(e.target.value)}
                 required
                 className={styles['pc-builder-phone-input']}
+                aria-label={
+                  currentLocale === 'ckb'
+                    ? 'ژمارەی مۆبایل'
+                    : currentLocale === 'ar'
+                      ? 'رقم الهاتف'
+                      : 'Phone number'
+                }
               />
               <button
                 type="submit"

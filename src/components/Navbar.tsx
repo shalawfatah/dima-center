@@ -19,11 +19,7 @@ interface NavbarProps {
   categories?: CategoryItem[]
 }
 
-export default function Navbar({
-  currentLocale: initialLocale,
-  activeCategory,
-  categories = [],
-}: NavbarProps) {
+export default function Navbar({ currentLocale: initialLocale }: NavbarProps) {
   const pathname = usePathname()
   const [cartCount, setCartCount] = useState<number>(0)
 
@@ -81,7 +77,6 @@ export default function Navbar({
           } as React.CSSProperties
         }
       >
-        {/* 1. Languages Dropdown */}
         <div
           style={{
             display: 'flex',
