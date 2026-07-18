@@ -273,6 +273,7 @@ export default async function SearchResultsPage({ params, searchParams }: Search
                         <Image
                           height={80}
                           width={80}
+                          loading="eager"
                           src={imageUrl}
                           alt={displayTitle}
                           style={{ width: '100%', height: '100%', objectFit: 'contain' }}

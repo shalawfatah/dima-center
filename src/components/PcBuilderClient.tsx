@@ -361,6 +361,7 @@ export default function PcBuilderClient({
                       <Image
                         height={100}
                         width={100}
+                        loading="eager"
                         src={itemImageUrl}
                         alt={getLocalizedTitle(chosenItem)}
                         className="object-cover w-full h-full"
@@ -369,7 +370,7 @@ export default function PcBuilderClient({
                       <Image
                         height={50}
                         width={50}
-                        // 🟢 Fix: Added .toLowerCase() to match the lowercase file name
+                        loading="eager"
                         src={
                           (slot as any).defaultImage || `/categories/${slot.key.toLowerCase()}.png`
                         }

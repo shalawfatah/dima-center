@@ -89,6 +89,7 @@ export default function ProductPickerModal({
                           src={modalProductImg}
                           height={100}
                           width={100}
+                          loading="eager"
                           alt={getLocalizedTitle(prod)}
                           className="object-cover w-full h-full"
                         />
@@ -96,6 +97,7 @@ export default function ProductPickerModal({
                         <Image
                           height={45}
                           width={45}
+                          loading="eager"
                           src={`/categories/${currentSlotConfig.key}.png`}
                           alt={currentSlotConfig.label}
                           className="object-contain opacity-50 w-4/5 h-4/5"
