@@ -97,8 +97,8 @@ export async function executeDifferentialSync() {
 
   payload.logger.info(`🔗 Sync script connecting to database host...`)
 
-  const BASE_URL = (process.env.BRUSK_BASE_URL || 'https://saaser.tadbeersoft.com').trim()
-  const PREFIX = (process.env.BRUSK_CMS_PREFIX || '/api/public/cms').trim()
+  const BASE_URL = (process.env.BRUSK_BASE_URL || '').trim()
+  const PREFIX = (process.env.BRUSK_CMS_PREFIX || '').trim()
   const API_KEY = (process.env.BRUSK_API_KEY || '').trim()
   const SECRET_KEY = (process.env.BRUSK_SECRET_KEY || '').trim()
   const BRANCH_ID = (process.env.BRUSK_BRANCH_ID || '').trim()
