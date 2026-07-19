@@ -6,12 +6,18 @@ import ProductPriceDisplay from './ProductPriceDisplay'
 import { RelatedProductCardProps } from '@/types/types'
 import styles from '@/styles/related_product_card.module.css'
 
+// Extending the imported interface locally so we don't pollute the shared types file
+type ExtendedRelatedProductCardProps = RelatedProductCardProps & {
+  basePath?: string
+}
+
 export default function RelatedProductCard({
   item,
   currentLocale,
   isRtl,
   exchangeRate,
-}: RelatedProductCardProps) {
+  basePath = 'products', // Default parameter fallback
+}: ExtendedRelatedProductCardProps) {
   const itemImgObj = item.featuredImage && typeof item.featuredImage === 'object'
   const itemImgUrl = itemImgObj ? (item.featuredImage as any).url : null
 
@@ -23,7 +29,7 @@ export default function RelatedProductCard({
   const iqdPrice = usdPrice * exchangeRate
 
   return (
-    <Link href={`/${currentLocale}/products/${item.id}`} className={styles.cardLink}>
+    <Link href={`/${currentLocale}/${basePath}/${item.id}`} className={styles.cardLink}>
       <div className={styles.card}>
         {priceSpecs.isDiscounted && (
           <DiscountBadge

@@ -246,6 +246,7 @@ export default async function CaseOfferDetailPage({ params }: OfferPageProps) {
           <RelatedProducts
             items={formattedRelatedOffers as any}
             currentLocale={currentLocale}
+            basePath="case-offers"
             isRtl={isRtl}
             exchangeRate={exchangeRate}
           />

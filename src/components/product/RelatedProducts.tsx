@@ -12,6 +12,7 @@ interface RelatedProductsProps {
   currentLocale: string
   isRtl: boolean
   exchangeRate: number
+  basePath?: string // 1. Added optional prop here
 }
 
 export default function RelatedProducts({
@@ -19,6 +20,7 @@ export default function RelatedProducts({
   currentLocale,
   isRtl,
   exchangeRate,
+  basePath = 'products', // 2. Defaulting to 'products' to avoid breaking current usage
 }: RelatedProductsProps) {
   return (
     <div style={{ marginTop: '6rem', borderTop: '1px solid #eee', paddingTop: '3rem' }}>
@@ -46,6 +48,7 @@ export default function RelatedProducts({
               currentLocale={currentLocale}
               isRtl={isRtl}
               exchangeRate={exchangeRate}
+              basePath={basePath} // 3. Forward the prop to the card
             />
           ))}
         </div>
