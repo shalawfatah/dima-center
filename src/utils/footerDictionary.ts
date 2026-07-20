@@ -1,3 +1,5 @@
+import { FooterTranslations } from '@/types/types'
+
 export const footerDictionary: Record<'en' | 'ar' | 'ckb', FooterTranslations> = {
   en: {
     aboutTitle: 'About Dima Center',
