@@ -66,3 +66,15 @@ export interface RelatedProductCardProps {
   isRtl: boolean
   exchangeRate: number
 }
+
+export interface FooterTranslations {
+  aboutTitle: string
+  aboutDesc: string
+  contactTitle: string
+  addressLine1: string
+  addressLine2: string
+  phonePrefix: string
+  phoneValue: string
+  policyTitle: string
+  policyDesc: string
+}

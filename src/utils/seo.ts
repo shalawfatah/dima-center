@@ -9,17 +9,17 @@ export async function getStorefrontMetadata(params: SeoParams): Promise<Metadata
 
   const seo = {
     en: {
-      title: 'Dima Hardware | Premium PC Components Shop',
+      title: 'Dima Center | Premium PC Components Shop',
       description:
         'Find high-performance CPUs, Graphics Cards, Motherboards, and gaming accessories in Iraq. Great prices and reliable hardware.',
     },
     ar: {
-      title: 'ديما هاردوير | متجر قطع ومكونات الكمبيوتر',
+      title: 'ديما کمبیوتر | متجر قطع ومكونات الكمبيوتر',
       description:
         'اكتشف أفضل قطع الكمبيوتر في العراق: معالجات، كروت شاشة، لوحات أم، وإكسسوارات جيمنج بأفضل الأسعار.',
     },
     ckb: {
-      title: 'دیما هاردوێر | فرۆشگای پارچە و پێکهاتەکانی کۆمپیوتەر',
+      title: 'دیما سەنتەر | فرۆشگای پارچە و پێکهاتەکانی کۆمپیوتەر',
       description:
         'باشترین پارچەکانی کۆمپیوتەر لە عێراق بەدەستبهێنە: پڕۆسێسەر، کارتی شاشە، مازەربۆرد و ئێکسسواراتی یاریکردن بە گونجاوترین نرخ.',
     },

@@ -2,7 +2,7 @@
 
 import { useMemo, useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation' // Added for programmatic button routing
+import { useRouter } from 'next/navigation'
 import { MAIN_CATEGORY_GROUPS } from '@/utils/categories'
 import styles from '@/styles/category_carousel.module.css'
 
@@ -11,7 +11,7 @@ interface CategoryDropdownNavProps {
 }
 
 export default function CategoryDropdownNav({ currentLocale }: CategoryDropdownNavProps) {
-  const router = useRouter() // Initialize router
+  const router = useRouter()
   const [activeDropdown, setActiveDropdown] = useState<number | null>(null)
   const [isHamOpen, setIsHamOpen] = useState<boolean>(false)
   const navRef = useRef<HTMLDivElement>(null)
@@ -27,14 +27,25 @@ export default function CategoryDropdownNav({ currentLocale }: CategoryDropdownN
 
   const titleFont = isRtl ? '"Rudaw", sans-serif' : 'system-ui, sans-serif'
 
-  // Translation helpers
   const caseOffersTitle = useMemo(() => {
     if (activeLocale === 'ckb') return 'ئۆفەری کەیس'
     if (activeLocale === 'ar') return 'عروض الكيسات الكاملة'
     return 'Full Build Offers'
   }, [activeLocale])
 
-  // Close open dropdowns if user clicks outside of the navigation wrapper
+  // Lock body scroll on mobile when hamburger drawer is open
+  useEffect(() => {
+    if (isHamOpen) {
+      document.body.style.overflow = 'hidden'
+    } else {
+      document.body.style.overflow = ''
+    }
+    return () => {
+      document.body.style.overflow = ''
+    }
+  }, [isHamOpen])
+
+  // Close open dropdowns if user clicks outside
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (navRef.current && !navRef.current.contains(event.target as Node)) {
@@ -57,7 +68,7 @@ export default function CategoryDropdownNav({ currentLocale }: CategoryDropdownN
       ref={navRef}
     >
       <div className={styles['nav-container']}>
-        {/* Hamburger Menu Button (Positioned left across all locales) */}
+        {/* Hamburger Menu Button (Visible on Desktop alongside items, and alone on mobile) */}
         <button
           type="button"
           className={styles['ham-menu-btn']}
@@ -69,7 +80,6 @@ export default function CategoryDropdownNav({ currentLocale }: CategoryDropdownN
 
         {/* Desktop Navigation Items Wrapper */}
         <div className={styles['desktop-nav-items']}>
-          {/* FIXED: Changed from Link to button for bulletproof alignment */}
           <div className={styles['nav-item-wrapper']}>
             <button
               type="button"
@@ -80,14 +90,12 @@ export default function CategoryDropdownNav({ currentLocale }: CategoryDropdownN
             </button>
           </div>
 
-          {/* Dynamic Category List */}
           {categories.map((category, index) => {
             const isIndependent = !!category.slug
 
             if (isIndependent) {
               return (
                 <div key={index} className={styles['nav-item-wrapper']}>
-                  {/* FIXED: Changed from Link to button to match styling exactly */}
                   <button
                     type="button"
                     onClick={() => router.push(`/${activeLocale}?category=${category.slug}`)}
@@ -112,7 +120,6 @@ export default function CategoryDropdownNav({ currentLocale }: CategoryDropdownN
                   <span className={styles['dropdown-caret']}>▼</span>
                 </button>
 
-                {/* Nested Dropdown List */}
                 {isOpen && category.subCategories && (
                   <div className={styles['dropdown-menu']}>
                     {category.subCategories.map((sub, subIdx) => (
@@ -133,10 +140,9 @@ export default function CategoryDropdownNav({ currentLocale }: CategoryDropdownN
         </div>
       </div>
 
-      {/* Mobile Dropdown Menu Drawer */}
+      {/* Mobile / Full Dropdown Drawer */}
       {isHamOpen && (
         <div className={styles['mobile-dropdown-panel']}>
-          {/* Full Build Offers link */}
           <Link
             href={`/${activeLocale}/case-offers`}
             className={styles['mobile-item-link']}
@@ -145,7 +151,6 @@ export default function CategoryDropdownNav({ currentLocale }: CategoryDropdownN
             {caseOffersTitle}
           </Link>
 
-          {/* Dynamic Categories inside Hamburger Drawer */}
           {categories.map((category, index) => {
             if (category.slug) {
               return (

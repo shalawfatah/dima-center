@@ -1,56 +1,13 @@
 'use client'
 
+import { footerDictionary } from '@/utils/footerDictionary'
+
 interface FooterProps {
   currentLocale: string
 }
 
-interface FooterTranslations {
-  aboutTitle: string
-  aboutDesc: string
-  contactTitle: string
-  addressLine1: string
-  addressLine2: string
-  phoneLabel: string
-  policyTitle: string
-  policyDesc: string
-}
-
 export default function Footer({ currentLocale }: FooterProps) {
   const isRtl = currentLocale === 'ar' || currentLocale === 'ckb'
-
-  const footerDictionary: Record<'en' | 'ar' | 'ckb', FooterTranslations> = {
-    en: {
-      aboutTitle: 'About Dima Center',
-      aboutDesc:
-        'Your premium destination for advanced computer hardware setups and power systems.',
-      contactTitle: 'Location & Support',
-      addressLine1: '📍 Salim Street, Sulaymaniyah - Next to City Star & Ali Namali Building',
-      addressLine2: 'Opposite Ramada Hotel',
-      phoneLabel: '📞 Phone: 0770 141 4269',
-      policyTitle: 'Order Policy',
-      policyDesc: '100% Cash on Delivery (COD) or instant In-Store Pickups.',
-    },
-    ar: {
-      aboutTitle: 'حول مركز ديما',
-      aboutDesc: 'متجرك المتكامل لقطع غيار الحاسوب المتطورة وأنظمة الطاقة البديلة.',
-      contactTitle: 'الموقع والدعم',
-      addressLine1: '📍 السليمانية، شارع سالم - بجانب سيتي ستار وبناية علي نملي',
-      addressLine2: 'مقابل فندق رامادا',
-      phoneLabel: '📞 رقم الموبايل: ٠٧٧٠ ١٤١ ٤٢٦٩',
-      policyTitle: 'سياسة الطلبات',
-      policyDesc: 'الدفع نقداً عند الاستلام أو الاستلام المباشر من داخل المتجر.',
-    },
-    ckb: {
-      aboutTitle: 'دەربارەی سەنتەری دیما',
-      aboutDesc: 'سەنتەری دابینکردنی باشترین پارچەی کۆمپیوتەر و سیستەمی وزە.',
-      contactTitle: 'ناونیشان و پەیوەندی',
-      addressLine1: '📍 سلێمانی، شەقامی سالم - تەنیشت سیتی ستار و بینایی عەلی نەمەلی',
-      addressLine2: 'بەرامبەر هۆتێل رامادا',
-      phoneLabel: '📞 ژ.موبایل: 0770 141 4269',
-      policyTitle: 'یاسای کڕین',
-      policyDesc: 'پارەدان لە کاتی گەیاندن یان وەرگرتن راستەوخۆ لە ناو سەنتەر.',
-    },
-  }
 
   const activeLocale = (
     footerDictionary[currentLocale as 'en' | 'ar' | 'ckb'] ? currentLocale : 'en'
@@ -87,9 +44,17 @@ export default function Footer({ currentLocale }: FooterProps) {
           color: #0070f3;
           transform: translateY(-2px);
         }
+        .agency-link {
+          color: #0070f3;
+          text-decoration: none;
+        }
+        .agency-link:hover {
+          text-decoration: underline;
+        }
       `}</style>
 
       <footer
+        dir={isRtl ? 'rtl' : 'ltr'}
         style={{
           fontFamily: regularFont,
           background: '#f8f9fa',
@@ -116,13 +81,10 @@ export default function Footer({ currentLocale }: FooterProps) {
             </h4>
             <p style={{ lineHeight: '1.6', margin: '0 0 1.25rem 0' }}>{t.aboutDesc}</p>
 
-            {/* Directionally Aware Social Links Layout */}
             <div
               style={{
                 display: 'flex',
                 gap: '1.25rem',
-                flexDirection: isRtl ? 'row-reverse' : 'row',
-                justifyContent: 'flex-start',
                 alignItems: 'center',
               }}
             >
@@ -191,17 +153,20 @@ export default function Footer({ currentLocale }: FooterProps) {
             >
               {t.addressLine2}
             </p>
+
+            {/* Fixed Phone Display with Isolating Dir wrapper */}
             <p
               style={{
                 lineHeight: '1.6',
                 margin: 0,
                 fontWeight: '600',
                 color: '#0f172a',
-                direction: 'ltr',
-                textAlign: isRtl ? 'right' : 'left',
               }}
             >
-              {t.phoneLabel}
+              <span>{t.phonePrefix}</span>
+              <span dir="ltr" style={{ unicodeBidi: 'plaintext' }}>
+                {t.phoneValue}
+              </span>
             </p>
           </div>
 
@@ -233,18 +198,18 @@ export default function Footer({ currentLocale }: FooterProps) {
             color: '#94a3b8',
           }}
         >
-          © {new Date().getFullYear()} Dima Center. All rights reserved.
-        </div>
-        <div>
-          Powered By{' '}
-          <a
-            href="https://ishtarstudio.netlify.app/"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="agency-link"
-          >
-            Ishtar Studio
-          </a>
+          <div>© {new Date().getFullYear()} Dima Center. All rights reserved.</div>
+          <div style={{ marginTop: '0.25rem' }}>
+            Powered By{' '}
+            <a
+              href="https://ishtarstudio.netlify.app/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="agency-link"
+            >
+              Ishtar Studio
+            </a>
+          </div>
         </div>
       </footer>
     </>

@@ -1,14 +1,11 @@
-/* Container Layout without Sliders */
+/* Container Layout */
 .nav-wrapper {
   position: relative;
   z-index: 999;
   font-family: 'Rudaw', sans-serif;
-
-  /* Fits orange background perfectly to content and centers it horizontally */
   width: max-content;
   max-width: calc(100% - 2.2rem);
   margin: 0 auto;
-
   background-color: #ffb83c;
   border-radius: 0.4rem;
   padding: 0.4rem 1rem;
@@ -18,11 +15,12 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  gap: 1rem;
 }
 
-/* Hamburger button - STRICKLY hidden on desktop */
+/* Hamburger button - Visible on desktop next to menu items */
 .ham-menu-btn {
-  display: none !important;
+  display: inline-flex !important;
   background: transparent;
   color: #000000;
   border: none;
@@ -33,27 +31,26 @@
   justify-content: center;
 }
 
-/* Flex desktop wrapper containing navigation items */
+/* Flex desktop wrapper */
 .desktop-nav-items {
   display: flex;
-  flex-direction: row; /* Forces horizontal alignment strictly */
+  flex-direction: row;
   align-items: center;
   justify-content: center;
   gap: 1.5rem;
   flex-grow: 0;
 }
 
-/* Individual list-item container context */
 .nav-item-wrapper {
-  position: relative; /* CRITICAL: Must be relative so dropdowns position relative to this link! */
+  position: relative;
 }
 
-/* ---------- Unified Direct Links & Dropdown Buttons ---------- */
+/* Direct Links & Dropdown Buttons */
 .direct-link-btn,
 .dropdown-trigger-btn {
   font-family: 'Rudaw', sans-serif;
   background: transparent;
-  color: #000000 !important; /* Force black text */
+  color: #000000 !important;
   border: none;
   font-size: 14px;
   font-weight: 600;
@@ -61,34 +58,29 @@
   padding: 6px 12px;
   border-radius: 6px;
   text-decoration: none;
-
-  /* Unified layout alignment */
   display: inline-flex;
   align-items: center;
   justify-content: center;
   box-sizing: border-box;
   white-space: nowrap;
-
   transition:
     background-color 0.2s ease,
     color 0.2s ease;
 }
 
-/* Standardized Hover and Active States */
 .direct-link-btn:hover,
 .dropdown-trigger-btn:hover,
 .active-trigger {
   background-color: rgba(0, 0, 0, 0.08);
 }
 
-/* Issue 2 Fix: Add wider gap specifically for buttons containing chevrons */
 .dropdown-trigger-btn {
-  gap: 10px; /* Increased gap to push arrow away from text */
+  gap: 10px;
   color: #000;
 }
 
 .dropdown-caret {
-  font-size: 10px; /* Balanced caret size */
+  font-size: 10px;
   opacity: 0.8;
   display: inline-block;
   transition: transform 0.2s ease;
@@ -98,12 +90,12 @@
   transform: rotate(180deg);
 }
 
-/* ---------- Subcategory Dropdown Panel (Desktop) ---------- */
+/* Subcategory Dropdown Panel (Desktop) */
 .dropdown-menu {
   position: absolute;
-  top: 100%; /* Sits cleanly below the parent link */
+  top: 100%;
   left: 0;
-  background-color: #ffffff !important; /* Force white background window */
+  background-color: #ffffff !important;
   border: 1px solid #e2e8f0;
   border-radius: 8px;
   box-shadow:
@@ -113,25 +105,23 @@
   padding: 6px 0;
   z-index: 1000;
   display: flex !important;
-  flex-direction: column !important; /* Force items to stack vertically */
+  flex-direction: column !important;
 }
 
-/* RTL Direction compatibility */
 [style*='direction: rtl'] .dropdown-menu {
   left: auto;
   right: 0;
 }
 
-/* Issue 3 Fix: Explicitly styling the dropdown links so text isn't white */
 .dropdown-item-link {
   font-family: 'Rudaw', sans-serif;
   padding: 10px 16px;
-  color: #1e293b !important; /* Force highly-visible dark text */
+  color: #1e293b !important;
   text-decoration: none;
   font-size: 13px;
   font-weight: 500;
   text-align: start;
-  display: block; /* Force item to be a block occupying its own line */
+  display: block;
   transition:
     background-color 0.15s ease,
     color 0.15s ease;
@@ -142,19 +132,22 @@
   color: var(--brand-primary, #0070f3) !important;
 }
 
-/* ---------- Mobile Dropdown Drawer/Panel ---------- */
+/* Floating Scrollable Panel (Fixes Issue 2) */
 .mobile-dropdown-panel {
-  display: none;
+  display: flex;
   flex-direction: column;
   background-color: #ffffff;
   border: 1px solid #e2e8f0;
-  border-radius: 8px;
-  padding: 8px 0;
+  border-radius: 12px;
+  padding: 12px 0;
   position: absolute;
-  top: 100%;
-  left: 1rem;
-  right: 1rem;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  top: calc(100% + 8px);
+  left: 0;
+  right: 0;
+  max-height: 75vh; /* Restricts height */
+  overflow-y: auto; /* Makes inner content touch-scrollable */
+  -webkit-overflow-scrolling: touch;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
   z-index: 1001;
 }
 
@@ -167,7 +160,6 @@
   display: block;
 }
 
-/* ADD THESE — currently missing, so these elements inherit an unwanted color */
 .mobile-group-title {
   padding: 10px 16px 4px;
   color: #000000;
@@ -177,44 +169,36 @@
 
 .mobile-sub-link {
   padding: 8px 16px 8px 28px;
-  color: #000000;
+  color: #334155;
   text-decoration: none;
   font-weight: 500;
   font-size: 13px;
   display: block;
 }
 
-.mobile-sub-link:hover {
+.mobile-sub-link:hover,
+.mobile-item-link:hover {
   background-color: #f1f5f9;
 }
 
 /* Responsive Rules */
 @media (max-width: 900px) {
-  /* Shrink-wrap container does not apply on mobile screens */
   .nav-wrapper {
     width: auto;
     margin: 0 1.1rem;
   }
 
-  /* Hide standard desktop category listings */
+  .nav-container {
+    justify-content: flex-start;
+  }
+
+  /* Hide row links on mobile; only hamburger button remains visible */
   .desktop-nav-items {
     display: none !important;
   }
 
-  .nav-container {
-    min-height: 2rem;
-  }
-
-  /* Show mobile hamburger menu exclusively under 900px */
   .ham-menu-btn {
-    display: inline-flex !important;
-    position: absolute;
-    left: 1rem;
-    top: 50%;
-    transform: translateY(-50%);
-  }
-
-  .mobile-dropdown-panel {
-    display: flex;
+    position: static;
+    transform: none;
   }
 }
