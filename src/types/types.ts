@@ -78,3 +78,19 @@ export interface FooterTranslations {
   policyTitle: string
   policyDesc: string
 }
+
+interface ModalLabels {
+  modalSelectPrefix: string
+  noItems: string
+}
+
+export interface ProductPickerModalProps {
+  activeModalSlot: string
+  products: any[]
+  currentLocale: string
+  labels: ModalLabels
+  getLocalizedTitle: (product: any) => string
+  onSelect: (slotKey: string, product: any) => void
+  onAddToCart: (product: any) => void
+  onClose: () => void
+}

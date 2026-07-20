@@ -508,3 +508,24 @@
   min-width: 24px;
   text-align: center;
 }
+/* Incompatible Row Styling */
+.incompatible {
+  cursor: not-allowed !important;
+  opacity: 0.5;
+  filter: grayscale(40%);
+  background-color: transparent !important; /* Prevents active hover background */
+  pointer-events: auto; /* Keeps row interactive so 'not-allowed' cursor shows on hover */
+}
+
+/* Disable hover effects for incompatible rows */
+.incompatible:hover {
+  background-color: transparent !important;
+  border-color: inherit !important;
+  transform: none !important;
+  box-shadow: none !important;
+}
+
+/* Optional: Keep inner details dimmed */
+.incompatible .pc-builder-product-title {
+  color: #6b7280; /* Muted text */
+}

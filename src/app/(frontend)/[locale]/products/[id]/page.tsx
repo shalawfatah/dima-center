@@ -178,8 +178,6 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
     iqdPriceNum = usdPriceNum * exchangeRate
   }
 
-  console.log('Title Type:', typeof product.title, 'Value:', product.title)
-  console.log('pp ', product)
   return (
     <div
       style={{

@@ -541,6 +541,7 @@ export default function PcBuilderClient({
           products={products}
           currentLocale={currentLocale}
           labels={{ modalSelectPrefix: t.modalSelectPrefix, noItems: t.noItems }}
+          selections={selections}
           getLocalizedTitle={getLocalizedTitle}
           onSelect={selectComponent}
           onAddToCart={handleAddToCartDefault}

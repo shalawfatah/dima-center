@@ -1,24 +1,14 @@
 'use client'
 
 import Image from 'next/image'
-import Link from 'next/link'
 import { COMPONENT_SLOTS } from '@/utils/pc_build_items'
+import { checkCompatibilityByTitle } from '@/utils/pc_compatibility'
 import styles from '@/styles/pc_builder.module.css'
+import { ProductPickerModalProps } from '@/types/types'
+import OpenLinkBtn from './pc-builder/OpenLinkBtn'
 
-interface ModalLabels {
-  modalSelectPrefix: string
-  noItems: string
-}
-
-interface ProductPickerModalProps {
-  activeModalSlot: string
-  products: any[]
-  currentLocale: string
-  labels: ModalLabels
-  getLocalizedTitle: (product: any) => string
-  onSelect: (slotKey: string, product: any) => void
-  onAddToCart: (product: any) => void
-  onClose: () => void
+interface ExtendedProductPickerModalProps extends ProductPickerModalProps {
+  selections?: Record<string, any>
 }
 
 export default function ProductPickerModal({
@@ -29,7 +19,8 @@ export default function ProductPickerModal({
   getLocalizedTitle,
   onSelect,
   onClose,
-}: ProductPickerModalProps) {
+  selections = {},
+}: ExtendedProductPickerModalProps) {
   const currentSlotConfig = COMPONENT_SLOTS.find((s) => s.key === activeModalSlot)
   if (!currentSlotConfig) return null
 
@@ -56,6 +47,16 @@ export default function ProductPickerModal({
     return isSlugMatch(String(prodCategory), targetSlug)
   })
 
+  // Format selections so each selected slot passes a { title: string } object
+  const formattedSelections: Record<string, { title: string }> = {}
+  Object.entries(selections).forEach(([slotKey, item]) => {
+    if (item) {
+      formattedSelections[slotKey] = {
+        title: getLocalizedTitle(item) || item.title || '',
+      }
+    }
+  })
+
   return (
     <div className={styles['pc-builder-modal-overlay']} onClick={onClose}>
       <div className={styles['pc-builder-modal-window']} onClick={(e) => e.stopPropagation()}>
@@ -76,11 +77,26 @@ export default function ProductPickerModal({
           ) : (
             filteredProducts.map((prod) => {
               const modalProductImg = prod?.featuredImage?.url || prod?.meta?.image?.url
+              const displayTitle = getLocalizedTitle(prod) || prod?.title || ''
+
+              // Run title parsing compatibility check
+              const { isCompatible, reason } = checkCompatibilityByTitle(
+                { title: displayTitle },
+                activeModalSlot,
+                formattedSelections,
+              )
+
               return (
                 <div
                   key={prod.id}
-                  onClick={() => onSelect(activeModalSlot, prod)}
-                  className={styles['pc-builder-product-row']}
+                  onClick={() => {
+                    if (isCompatible) {
+                      onSelect(activeModalSlot, prod)
+                    }
+                  }}
+                  className={`${styles['pc-builder-product-row']} ${
+                    !isCompatible ? styles['incompatible'] || 'opacity-50 cursor-not-allowed' : ''
+                  }`}
                 >
                   <div className={styles['pc-builder-product-info']}>
                     <div className={styles['pc-builder-product-thumb']}>
@@ -90,7 +106,7 @@ export default function ProductPickerModal({
                           sizes="100px"
                           width="100"
                           height="100"
-                          alt={getLocalizedTitle(prod)}
+                          alt={displayTitle}
                           style={{ objectFit: 'contain' }}
                         />
                       ) : (
@@ -104,39 +120,19 @@ export default function ProductPickerModal({
                         />
                       )}
                     </div>
-                    <span className={styles['pc-builder-product-title']}>
-                      {getLocalizedTitle(prod)}
-                    </span>
+                    <div style={{ display: 'flex', flexDirection: 'column' }}>
+                      <span className={styles['pc-builder-product-title']}>{displayTitle}</span>
+                      {!isCompatible && (
+                        <span style={{ fontSize: '0.75rem', color: '#ef4444', marginTop: '2px' }}>
+                          ⚠️ {reason}
+                        </span>
+                      )}
+                    </div>
                   </div>
 
                   <div className={styles['pc-builder-actions-wrapper']}>
                     <span className={styles['pc-builder-product-price']}>${prod.price}</span>
-
-                    <div className={styles['pc-builder-inline-icons-group']}>
-                      <Link
-                        href={`/${currentLocale}/products/${prod.id}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        title="Open Page"
-                        onClick={(e) => e.stopPropagation()}
-                        className={styles['pc-builder-icon-btn']}
-                      >
-                        <svg
-                          width="16"
-                          height="16"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          stroke="#475569"
-                          strokeWidth="2.5"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        >
-                          <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
-                          <polyline points="15 3 21 3 21 9" />
-                          <line x1="10" y1="14" x2="21" y2="3" />
-                        </svg>
-                      </Link>
-                    </div>
+                    <OpenLinkBtn link={`/${currentLocale}/products/${prod.id}`} />
                   </div>
                 </div>
               )
