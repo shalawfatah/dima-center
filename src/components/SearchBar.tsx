@@ -2,7 +2,6 @@
 
 import { useRouter, useSearchParams, usePathname } from 'next/navigation'
 import { useState, useEffect, useRef } from 'react'
-import Image from 'next/image'
 import styles from '@/styles/search.module.css'
 
 const searchCache: Record<string, any[]> = {}
@@ -25,7 +24,7 @@ async function fetchSearchResults(query: string, locale: string) {
   }
 }
 
-function SearchIcon({ color = '#f3f3f3', size = 16 }: { color?: string; size?: number }) {
+function SearchIcon({ color = '#334155', size = 18 }: { color?: string; size?: number }) {
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"
@@ -56,13 +55,14 @@ export default function SearchBar({ locale: initialLocale }: { locale: string })
   const [isLoading, setIsLoading] = useState(false)
   const [showDropdown, setShowDropdown] = useState(false)
 
-  const inputRef = useRef<HTMLInputElement>(null)
+  const mobileInputRef = useRef<HTMLInputElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
 
   const segments = pathname.split('/')
   const locale = ['en', 'ar', 'ckb'].includes(segments[1]) ? segments[1] : initialLocale || 'en'
   const isRtl = locale === 'ar' || locale === 'ckb'
 
+  // Debounced search logic
   useEffect(() => {
     const trimmed = searchTerm.trim()
 
@@ -92,6 +92,7 @@ export default function SearchBar({ locale: initialLocale }: { locale: string })
     return () => clearTimeout(delayDebounceFn)
   }, [searchTerm, locale])
 
+  // Click outside to hide dropdown
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
@@ -102,23 +103,20 @@ export default function SearchBar({ locale: initialLocale }: { locale: string })
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [])
 
-  const handleSearchSubmit = (e: React.SubmitEvent) => {
+  // Focus mobile input on open
+  useEffect(() => {
+    if (isMobileOpen) {
+      setTimeout(() => mobileInputRef.current?.focus(), 50)
+    }
+  }, [isMobileOpen])
+
+  const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     if (!searchTerm.trim()) return
-    triggerSearchRedirect(searchTerm.trim())
-  }
-
-  const triggerSearchRedirect = (query: string) => {
-    router.push(`/${locale}/search?q=${encodeURIComponent(query)}`)
+    router.push(`/${locale}/search?q=${encodeURIComponent(searchTerm.trim())}`)
     setIsMobileOpen(false)
     setShowDropdown(false)
   }
-
-  useEffect(() => {
-    if (isMobileOpen && inputRef.current) {
-      inputRef.current.focus()
-    }
-  }, [isMobileOpen])
 
   const placeholders: Record<string, string> = {
     en: 'Search for CPUs, GPUs, laptops...',
@@ -129,67 +127,57 @@ export default function SearchBar({ locale: initialLocale }: { locale: string })
   const RenderSearchResults = () => {
     if (!showDropdown || searchTerm.trim().length < 1) return null
 
+    // Helper function to safely extract localized or string values
+    const getLocalizedText = (val: any) => {
+      if (!val) return ''
+      if (typeof val === 'string') return val
+      if (typeof val === 'object') {
+        return val[locale] || val.en || val.ckb || val.ar || Object.values(val)[0] || ''
+      }
+      return String(val)
+    }
+
+    // Helper function to resolve image URL from various API formats
+    const getImageUrl = (item: any): string | null => {
+      const img = item.image || item.thumbnail || item.media || item.featuredImage
+      if (!img) return null
+      if (typeof img === 'string') return img
+      if (typeof img === 'object') {
+        return img.url || img.sizes?.thumbnail?.url || img.sizes?.card?.url || null
+      }
+      return null
+    }
+
     return (
-      <div className={styles.searchResultsDropdown} style={{ direction: isRtl ? 'rtl' : 'ltr' }}>
+      <div className={styles.searchResultsDropdown}>
         {isLoading ? (
           <div className={styles.searchStatusItem}>Loading...</div>
         ) : results.length > 0 ? (
           <ul className={styles.resultsList}>
-            {results.map((item) => {
-              const rawTitle = item.title || item.name || ''
-
-              // Safe dynamic multi-language key fallback checking
-              const displayName =
-                typeof rawTitle === 'object' && rawTitle !== null
-                  ? rawTitle[locale] ||
-                    rawTitle['ckb'] ||
-                    rawTitle['en'] ||
-                    rawTitle['ar'] ||
-                    Object.values(rawTitle)[0] ||
-                    ''
-                  : rawTitle
-
-              const rawImage = item.featuredImage || item.featured_image
-              const imageUrl =
-                typeof rawImage === 'object' && rawImage !== null ? rawImage.url : null
-              const price = item.price
+            {results.map((item, idx) => {
+              const displayTitle = getLocalizedText(item.title || item.name)
+              const displayPrice =
+                typeof item.price === 'object' ? getLocalizedText(item.price) : item.price
+              const imageUrl = getImageUrl(item)
 
               return (
                 <li
-                  key={item.id}
-                  onClick={() => {
-                    // FIX: Direct item selection pushes explicitly to the product page instead of the search grid
-                    router.push(`/${locale}/products/${item.id}`)
-                    setIsMobileOpen(false)
-                    setShowDropdown(false)
-                  }}
+                  key={item.id || idx}
                   className={styles.resultsItem}
+                  onClick={() => {
+                    router.push(`/${locale}/product/${item.slug || item.id}`)
+                    setShowDropdown(false)
+                    setIsMobileOpen(false)
+                  }}
                 >
                   <div className={styles.resultsLeftCol}>
-                    <span className={styles.resultTitle}>{displayName}</span>
+                    <span className={styles.resultTitle}>{displayTitle}</span>
                   </div>
-
                   <div className={styles.resultsRightCol}>
-                    {price !== undefined && (
-                      <span className={styles.resultPrice}>
-                        {typeof price === 'number' ? `$${price.toLocaleString()}` : price}
-                      </span>
-                    )}
-
-                    {imageUrl ? (
+                    {displayPrice && <span className={styles.resultPrice}>{displayPrice}</span>}
+                    {imageUrl && (
                       <div className={styles.thumbWrapper}>
-                        <Image
-                          src={imageUrl}
-                          alt={displayName}
-                          width={36}
-                          height={36}
-                          className={styles.resultThumb}
-                          unoptimized
-                        />
-                      </div>
-                    ) : (
-                      <div className={styles.iconFallback}>
-                        <SearchIcon color="#94a3b8" size={14} />
+                        <img src={imageUrl} alt={displayTitle} className={styles.resultThumb} />
                       </div>
                     )}
                   </div>
@@ -206,104 +194,69 @@ export default function SearchBar({ locale: initialLocale }: { locale: string })
 
   return (
     <div className={styles.searchComponentRoot} ref={containerRef}>
+      {/* 📱 Mobile Toggle Icon Button with #ffcb6b Background */}
       <button
         type="button"
-        aria-label="Search"
+        aria-label="Toggle search"
         className={styles.searchMobileToggleBtn}
-        onClick={() => setIsMobileOpen(!isMobileOpen)}
+        onClick={() => setIsMobileOpen((prev) => !prev)}
       >
-        {isMobileOpen ? '✕' : <SearchIcon color="#f3f3f3" size={18} />}
+        <SearchIcon color="#1e293b" size={20} />
       </button>
 
-      <div className={`${styles.searchMobileOverlay} ${isMobileOpen ? styles.isActive : ''}`}>
-        <form
-          onSubmit={handleSearchSubmit}
-          style={{ display: 'flex', position: 'relative', width: '100%' }}
-        >
-          <input
-            ref={inputRef}
-            type="text"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder={placeholders[locale] || placeholders.en}
-            style={{
-              width: '100%',
-              padding: '0.75rem 2rem',
-              fontSize: '15px',
-              borderRadius: '8px',
-              border: '1px solid #3b82f6',
-              outline: 'none',
-              backgroundColor: '#ffffff',
-              color: '#0f172a',
-              paddingInlineEnd: '45px',
-              fontFamily: 'inherit',
-            }}
-          />
-          <button
-            type="submit"
-            style={{
-              position: 'absolute',
-              [isRtl ? 'left' : 'right']: '14px',
-              top: '50%',
-              transform: 'translateY(-50%)',
-              background: 'none',
-              border: 'none',
-              cursor: 'pointer',
-              fontSize: '18px',
-            }}
-          >
-            <SearchIcon color="#f3f3f3" size={18} />
-          </button>
-        </form>
-        <RenderSearchResults />
-      </div>
-
+      {/* 💻 Desktop Form */}
       <form onSubmit={handleSearchSubmit} className={styles.searchFormDesktop}>
         <input
           type="text"
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           placeholder={placeholders[locale] || placeholders.en}
-          style={{
-            width: '100%',
-            padding: '0.75rem 3rem',
-            fontSize: '14px',
-            borderRadius: '9999px',
-            border: '1px solid #cbd5e1',
-            outline: 'none',
-            backgroundColor: '#ffffff',
-            color: '#0f172a',
-            transition: 'all 0.15s ease',
-            paddingInlineEnd: '44px',
-            fontFamily: locale === 'en' ? 'inherit' : '"Rudaw", sans-serif',
-          }}
-          onFocus={(e) => {
-            e.currentTarget.style.borderColor = '#3b82f6'
-            e.currentTarget.style.boxShadow = '0 0 0 3px rgba(59, 130, 246, 0.15)'
-            setShowDropdown(searchTerm.trim().length >= 1)
-          }}
-          onBlur={(e) => {
-            e.currentTarget.style.borderColor = '#cbd5e1'
-            e.currentTarget.style.boxShadow = 'none'
-          }}
+          className={styles.desktopInput}
+          onFocus={() => setShowDropdown(searchTerm.trim().length >= 1)}
         />
         <button
           type="submit"
-          style={{
-            position: 'absolute',
-            [isRtl ? 'left' : 'right']: '16px',
-            top: '50%',
-            transform: 'translateY(-50%)',
-            background: 'none',
-            border: 'none',
-            cursor: 'pointer',
-            fontSize: '16px',
-          }}
+          className={styles.desktopSubmitBtn}
+          style={{ [isRtl ? 'left' : 'right']: '12px' }}
         >
           <SearchIcon color="#808080" size={16} />
         </button>
         <RenderSearchResults />
       </form>
+
+      {/* 📱 Mobile Overlay */}
+      <div
+        className={`${styles.searchMobileOverlay} ${isMobileOpen ? styles.isActive : ''}`}
+        style={{ direction: isRtl ? 'rtl' : 'ltr' }}
+      >
+        <div className={styles.mobileFormWrapper}>
+          <form onSubmit={handleSearchSubmit} style={{ flex: 1, position: 'relative' }}>
+            <input
+              ref={mobileInputRef}
+              type="text"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              placeholder={placeholders[locale] || placeholders.en}
+              className={styles.mobileInput}
+            />
+            <button
+              type="submit"
+              className={styles.desktopSubmitBtn}
+              style={{ [isRtl ? 'left' : 'right']: '10px' }}
+            >
+              <SearchIcon color="#475569" size={16} />
+            </button>
+          </form>
+          <button
+            type="button"
+            className={styles.mobileCloseBtn}
+            onClick={() => setIsMobileOpen(false)}
+          >
+            ✕
+          </button>
+        </div>
+        <RenderSearchResults />
+      </div>
     </div>
   )
 }

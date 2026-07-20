@@ -14,12 +14,26 @@ export const search_styles = () => `
     gap: 1.5rem;
     background: var(--brand-background);
     position: relative;
+    z-index: 1000;
+  }
+
+  .logo-link-container {
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+  }
+
+  .logo-link-container img {
+    height: auto;
+    max-width: 100%;
   }
   
   .actions-cluster { 
     display: flex; 
     align-items: center; 
     gap: .25rem; 
+    flex-shrink: 0;
   }
   
   .independent-nav-row { 
@@ -33,13 +47,12 @@ export const search_styles = () => `
       padding: 0.75rem 1rem;
       gap: 1rem;
     }
-    
-    .search-component-root {
-      margin-inline-start: auto;
-      display: flex;
-      align-items: center;
-    }
 
+    .logo-link-container {
+      width: 60px;
+      max-width: 60px;
+    }
+    
     .actions-cluster {
       margin-inline-start: 0;
       gap: 0.75rem;

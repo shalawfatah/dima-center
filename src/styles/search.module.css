@@ -2,6 +2,22 @@
   position: relative;
   flex: 1 1 auto;
   min-width: 0;
+  font-family: 'Rudaw', var(--font-rudaw, sans-serif);
+}
+
+/* Ensure inputs, buttons, and placeholders inherit the Rudaw font family */
+.desktopInput,
+.mobileInput,
+.desktopSubmitBtn,
+.mobileCloseBtn,
+.searchMobileToggleBtn {
+  font-family: 'Rudaw', var(--font-rudaw, inherit) !important;
+}
+
+.desktopInput::placeholder,
+.mobileInput::placeholder {
+  font-family: 'Rudaw', var(--font-rudaw, inherit) !important;
+  color: #94a3b8;
 }
 
 .searchFormDesktop {
@@ -12,28 +28,100 @@
   margin-left: auto;
 }
 
-.searchMobileToggleBtn {
-  display: none;
-  background: none;
-  border: none;
-  font-size: 22px;
-  cursor: pointer;
-  padding: 6px;
-  color: #475569;
+/* 🟢 Desktop Input: Clears search icon on both LTR and RTL */
+.desktopInput {
+  width: 100%;
+  font-size: 14px;
+  border-radius: 9999px;
+  border: 1px solid #cbd5e1;
+  outline: none;
+  background-color: #ffffff;
+  color: #0f172a;
+  padding-block: 0.6rem;
+  padding-left: 2rem;
+  padding-right: 2rem;
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
+  box-sizing: border-box;
 }
 
+.desktopInput:focus {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+}
+
+.desktopSubmitBtn {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+  z-index: 2;
+}
+
+/* 📱 Mobile Toggle Icon Button with #ffcb6b background & 8px radius */
+.searchMobileToggleBtn {
+  display: none;
+  background-color: #ffcb6b;
+  border: none;
+  border-radius: 8px;
+  width: 38px;
+  height: 38px;
+  cursor: pointer;
+  padding: 0;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ---------- Mobile Modal / Overlay ---------- */
 .searchMobileOverlay {
   display: none;
-  position: absolute;
-  top: 100%;
+  position: fixed;
+  top: 60px;
   left: 0;
   right: 0;
   background: #ffffff;
   padding: 0.75rem 1rem;
   box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-  z-index: 9999;
+  z-index: 99999;
   border-bottom: 1px solid #e2e8f0;
   box-sizing: border-box;
+}
+
+.mobileFormWrapper {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+}
+
+.mobileInput {
+  width: 100%;
+  font-size: 15px;
+  outline: none;
+  color: #0f172a;
+  background: #f8fafc;
+  border-radius: 8px;
+  border: 1px solid #3b82f6;
+  padding-block: 0.65rem;
+  padding-inline-start: 1rem;
+  padding-inline-end: 2.5rem;
+  box-sizing: border-box;
+}
+
+.mobileCloseBtn {
+  background: transparent;
+  border: none;
+  font-size: 1.25rem;
+  color: #64748b;
+  cursor: pointer;
+  padding: 4px 8px;
 }
 
 /* ---------- Dropdown Box ---------- */
@@ -58,7 +146,6 @@
   margin: 0;
 }
 
-/* 🟢 Force-aligning item row so content splits horizontally */
 .resultsItem {
   display: flex !important;
   flex-direction: row !important;
@@ -80,12 +167,11 @@
   background-color: #f1f5f9;
 }
 
-/* 🟢 Left Column (Title layout wrapper) */
 .resultsLeftCol {
   display: flex;
   align-items: center;
   min-width: 0;
-  flex: 1; /* Lets title expand dynamically */
+  flex: 1;
 }
 
 .resultTitle {
@@ -97,7 +183,6 @@
   text-overflow: ellipsis;
 }
 
-/* 🟢 Right Column (Container for side-by-side Price & Thumbnail) */
 .resultsRightCol {
   display: flex !important;
   flex-direction: row !important;
@@ -113,7 +198,6 @@
   white-space: nowrap;
 }
 
-/* 🟢 Image Thumbnail Sizing bounds */
 .thumbWrapper {
   position: relative;
   width: 36px;
@@ -131,17 +215,6 @@
   height: 100%;
 }
 
-.iconFallback {
-  width: 36px;
-  height: 36px;
-  border-radius: 6px;
-  background-color: #f1f5f9;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
-
 .searchStatusItem {
   padding: 1rem;
   color: #64748b;
@@ -154,7 +227,7 @@
     display: none !important;
   }
   .searchMobileToggleBtn {
-    display: block !important;
+    display: flex !important;
   }
   .searchMobileOverlay.isActive {
     display: block !important;

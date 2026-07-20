@@ -34,8 +34,26 @@ export default function ProductCarousel({
     direction: emblaDirection,
   })
 
+  // Navigation state for arrows
+  const [canScrollPrev, setCanScrollPrev] = useState(false)
+  const [canScrollNext, setCanScrollNext] = useState(false)
+
   const [quickViewProduct, setQuickViewProduct] = useState<ProductItem | null>(null)
   const [toastProduct, setToastProduct] = useState<ProductItem | null>(null)
+
+  // Track scroll possibilities
+  const onSelect = useCallback((api: any) => {
+    setCanScrollPrev(api.canScrollPrev())
+    setCanScrollNext(api.canScrollNext())
+  }, [])
+
+  const scrollPrev = useCallback(() => {
+    if (emblaApi) emblaApi.scrollPrev()
+  }, [emblaApi])
+
+  const scrollNext = useCallback(() => {
+    if (emblaApi) emblaApi.scrollNext()
+  }, [emblaApi])
 
   useEffect(() => {
     if (!toastProduct) return
@@ -125,10 +143,15 @@ export default function ProductCarousel({
 
   useEffect(() => {
     if (!emblaApi) return
-    emblaApi.on('scroll', onScroll)
-    emblaApi.on('reInit', onScroll)
+
+    onSelect(emblaApi)
     onScroll(emblaApi)
-  }, [emblaApi, onScroll])
+
+    emblaApi.on('select', onSelect)
+    emblaApi.on('scroll', onScroll)
+    emblaApi.on('reInit', onSelect)
+    emblaApi.on('reInit', onScroll)
+  }, [emblaApi, onSelect, onScroll])
 
   const getNumericalPrice = (price: number | string | null | undefined): number => {
     if (!price) return 0
@@ -155,7 +178,6 @@ export default function ProductCarousel({
     if (!product) return ''
     const rawFieldVal = product[fieldType] || ''
 
-    // Explicit localized template object configuration matching
     const langKey = currentLocale === 'ar' || currentLocale === 'ckb' ? currentLocale : 'en'
     if (product[`${fieldType}_${langKey}`]) {
       return product[`${fieldType}_${langKey}`]
@@ -212,12 +234,58 @@ export default function ProductCarousel({
         { '--pc-title-font': isRtl ? '"Rudaw", sans-serif' : 'inherit' } as React.CSSProperties
       }
     >
+      {/* Navigation Arrows */}
+      {canScrollPrev && (
+        <button
+          className={`${styles['pc-arrow']} ${styles['pc-arrow-prev']}`}
+          onClick={scrollPrev}
+          aria-label="Previous slides"
+        >
+          <svg
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2.5"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d={isRtl ? 'M9 5l7 7-7 7' : 'M15 19l-7-7 7-7'}
+            />
+          </svg>
+        </button>
+      )}
+
+      {canScrollNext && (
+        <button
+          className={`${styles['pc-arrow']} ${styles['pc-arrow-next']}`}
+          onClick={scrollNext}
+          aria-label="Next slides"
+        >
+          <svg
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2.5"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d={isRtl ? 'M15 19l-7-7 7-7' : 'M9 5l7 7-7 7'}
+            />
+          </svg>
+        </button>
+      )}
+
       <div ref={emblaRef} className={styles['pc-viewport']}>
         <div className={styles['product-carousel-track']}>
           {sortedProducts.map((product) => {
             const currentTitle = getLocalizedTitle(product)
 
-            // Fixed Fallback Check: Safely parsing nested payload data paths
             const imageUrl =
               product.featuredImage && typeof product.featuredImage === 'object'
                 ? product.featuredImage.url

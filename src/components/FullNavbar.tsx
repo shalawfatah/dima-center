@@ -12,8 +12,6 @@ interface FullNavbarProps {
 }
 
 export default async function FullNavbar({ currentLocale }: FullNavbarProps) {
-  const isRtl = currentLocale === 'ar' || currentLocale === 'ckb'
-
   const payload = await getPayload({ config })
 
   const categoriesData = await payload.find({
@@ -23,7 +21,7 @@ export default async function FullNavbar({ currentLocale }: FullNavbarProps) {
   })
 
   return (
-    <header style={{ width: '100%' }}>
+    <header style={{ width: '100%', position: 'relative', zIndex: 1000 }}>
       <style
         dangerouslySetInnerHTML={{
           __html: `
@@ -44,7 +42,7 @@ export default async function FullNavbar({ currentLocale }: FullNavbarProps) {
       />
 
       <div className="top-nav-bar">
-        {/* 🎯 Added class "logo-link-container" to target via mobile media query */}
+        {/* Logo Link Container */}
         <Link
           href={`/${currentLocale}`}
           className="logo-link-container"
@@ -59,8 +57,11 @@ export default async function FullNavbar({ currentLocale }: FullNavbarProps) {
             priority
           />
         </Link>
+
+        {/* Search Bar Component */}
         <SearchBar locale={currentLocale} />
 
+        {/* Right side Actions / Cart / Menu */}
         <div className="actions-cluster">
           <Navbar currentLocale={currentLocale} categories={categoriesData.docs as any} />
         </div>

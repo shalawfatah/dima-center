@@ -1,5 +1,12 @@
 /* ---------- track / slides ---------- */
-
+.pc-wrapper {
+  position: relative;
+  width: 100%;
+}
+.pc-viewport {
+  overflow: hidden;
+  width: 100%;
+}
 .product-carousel-track {
   display: flex;
   touch-action: pan-y;
@@ -472,4 +479,47 @@
     opacity: 1;
     transform: translateY(0) scale(1);
   }
+}
+
+.pc-arrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background-color: rgba(255, 255, 255, 0.9);
+  border: 1px solid #e5e7eb;
+  color: #1f2937;
+  cursor: pointer;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  transition: all 0.2s ease;
+}
+
+.pc-arrow:hover {
+  background-color: #ffffff;
+  transform: translateY(-50%) scale(1.08);
+}
+
+.pc-arrow-prev {
+  left: -20px;
+}
+
+.pc-arrow-next {
+  right: -20px;
+}
+
+/* Adjust button placement when in RTL mode if necessary */
+[data-dir='rtl'] .pc-arrow-prev {
+  left: auto;
+  right: -20px;
+}
+
+[data-dir='rtl'] .pc-arrow-next {
+  right: auto;
+  left: -20px;
 }
