@@ -1,3 +1,4 @@
+import { validateCrossCollectionSlug } from '@/utils/validate_cross_colletion_slug'
 import { CollectionConfig } from 'payload'
 
 export const Categories: CollectionConfig = {
@@ -11,12 +12,13 @@ export const Categories: CollectionConfig = {
       name: 'title',
       type: 'text',
       required: true,
-      localized: true, // If you want to translate "CPU" or "Computer Parts"
+      localized: true,
     },
     {
       name: 'slug',
       type: 'text',
       required: true,
+      validate: validateCrossCollectionSlug('ui-categories'),
       admin: {
         description: 'Used in the URL (e.g., cpu, computer-parts)',
       },
@@ -24,7 +26,7 @@ export const Categories: CollectionConfig = {
     {
       name: 'parent',
       type: 'relationship',
-      relationTo: 'categories', // 🔄 Self-referencing relationship
+      relationTo: 'categories',
       hasMany: false,
       admin: {
         position: 'sidebar',

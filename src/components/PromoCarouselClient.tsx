@@ -13,6 +13,13 @@ interface PromoCarouselClientProps {
   isRtl: boolean
 }
 
+// Helper to handle client-side localization fallbacks (Target -> EN -> Any available)
+function getLocalizedField(field: any, currentLocale: string): string {
+  if (!field) return ''
+  if (typeof field === 'string') return field
+  return field[currentLocale] || field.en || field.ar || field.ckb || ''
+}
+
 export default function PromoCarouselClient({
   promotions,
   currentLocale,
@@ -56,26 +63,32 @@ export default function PromoCarouselClient({
         <div className={styles.track} style={{ direction: isRtl ? 'rtl' : 'ltr' }}>
           {promotions.map((promo: any) => {
             const imageUrl = promo.image && typeof promo.image === 'object' ? promo.image.url : null
+            const title = getLocalizedField(promo.title, currentLocale)
+            const description = getLocalizedField(promo.description, currentLocale)
 
-            // Determine dynamic links based on promotion type
-            let targetUrl = promo.linkUrl || null
+            // Resolve dynamic links based on UIProducts schema (linkType: 'product' | 'static' | 'none')
+            let targetUrl: string | null = null
             let shouldLink = false
 
-            if (promo.type === 'product' && promo.relatedProduct) {
+            if (promo.linkType === 'product' && promo.linkedProduct) {
               const prodId =
-                typeof promo.relatedProduct === 'object'
-                  ? promo.relatedProduct.id
-                  : promo.relatedProduct
+                typeof promo.linkedProduct === 'object'
+                  ? promo.linkedProduct.id
+                  : promo.linkedProduct
               targetUrl = `/${currentLocale}/products/${prodId}`
               shouldLink = true
-            } else if (promo.type === 'offer' && promo.relatedOffer) {
-              const offerId =
-                typeof promo.relatedOffer === 'object' ? promo.relatedOffer.id : promo.relatedOffer
-              targetUrl = `/${currentLocale}/case-offers/${offerId}`
-              shouldLink = true
-            } else if (promo.linkUrl) {
+            } else if (promo.linkType === 'static' && promo.staticUrl) {
+              targetUrl = promo.staticUrl.startsWith('http')
+                ? promo.staticUrl
+                : `/${currentLocale}${promo.staticUrl.startsWith('/') ? '' : '/'}${promo.staticUrl}`
               shouldLink = true
             }
+
+            // Category badge label (localized)
+            const categoryTitle =
+              promo.uiCategory && typeof promo.uiCategory === 'object'
+                ? getLocalizedField(promo.uiCategory.title, currentLocale)
+                : null
 
             const slideContent = (
               <div className={styles.promoWrapper} style={{ textAlign: isRtl ? 'right' : 'left' }}>
@@ -84,7 +97,7 @@ export default function PromoCarouselClient({
                   <div className={styles.imageWrapper}>
                     <Image
                       src={imageUrl}
-                      alt={promo.title || 'Promotion'}
+                      alt={title || 'Promotion'}
                       width={1000}
                       height={400}
                       draggable={false}
@@ -97,22 +110,18 @@ export default function PromoCarouselClient({
 
                 {/* ✍️ TEXT CONTENT LAYER */}
                 <div className={styles.textContent}>
-                  {promo.type !== 'generic' && (
-                    <span
-                      className={`${styles.badge} ${
-                        promo.type === 'product' ? styles.badgeProduct : styles.badgeOffer
-                      }`}
-                    >
-                      {promo.type === 'offer' ? 'Offer' : promo.type}
+                  {categoryTitle && (
+                    <span className={`${styles.badge} ${styles.badgeProduct}`}>
+                      {categoryTitle}
                     </span>
                   )}
-                  <h2 className={styles.title}>{promo.title}</h2>
-                  {promo.description && <p className={styles.description}>{promo.description}</p>}
+                  {title && <h2 className={styles.title}>{title}</h2>}
+                  {description && <p className={styles.description}>{description}</p>}
                 </div>
               </div>
             )
 
-            // Render clickable Link ONLY for product / offer types or custom links
+            // Render clickable Link ONLY when linkType specifies a valid URL
             return shouldLink && targetUrl ? (
               <Link key={promo.id} href={targetUrl} className={styles.slide} draggable={false}>
                 {slideContent}

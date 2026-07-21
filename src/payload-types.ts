@@ -368,6 +368,14 @@ export interface UiCategory {
 export interface UiProduct {
   id: number;
   title: string;
+  /**
+   * Used for direct URLs (e.g., /laptops/custom-bundle). Checked against Products so it remains unique.
+   */
+  slug?: string | null;
+  /**
+   * Optional direct price for this UI banner/offer card.
+   */
+  price?: number | null;
   description?: string | null;
   image?: (number | null) | Media;
   /**
@@ -692,6 +700,8 @@ export interface UiCategoriesSelect<T extends boolean = true> {
  */
 export interface UiProductsSelect<T extends boolean = true> {
   title?: T;
+  slug?: T;
+  price?: T;
   description?: T;
   image?: T;
   uiCategory?: T;

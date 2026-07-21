@@ -2,7 +2,7 @@ import { getPayload } from 'payload'
 import config from '@/payload.config'
 import ProductCarousel from '@/components/ProductCarousel'
 import LocalizedHeading from '@/components/LocalizedHeading'
-import { formatCaseOfferForCarousel } from '@/utils/homepage-helpers'
+// import { formatCaseOfferForCarousel } from '@/utils/homepage-helpers'
 import styles from '@/styles/homepage.module.css' // adjust if your page.module.css lives elsewhere
 
 export default async function CaseOffersSection({
@@ -37,13 +37,6 @@ export default async function CaseOffersSection({
         ar="عروض الكيسات الكاملة"
         ckb="ئۆفەری کەیس"
         style={{ fontSize: '1.4rem', marginBottom: '0.5rem' }}
-      />
-      <ProductCarousel
-        isRtl={isRtl}
-        currentLocale={currentLocale}
-        products={caseOffers.map((o: any) => formatCaseOfferForCarousel(o, currentLocale))}
-        cardHeight={330}
-        cardWidth={230}
       />
     </section>
   )

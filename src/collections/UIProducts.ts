@@ -1,10 +1,11 @@
 import { CollectionConfig } from 'payload'
+import { validateCrossCollectionSlug } from '@/utils/validate_cross_slug'
 
 export const UIProducts: CollectionConfig = {
   slug: 'ui-products',
   admin: {
     useAsTitle: 'title',
-    defaultColumns: ['title', 'uiCategory', 'category', 'linkType', 'updatedAt'],
+    defaultColumns: ['title', 'slug', 'price', 'uiCategory', 'category', 'linkType', 'updatedAt'],
   },
   fields: [
     {
@@ -12,6 +13,26 @@ export const UIProducts: CollectionConfig = {
       type: 'text',
       required: true,
       localized: true, // Supports EN, AR, CKB
+    },
+    // --- ADDED: Cross-Collection Unique Slug ---
+    {
+      name: 'slug',
+      type: 'text',
+      required: false, // Optional if it links externally or acts as a banner
+      unique: true,
+      validate: validateCrossCollectionSlug('products'),
+      admin: {
+        description:
+          'Used for direct URLs (e.g., /laptops/custom-bundle). Checked against Products so it remains unique.',
+      },
+    },
+    {
+      name: 'price',
+      type: 'number',
+      required: false,
+      admin: {
+        description: 'Optional direct price for this UI banner/offer card.',
+      },
     },
     {
       name: 'description',
@@ -21,7 +42,7 @@ export const UIProducts: CollectionConfig = {
     {
       name: 'image',
       type: 'upload',
-      relationTo: 'media', // Adjust to match your media collection slug
+      relationTo: 'media',
       required: false,
     },
     // --- Categorization ---
@@ -38,7 +59,7 @@ export const UIProducts: CollectionConfig = {
     {
       name: 'category',
       type: 'relationship',
-      relationTo: 'categories', // Optional: link to standard product categories if applicable
+      relationTo: 'categories',
       required: false,
       admin: {
         description:
@@ -62,7 +83,7 @@ export const UIProducts: CollectionConfig = {
     {
       name: 'linkedProduct',
       type: 'relationship',
-      relationTo: 'products', // Adjust to your standard CRM products collection slug
+      relationTo: 'products',
       required: true,
       admin: {
         condition: (data) => data?.linkType === 'product',

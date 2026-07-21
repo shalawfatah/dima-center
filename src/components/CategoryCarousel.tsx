@@ -1,37 +1,37 @@
 'use client'
 
-import { useMemo, useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { MAIN_CATEGORY_GROUPS } from '@/utils/categories'
 import styles from '@/styles/category_carousel.module.css'
+
+export interface CategoryItem {
+  id?: string
+  title: string
+  slug?: string
+  isContainer?: boolean
+  subCategories?: Array<{
+    title: string
+    slug: string
+  }>
+}
 
 interface CategoryDropdownNavProps {
   currentLocale: string
+  categories: CategoryItem[]
 }
 
-export default function CategoryDropdownNav({ currentLocale }: CategoryDropdownNavProps) {
+export default function CategoryDropdownNav({
+  currentLocale,
+  categories = [],
+}: CategoryDropdownNavProps) {
   const router = useRouter()
   const [activeDropdown, setActiveDropdown] = useState<number | null>(null)
   const [isHamOpen, setIsHamOpen] = useState<boolean>(false)
   const navRef = useRef<HTMLDivElement>(null)
 
   const isRtl = currentLocale === 'ar' || currentLocale === 'ckb'
-  const activeLocale = (
-    MAIN_CATEGORY_GROUPS[currentLocale as 'en' | 'ar' | 'ckb'] ? currentLocale : 'en'
-  ) as 'en' | 'ar' | 'ckb'
-
-  const categories = useMemo(() => {
-    return MAIN_CATEGORY_GROUPS[activeLocale] || []
-  }, [activeLocale])
-
   const titleFont = isRtl ? '"Rudaw", sans-serif' : 'system-ui, sans-serif'
-
-  const caseOffersTitle = useMemo(() => {
-    if (activeLocale === 'ckb') return 'ئۆفەری کەیس'
-    if (activeLocale === 'ar') return 'عروض الكيسات الكاملة'
-    return 'Full Build Offers'
-  }, [activeLocale])
 
   // Lock body scroll on mobile when hamburger drawer is open
   useEffect(() => {
@@ -68,7 +68,7 @@ export default function CategoryDropdownNav({ currentLocale }: CategoryDropdownN
       ref={navRef}
     >
       <div className={styles['nav-container']}>
-        {/* Hamburger Menu Button (Visible on Desktop alongside items, and alone on mobile) */}
+        {/* Hamburger Menu Button */}
         <button
           type="button"
           className={styles['ham-menu-btn']}
@@ -80,25 +80,15 @@ export default function CategoryDropdownNav({ currentLocale }: CategoryDropdownN
 
         {/* Desktop Navigation Items Wrapper */}
         <div className={styles['desktop-nav-items']}>
-          <div className={styles['nav-item-wrapper']}>
-            <button
-              type="button"
-              onClick={() => router.push(`/${activeLocale}/case-offers`)}
-              className={styles['direct-link-btn']}
-            >
-              {caseOffersTitle}
-            </button>
-          </div>
-
           {categories.map((category, index) => {
-            const isIndependent = !!category.slug
+            const isIndependent = !category.isContainer && !!category.slug
 
             if (isIndependent) {
               return (
-                <div key={index} className={styles['nav-item-wrapper']}>
+                <div key={category.id || index} className={styles['nav-item-wrapper']}>
                   <button
                     type="button"
-                    onClick={() => router.push(`/${activeLocale}?category=${category.slug}`)}
+                    onClick={() => router.push(`/${currentLocale}?category=${category.slug}`)}
                     className={styles['direct-link-btn']}
                   >
                     {category.title}
@@ -110,11 +100,13 @@ export default function CategoryDropdownNav({ currentLocale }: CategoryDropdownN
             const isOpen = activeDropdown === index
 
             return (
-              <div key={index} className={styles['nav-item-wrapper']}>
+              <div key={category.id || index} className={styles['nav-item-wrapper']}>
                 <button
                   type="button"
                   onClick={() => handleToggleDropdown(index)}
-                  className={`${styles['dropdown-trigger-btn']} ${isOpen ? styles['active-trigger'] : ''}`}
+                  className={`${styles['dropdown-trigger-btn']} ${
+                    isOpen ? styles['active-trigger'] : ''
+                  }`}
                 >
                   {category.title}
                   <span className={styles['dropdown-caret']}>▼</span>
@@ -125,7 +117,7 @@ export default function CategoryDropdownNav({ currentLocale }: CategoryDropdownN
                     {category.subCategories.map((sub, subIdx) => (
                       <Link
                         key={subIdx}
-                        href={`/${activeLocale}?category=${sub.slug}`}
+                        href={`/${currentLocale}?category=${sub.slug}`}
                         className={styles['dropdown-item-link']}
                         onClick={() => setActiveDropdown(null)}
                       >
@@ -140,23 +132,15 @@ export default function CategoryDropdownNav({ currentLocale }: CategoryDropdownN
         </div>
       </div>
 
-      {/* Mobile / Full Dropdown Drawer */}
+      {/* Mobile Drawer */}
       {isHamOpen && (
         <div className={styles['mobile-dropdown-panel']}>
-          <Link
-            href={`/${activeLocale}/case-offers`}
-            className={styles['mobile-item-link']}
-            onClick={() => setIsHamOpen(false)}
-          >
-            {caseOffersTitle}
-          </Link>
-
           {categories.map((category, index) => {
-            if (category.slug) {
+            if (!category.isContainer && category.slug) {
               return (
                 <Link
-                  key={index}
-                  href={`/${activeLocale}?category=${category.slug}`}
+                  key={category.id || index}
+                  href={`/${currentLocale}?category=${category.slug}`}
                   className={styles['mobile-item-link']}
                   onClick={() => setIsHamOpen(false)}
                 >
@@ -166,12 +150,12 @@ export default function CategoryDropdownNav({ currentLocale }: CategoryDropdownN
             }
 
             return (
-              <div key={index} className={styles['mobile-group-section']}>
+              <div key={category.id || index} className={styles['mobile-group-section']}>
                 <div className={styles['mobile-group-title']}>{category.title}</div>
                 {category.subCategories?.map((sub, subIdx) => (
                   <Link
                     key={subIdx}
-                    href={`/${activeLocale}?category=${sub.slug}`}
+                    href={`/${currentLocale}?category=${sub.slug}`}
                     className={styles['mobile-sub-link']}
                     onClick={() => setIsHamOpen(false)}
                   >

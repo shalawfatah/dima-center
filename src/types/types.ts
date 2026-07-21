@@ -94,3 +94,8 @@ export interface ProductPickerModalProps {
   onAddToCart: (product: any) => void
   onClose: () => void
 }
+
+export interface ExtendedProductCarouselProps extends ProductCarouselProps {
+  cardWidth?: number
+  cardHeight?: number
+}

@@ -9,19 +9,71 @@ interface PromoCarouselProps {
 export default async function PromoCarousel({ currentLocale }: PromoCarouselProps) {
   const payload = await getPayload({ config })
 
-  // Fetch active promotions sorted by newest first (-createdAt)
-  const promoData = await payload.find({
-    collection: 'promotions',
-    locale: currentLocale as 'en' | 'ar' | 'ckb',
+  // 1. Fetch the 'promotions' UI Category
+  const categoryResult = await payload.find({
+    collection: 'ui-categories',
     where: {
-      isActive: {
-        equals: true,
+      slug: {
+        equals: 'promotions',
       },
     },
-    sort: '-createdAt',
+    limit: 1,
   })
 
-  const promotions = promoData.docs
+  const promoCategory = categoryResult.docs[0]
+
+  // DEBUG 1: Did we find the category?
+  if (!promoCategory) {
+    console.log(
+      '❌ [PromoCarousel] Category with slug "promotions" was NOT found in ui-categories.',
+    )
+    return null
+  }
+
+  // 2. Fetch UI Products linked to this category ID or slug
+  const promoData = await payload.find({
+    collection: 'ui-products',
+    locale: currentLocale as 'en' | 'ar' | 'ckb',
+    fallbackLocale: 'en', // Automatically fallback to English if string is missing
+    draft: true, // 👈 CRITICAL: Fetch drafts too in case items aren't published
+    overrideAccess: true, // 👈 Bypasses access control restriction checks on local API
+    where: {
+      uiCategory: {
+        equals: promoCategory.id,
+      },
+    },
+    sort: 'order',
+    depth: 2,
+  })
+
+  // DEBUG 2: Fallback query if category ID match returns 0 (handling relation type differences)
+  let promotions = promoData.docs
+
+  if (promotions.length === 0) {
+    console.log(
+      '⚠️ [PromoCarousel] 0 items found using category ID. Attempting fallback query with category slug...',
+    )
+
+    const fallbackData = await payload.find({
+      collection: 'ui-products',
+      locale: currentLocale as 'en' | 'ar' | 'ckb',
+      fallbackLocale: 'en',
+      draft: true,
+      overrideAccess: true,
+      where: {
+        'uiCategory.slug': {
+          equals: 'promotions',
+        },
+      },
+      sort: 'order',
+      depth: 2,
+    })
+
+    promotions = fallbackData.docs
+  }
+
+  console.log(`✅ [PromoCarousel] Found ${promotions.length} promotions.`)
+
   const isRtl = currentLocale === 'ar' || currentLocale === 'ckb'
 
   if (!promotions || promotions.length === 0) return null

@@ -1,18 +1,20 @@
 'use client'
 
-import React, { useCallback, useEffect, useState, useMemo } from 'react'
-import Link from 'next/link'
-import useEmblaCarousel from 'embla-carousel-react'
-import { EngineType } from 'embla-carousel'
-import Image from 'next/image'
-import { ProductCarouselProps, ProductItem } from '@/types/types'
+import React, { useCallback, useEffect, useMemo, useState } from 'react'
+import { ExtendedProductCarouselProps, ProductItem } from '@/types/types'
 import styles from '@/styles/product_carousel.module.css'
 import { carouselDictionary } from '@/utils/carousel_dictionary'
-
-interface ExtendedProductCarouselProps extends ProductCarouselProps {
-  cardWidth?: number
-  cardHeight?: number
-}
+import { resolveImageUrl } from '@/utils/resolve_image_url'
+import {
+  getDiscountedPrice,
+  getFallbackText,
+  sortProductsForDisplay,
+} from '@/utils/product_helpers'
+import NextBtn from './carousel/NextBtn'
+import PrevBtn from './carousel/PrevBtn'
+import ProductCard from './carousel/ProductCard'
+import QuickViewModal from './carousel/QuickViewModal'
+import { useCarouselController } from './carousel/useCarouselController'
 
 export default function ProductCarousel({
   products,
@@ -23,37 +25,11 @@ export default function ProductCarousel({
   cardWidth = 220,
   cardHeight = 300,
 }: ExtendedProductCarouselProps) {
-  // Fast directional flip string setup
-  const emblaDirection = isRtl ? 'rtl' : 'ltr'
-
-  const [emblaRef, emblaApi] = useEmblaCarousel({
-    loop: false,
-    duration: 20, // Slightly snappier transition duration
-    dragFree: true,
-    containScroll: 'trimSnaps',
-    direction: emblaDirection,
-  })
-
-  // Navigation state for arrows
-  const [canScrollPrev, setCanScrollPrev] = useState(false)
-  const [canScrollNext, setCanScrollNext] = useState(false)
+  const { emblaRef, emblaDirection, canScrollPrev, canScrollNext, scrollPrev, scrollNext } =
+    useCarouselController(isRtl)
 
   const [quickViewProduct, setQuickViewProduct] = useState<ProductItem | null>(null)
   const [toastProduct, setToastProduct] = useState<ProductItem | null>(null)
-
-  // Track scroll possibilities
-  const onSelect = useCallback((api: any) => {
-    setCanScrollPrev(api.canScrollPrev())
-    setCanScrollNext(api.canScrollNext())
-  }, [])
-
-  const scrollPrev = useCallback(() => {
-    if (emblaApi) emblaApi.scrollPrev()
-  }, [emblaApi])
-
-  const scrollNext = useCallback(() => {
-    if (emblaApi) emblaApi.scrollNext()
-  }, [emblaApi])
 
   useEffect(() => {
     if (!toastProduct) return
@@ -61,132 +37,50 @@ export default function ProductCarousel({
     return () => clearTimeout(timer)
   }, [toastProduct])
 
-  const isMonitorCategory = useCallback((product: ProductItem): boolean => {
-    if (!product.category) return false
-
-    if (typeof product.category === 'object') {
-      const cat = product.category as any
-      const slug = String(cat.slug || '').toLowerCase()
-      const titleEn = String(cat.title?.en || cat.title || '').toLowerCase()
-      const nameEn = String(cat.name?.en || cat.name || '').toLowerCase()
-
-      return (
-        slug === 'monitor' || slug === 'monitors' || titleEn === 'monitor' || nameEn === 'monitor'
-      )
-    }
-    return String(product.category).toLowerCase() === 'monitor'
-  }, [])
-
-  // Optimized sorting pass running smoothly on props transitions
-  const sortedProducts = useMemo(() => {
-    if (!products || !Array.isArray(products)) return []
-
-    const manualOffers: ProductItem[] = []
-    const discountedProducts: ProductItem[] = []
-    const monitorProducts: ProductItem[] = []
-    const defaultProducts: ProductItem[] = []
-
-    for (let i = 0; i < products.length; i++) {
-      const product = products[i]
-      if (product.isCaseOffer) {
-        manualOffers.push(product)
-      } else if (product.hasDiscount) {
-        discountedProducts.push(product)
-      } else if (isMonitorCategory(product)) {
-        monitorProducts.push(product)
-      } else {
-        defaultProducts.push(product)
-      }
-    }
-
-    return [...manualOffers, ...discountedProducts, ...monitorProducts, ...defaultProducts]
-  }, [products, isMonitorCategory])
+  const sortedProducts = useMemo(() => sortProductsForDisplay(products), [products])
 
   const getProductPath = useCallback(
-    (product: ProductItem): string => {
+    (
+      product: ProductItem & { linkType?: string; staticUrl?: string; linkedProduct?: any },
+    ): string => {
+      // 1. Respect top-level custom linkResolver if provided
       if (linkResolver) return linkResolver(product)
-      const routeSegment = product.isCaseOffer ? 'case-offers' : 'products'
-      return `/${currentLocale}/${routeSegment}/${product.id}`
+
+      // 2. Handle UIProducts flexible link settings (Static / Direct CRM Product link)
+      if (product.linkType === 'static' && product.staticUrl) {
+        return product.staticUrl
+      }
+
+      if (product.linkType === 'product' && product.linkedProduct) {
+        const linked = typeof product.linkedProduct === 'object' ? product.linkedProduct : null
+        if (linked) {
+          const linkedCatSlug =
+            typeof linked.category === 'object' && linked.category?.slug
+              ? linked.category.slug
+              : 'products'
+          return `/${currentLocale}/${linkedCatSlug}/${linked.id}`
+        }
+      }
+
+      // 3. Special Case Offers routing using ID
+      if (product.isCaseOffer) {
+        return `/${currentLocale}/case-offers/${product.id}`
+      }
+
+      // 4. Resolve Category Slug (handles both category & uiCategory relationships)
+      let categorySlug = 'products'
+
+      if (typeof product.category === 'object' && product.category?.slug) {
+        categorySlug = product.category.slug
+      } else if (typeof product.uiCategory === 'object' && product.uiCategory?.slug) {
+        categorySlug = product.uiCategory.slug
+      }
+
+      // 5. Build dynamic /[locale]/[category_slug]/[id] route
+      return `/${currentLocale}/${categorySlug}/${product.id}`
     },
     [currentLocale, linkResolver],
   )
-
-  // Parallax translation scrolling logic
-  const onScroll = useCallback((api: any) => {
-    const engine = api.internalEngine() as EngineType
-    const scrollSnapList = api.scrollSnapList()
-    const target = api.scrollProgress()
-
-    api.slideNodes().forEach((slide: HTMLElement, index: number) => {
-      const snap = scrollSnapList[index]
-      let diffToTarget = snap - target
-
-      if (engine.options.loop) {
-        engine.slideLooper.loopPoints.forEach((loopPoint) => {
-          const targetSign = Math.sign(loopPoint.target())
-          if (index === loopPoint.index && targetSign !== Math.sign(diffToTarget)) {
-            diffToTarget += loopPoint.target() * targetSign
-          }
-        })
-      }
-
-      const parallaxFactor = 0.12
-      let xTranslation = diffToTarget * (-1 * parallaxFactor * 100)
-      xTranslation = Math.max(-10, Math.min(10, xTranslation))
-
-      const imgLayer = slide.querySelector(`.${styles['product-parallax-img']}`) as HTMLElement
-      if (imgLayer) {
-        imgLayer.style.transform = `translateX(${xTranslation}%)`
-      }
-    })
-  }, [])
-
-  useEffect(() => {
-    if (!emblaApi) return
-
-    onSelect(emblaApi)
-    onScroll(emblaApi)
-
-    emblaApi.on('select', onSelect)
-    emblaApi.on('scroll', onScroll)
-    emblaApi.on('reInit', onSelect)
-    emblaApi.on('reInit', onScroll)
-  }, [emblaApi, onSelect, onScroll])
-
-  const getNumericalPrice = (price: number | string | null | undefined): number => {
-    if (!price) return 0
-    if (typeof price === 'string') {
-      return parseFloat(price.replace(/,/g, '')) || 0
-    }
-    return price
-  }
-
-  const getDiscountedPrice = (product: ProductItem): number => {
-    const originalPrice = getNumericalPrice(product.price)
-    if (!product.hasDiscount || !product.discountValue) return originalPrice
-
-    if (product.discountType === 'percentage') {
-      return Math.max(0, originalPrice - (originalPrice * product.discountValue) / 100)
-    }
-    return Math.max(0, originalPrice - product.discountValue)
-  }
-
-  const getFallbackText = (
-    product: ProductItem | null,
-    fieldType: 'title' | 'description',
-  ): string => {
-    if (!product) return ''
-    const rawFieldVal = product[fieldType] || ''
-
-    const langKey = currentLocale === 'ar' || currentLocale === 'ckb' ? currentLocale : 'en'
-    if (product[`${fieldType}_${langKey}`]) {
-      return product[`${fieldType}_${langKey}`]
-    }
-    return rawFieldVal
-  }
-
-  const getLocalizedTitle = (product: ProductItem | null) => getFallbackText(product, 'title')
-  const getLocalizedDesc = (product: ProductItem | null) => getFallbackText(product, 'description')
 
   const handleAddToCart = (e: React.MouseEvent, product: ProductItem) => {
     e.preventDefault()
@@ -206,10 +100,10 @@ export default function ProductCarousel({
       } else {
         cart.push({
           id: product.id,
-          title: getLocalizedTitle(product),
+          title: getFallbackText(product, 'title', currentLocale),
           price: finalPrice,
           quantity: 1,
-          imageUrl: typeof product.featuredImage === 'object' ? product.featuredImage?.url : null,
+          imageUrl: resolveImageUrl(product),
         })
       }
 
@@ -234,239 +128,35 @@ export default function ProductCarousel({
         { '--pc-title-font': isRtl ? '"Rudaw", sans-serif' : 'inherit' } as React.CSSProperties
       }
     >
-      {/* Navigation Arrows */}
-      {canScrollPrev && (
-        <button
-          className={`${styles['pc-arrow']} ${styles['pc-arrow-prev']}`}
-          onClick={scrollPrev}
-          aria-label="Previous slides"
-        >
-          <svg
-            width="20"
-            height="20"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2.5"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d={isRtl ? 'M9 5l7 7-7 7' : 'M15 19l-7-7 7-7'}
-            />
-          </svg>
-        </button>
-      )}
-
-      {canScrollNext && (
-        <button
-          className={`${styles['pc-arrow']} ${styles['pc-arrow-next']}`}
-          onClick={scrollNext}
-          aria-label="Next slides"
-        >
-          <svg
-            width="20"
-            height="20"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2.5"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d={isRtl ? 'M15 19l-7-7 7-7' : 'M9 5l7 7-7 7'}
-            />
-          </svg>
-        </button>
-      )}
+      {canScrollPrev && <PrevBtn isRtl={isRtl} scrollPrev={scrollPrev} />}
+      {canScrollNext && <NextBtn isRtl={isRtl} scrollNext={scrollNext} />}
 
       <div ref={emblaRef} className={styles['pc-viewport']}>
         <div className={styles['product-carousel-track']}>
-          {sortedProducts.map((product) => {
-            const currentTitle = getLocalizedTitle(product)
-
-            const imageUrl =
-              product.featuredImage && typeof product.featuredImage === 'object'
-                ? product.featuredImage.url
-                : null
-
-            const imageAlt =
-              product.featuredImage && typeof product.featuredImage === 'object'
-                ? product.featuredImage.alt || currentTitle
-                : currentTitle
-
-            const hasDiscount = !!product.hasDiscount
-            const originalPrice = getNumericalPrice(product.price)
-            const finalPrice = getDiscountedPrice(product)
-            const priceIQDValue = product.priceIQD ? getNumericalPrice(product.priceIQD) : null
-
-            return (
-              <Link
-                key={product.id}
-                href={getProductPath(product)}
-                className={`${styles['product-carousel-slide']} ${styles['pc-slide-link']}`}
-                draggable={false}
-                style={
-                  {
-                    '--pc-card-width': `${cardWidth}px`,
-                    '--pc-card-height': `${cardHeight}px`,
-                  } as React.CSSProperties
-                }
-              >
-                <div className={styles['product-card-inner']}>
-                  {hasDiscount && (
-                    <div className={styles['pc-discount-badge']}>
-                      {product.discountType === 'percentage'
-                        ? `-${product.discountValue}% ${t.discountLabel}`
-                        : `-$${product.discountValue} ${t.discountLabel}`}
-                    </div>
-                  )}
-
-                  <div className={styles['pc-image-container']}>
-                    {imageUrl ? (
-                      <Image
-                        width={cardWidth}
-                        height={cardHeight}
-                        sizes="(max-width: 640px) 50vw, 220px"
-                        src={imageUrl}
-                        alt={imageAlt}
-                        className={styles['product-parallax-img']}
-                        priority={false}
-                      />
-                    ) : (
-                      <div className={styles['pc-image-placeholder']}>📦</div>
-                    )}
-                  </div>
-
-                  {/* Operational Action Layer */}
-                  <div className={styles['side-actions-wrapper']}>
-                    <button
-                      className={styles['side-action-btn']}
-                      onClick={(e) => {
-                        e.preventDefault()
-                        setQuickViewProduct(product)
-                      }}
-                      title={t.quickViewTitle}
-                    >
-                      <svg
-                        width="15"
-                        height="15"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2.5"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-                        />
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
-                        />
-                      </svg>
-                    </button>
-                    <button
-                      className={styles['side-action-btn']}
-                      onClick={(e) => {
-                        e.preventDefault()
-                        const targetUrl = `${window.location.origin}${getProductPath(product)}`
-                        navigator.clipboard.writeText(targetUrl)
-                        alert('Copied!')
-                      }}
-                      title={t.shareTitle}
-                    >
-                      <svg
-                        width="14"
-                        height="14"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2.5"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          d="M15 15l6-6m0 0l-6-6m6 6H9a6 6 0 00-6 6v3"
-                        />
-                      </svg>
-                    </button>
-                  </div>
-
-                  {/* Content Details Block */}
-                  <div className={styles['pc-info-panel']}>
-                    <h3 className={styles['pc-title']}>{currentTitle}</h3>
-                    <div className={styles['pc-price-container']}>
-                      <div className={styles['pc-price-row']}>
-                        {hasDiscount ? (
-                          <div className={styles['pc-price-group']}>
-                            <span className={styles['pc-price-final']}>
-                              {t.currency}
-                              {finalPrice.toLocaleString()}
-                            </span>
-                            <span className={styles['pc-price-original']}>
-                              {t.currency}
-                              {originalPrice.toLocaleString()}
-                            </span>
-                          </div>
-                        ) : (
-                          <span className={styles['pc-price-final']}>
-                            {t.currency}
-                            {originalPrice.toLocaleString()}
-                          </span>
-                        )}
-                      </div>
-                      {priceIQDValue !== null && priceIQDValue > 0 && (
-                        <span className={styles['pc-iqd-badge']}>
-                          {priceIQDValue.toLocaleString()} IQD د.ع
-                        </span>
-                      )}
-                    </div>
-                  </div>
-
-                  <div className={styles['hover-cart-overlay']}>
-                    <button
-                      className={styles['hover-cart-btn']}
-                      onClick={(e) => handleAddToCart(e, product)}
-                    >
-                      {t.addToCart}
-                    </button>
-                  </div>
-                </div>
-              </Link>
-            )
-          })}
+          {sortedProducts.map((product) => (
+            <ProductCard
+              key={product.id}
+              product={product}
+              currentLocale={currentLocale}
+              cardWidth={cardWidth}
+              cardHeight={cardHeight}
+              productPath={getProductPath(product)}
+              t={t}
+              onQuickView={setQuickViewProduct}
+              onAddToCart={handleAddToCart}
+            />
+          ))}
         </div>
       </div>
 
-      {/* MODAL & TOAST COMPONENT HOOKS */}
       {quickViewProduct && (
-        <div className={styles['pc-modal-backdrop']} onClick={() => setQuickViewProduct(null)}>
-          <div className={styles['pc-modal-content']} onClick={(e) => e.stopPropagation()}>
-            <button className={styles['pc-modal-close']} onClick={() => setQuickViewProduct(null)}>
-              ✕
-            </button>
-            <h2 className={styles['pc-modal-title']}>{getLocalizedTitle(quickViewProduct)}</h2>
-            <div className={styles['pc-modal-price']}>
-              {quickViewProduct.hasDiscount
-                ? `${t.currency}${getDiscountedPrice(quickViewProduct).toLocaleString()}`
-                : `${t.currency}${getNumericalPrice(quickViewProduct.price).toLocaleString()}`}
-            </div>
-            <div className={styles['pc-modal-desc']}>{getLocalizedDesc(quickViewProduct)}</div>
-            <button
-              className={styles['pc-modal-addcart']}
-              onClick={(e) => {
-                setQuickViewProduct(null)
-                handleAddToCart(e, quickViewProduct)
-              }}
-            >
-              {t.addToCart}
-            </button>
-          </div>
-        </div>
+        <QuickViewModal
+          product={quickViewProduct}
+          currentLocale={currentLocale}
+          t={t}
+          onClose={() => setQuickViewProduct(null)}
+          onAddToCart={handleAddToCart}
+        />
       )}
     </div>
   )

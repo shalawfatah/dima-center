@@ -13,24 +13,14 @@ interface PageProps {
 }
 
 import type { Metadata } from 'next'
-import { MAIN_CATEGORY_GROUPS } from '@/utils/categories'
 import { getStorefrontMetadata } from '@/utils/seo'
 import Image from 'next/image'
 import CategoryCarousel from '@/components/CategoryCarousel'
 import SectionSkeleton from '@/components/SectionSkeleton'
-import { MINIMAL_PRODUCT_FIELDS, getFlatCategories } from '@/utils/homepage-helpers'
+import { MINIMAL_PRODUCT_FIELDS } from '@/utils/homepage-helpers'
 
-// ⚡ Dynamic components split the initial JS bundle down to fix the 4.3s execution blocks
 const PCBuilderSection = dynamic(() => import('@/components/PCBuilderSection'), {
   loading: () => <div className={styles.pcBuilderSkeleton} />,
-})
-
-const CaseOffersSection = dynamic(() => import('@/components/CaseOffersSection'), {
-  loading: () => <SectionSkeleton />,
-})
-
-const DiscountsSection = dynamic(() => import('@/components/DiscountsSection'), {
-  loading: () => <SectionSkeleton />,
 })
 
 const CategorySections = dynamic(() => import('@/components/CategorySections'), {
@@ -42,6 +32,38 @@ export const revalidate = 3600
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const resolvedParams = await params
   return getStorefrontMetadata({ locale: resolvedParams.locale })
+}
+
+/**
+ * Safely resolves localized fields with strict fallback hierarchy:
+ * Preferred Locale -> EN -> AR -> Any available string
+ */
+function resolveLocalizedText(val: any, preferredLocale: string): string {
+  if (!val) return ''
+  if (typeof val === 'string') return val.trim()
+
+  if (typeof val === 'object') {
+    if (
+      val[preferredLocale] &&
+      typeof val[preferredLocale] === 'string' &&
+      val[preferredLocale].trim()
+    ) {
+      return val[preferredLocale].trim()
+    }
+    if (val.en && typeof val.en === 'string' && val.en.trim()) {
+      return val.en.trim()
+    }
+    if (val.ar && typeof val.ar === 'string' && val.ar.trim()) {
+      return val.ar.trim()
+    }
+    // Fallback to the first non-empty string entry in the object
+    const firstAvailable = Object.values(val).find(
+      (v) => typeof v === 'string' && v.trim().length > 0,
+    ) as string | undefined
+    if (firstAvailable) return firstAvailable.trim()
+  }
+
+  return ''
 }
 
 export default async function StorefrontHome({ params, searchParams }: PageProps) {
@@ -65,23 +87,146 @@ export default async function StorefrontHome({ params, searchParams }: PageProps
   if (activeCategory) {
     const payload = await getPayload({ config })
 
-    const flatEn = getFlatCategories(MAIN_CATEGORY_GROUPS['en'] || [])
-    const flatAr = getFlatCategories(MAIN_CATEGORY_GROUPS['ar'] || [])
-    const flatCkb = getFlatCategories(MAIN_CATEGORY_GROUPS['ckb'] || [])
-
-    const matchedCatEn = flatEn.find((c) => c.slug === activeCategory)
-    const matchedCatAr = flatAr.find((c) => c.slug === activeCategory)
-    const matchedCatCkb = flatCkb.find((c) => c.slug === activeCategory)
-
-    const res = await payload.find({
-      collection: 'products',
-      depth: 1,
-      select: MINIMAL_PRODUCT_FIELDS,
+    // 1. Resolve matching UI Category document and its ID
+    const categoryDocRes = await payload.find({
+      collection: 'ui-categories',
       where: {
-        and: [{ 'category.slug': { equals: activeCategory } }, { stock: { greater_than: 0 } }],
+        or: [
+          { slug: { equals: activeCategory } },
+          { 'subCategories.slug': { equals: activeCategory } },
+        ],
       },
-      limit: 100,
+      limit: 1,
     })
+
+    const uiCategoryDoc = categoryDocRes.docs[0]
+    const rawUiCategoryId = uiCategoryDoc?.id
+    const validUiCategoryId =
+      rawUiCategoryId !== undefined &&
+      rawUiCategoryId !== null &&
+      !Number.isNaN(Number(rawUiCategoryId))
+        ? rawUiCategoryId
+        : null
+
+    // 2. Fetch localized heading text
+    const fetchLocalizedCategoryTitle = async (locale: 'en' | 'ar' | 'ckb') => {
+      const categoriesRes = await payload.find({
+        collection: 'ui-categories',
+        locale,
+        limit: 200,
+      })
+
+      for (const cat of categoriesRes.docs) {
+        if (cat.slug === activeCategory) return cat.title
+        if (cat.isContainer && Array.isArray(cat.subCategories)) {
+          const matchedSub = cat.subCategories.find((sub: any) => sub.slug === activeCategory)
+          if (matchedSub?.title) return matchedSub.title
+        }
+      }
+      return null
+    }
+
+    // 3. Construct specific field conditions per schema
+    const productWhere: any[] = [{ 'category.slug': { equals: activeCategory } }]
+    if (validUiCategoryId !== null) {
+      productWhere.push({ category: { equals: validUiCategoryId } })
+    }
+
+    const uiProductWhere: any[] = [{ 'uiCategory.slug': { equals: activeCategory } }]
+    if (validUiCategoryId !== null) {
+      uiProductWhere.push({ uiCategory: { equals: validUiCategoryId } })
+    }
+
+    // 4. Fetch all locale fallbacks by querying with fallback enabled or raw object parsing
+    const [matchedTitleEn, matchedTitleAr, matchedTitleCkb, productsRes, uiProductsRes] =
+      await Promise.all([
+        fetchLocalizedCategoryTitle('en'),
+        fetchLocalizedCategoryTitle('ar'),
+        fetchLocalizedCategoryTitle('ckb'),
+
+        // Standard products
+        payload
+          .find({
+            collection: 'products',
+            locale: currentLocale as 'en' | 'ar' | 'ckb',
+            fallbackLocale: 'en', // Payload native fallback to EN if CKB missing
+            depth: 1,
+            select: MINIMAL_PRODUCT_FIELDS,
+            where: {
+              and: [{ or: productWhere }, { stock: { greater_than: 0 } }],
+            },
+            limit: 100,
+          })
+          .catch((err) => {
+            console.error('Error querying products:', err)
+            return { docs: [] }
+          }),
+
+        // UI products
+        payload
+          .find({
+            collection: 'ui-products',
+            locale: currentLocale as 'en' | 'ar' | 'ckb',
+            fallbackLocale: 'en', // Payload native fallback to EN if CKB missing
+            depth: 1,
+            where: {
+              or: uiProductWhere,
+            },
+            limit: 100,
+          })
+          .catch((err) => {
+            console.error('Error querying ui-products:', err)
+            return { docs: [] }
+          }),
+      ])
+
+    // Normalize ui-products with robust multi-layer fallback
+    const normalizedUiProducts = (uiProductsRes.docs || []).map((item: any) => {
+      let resolvedTitle = resolveLocalizedText(item.title, currentLocale)
+
+      // If empty on UI Product itself, try the linked CRM product title
+      if (!resolvedTitle && item.linkedProduct) {
+        resolvedTitle = resolveLocalizedText(item.linkedProduct.title, currentLocale)
+      }
+
+      // Final fallback if name field exists
+      if (!resolvedTitle && item.name) {
+        resolvedTitle = resolveLocalizedText(item.name, currentLocale)
+      }
+
+      const resolvedPrice = item.price ?? item.linkedProduct?.price ?? null
+
+      return {
+        id: item.id,
+        title: resolvedTitle || 'Untitled',
+        price: resolvedPrice,
+        featuredImage: item.image || item.linkedProduct?.featuredImage || item.linkedProduct?.image,
+        isCaseOffer: activeCategory === 'case-offers',
+      }
+    })
+
+    // Normalize standard products
+    const normalizedProducts = (productsRes.docs || []).map((item: any) => {
+      let resolvedTitle = resolveLocalizedText(item.title, currentLocale)
+      if (!resolvedTitle && item.name) {
+        resolvedTitle = resolveLocalizedText(item.name, currentLocale)
+      }
+
+      return {
+        ...item,
+        title: resolvedTitle || 'Untitled',
+        isCaseOffer: activeCategory === 'case-offers',
+      }
+    })
+
+    // Deduplicate items by ID
+    const productMap = new Map()
+    for (const item of [...normalizedProducts, ...normalizedUiProducts]) {
+      if (!productMap.has(item.id)) {
+        productMap.set(item.id, item)
+      }
+    }
+    const allProducts = Array.from(productMap.values())
 
     return (
       <div className={`${styles.pageWrapper} ${styles.pageWrapperFiltered} ${dirClass}`}>
@@ -89,9 +234,9 @@ export default async function StorefrontHome({ params, searchParams }: PageProps
           <div className={styles.filteredHeader}>
             <LocalizedHeading
               currentLocale={currentLocale}
-              en={matchedCatEn?.title || 'Products'}
-              ar={matchedCatAr?.title || 'المنتجات'}
-              ckb={matchedCatCkb?.title || 'کاڵاکان'}
+              en={matchedTitleEn || 'Products'}
+              ar={matchedTitleAr || 'المنتجات'}
+              ckb={matchedTitleCkb || 'کاڵاکان'}
               style={{ fontSize: '1.75rem', fontWeight: '700' }}
             />
             <Link href={`/${currentLocale}`} className={styles.showAllLink}>
@@ -103,7 +248,7 @@ export default async function StorefrontHome({ params, searchParams }: PageProps
             </Link>
           </div>
 
-          {res.docs.length === 0 ? (
+          {allProducts.length === 0 ? (
             <div className={styles.emptyState}>
               📦{' '}
               {currentLocale === 'ar'
@@ -114,10 +259,17 @@ export default async function StorefrontHome({ params, searchParams }: PageProps
             </div>
           ) : (
             <div className={styles.productGrid}>
-              {res.docs.map((product: any) => {
-                const hasImage = product.featuredImage && typeof product.featuredImage === 'object'
-                const imageUrl = hasImage ? (product.featuredImage as any).url : null
-                const productHref = resolveProductHref(product.id, false)
+              {allProducts.map((product: any) => {
+                const imgData = product.featuredImage || product.image
+                let imageUrl: string | null = null
+
+                if (typeof imgData === 'string') {
+                  imageUrl = imgData
+                } else if (typeof imgData === 'object' && imgData?.url) {
+                  imageUrl = imgData.url
+                }
+
+                const productHref = resolveProductHref(product.id, !!product.isCaseOffer)
 
                 return (
                   <Link key={product.id} href={productHref} className={styles.productCardLink}>
@@ -128,7 +280,7 @@ export default async function StorefrontHome({ params, searchParams }: PageProps
                             src={imageUrl}
                             width={200}
                             height={200}
-                            alt={product.title}
+                            alt={product.title || 'Product'}
                             className={styles.productImage}
                           />
                         ) : (
@@ -136,7 +288,11 @@ export default async function StorefrontHome({ params, searchParams }: PageProps
                         )}
                       </div>
                       <h3 className={styles.productTitle}>{product.title}</h3>
-                      <div className={styles.productPrice}>${product.price}</div>
+                      <div className={styles.productPrice}>
+                        {product.price !== null && product.price !== undefined
+                          ? `$${product.price}`
+                          : ''}
+                      </div>
                     </div>
                   </Link>
                 )
@@ -149,9 +305,29 @@ export default async function StorefrontHome({ params, searchParams }: PageProps
   }
 
   // 🏠 DEFAULT HOME VIEW
+  const payload = await getPayload({ config })
+  const categoriesRes = await payload.find({
+    collection: 'ui-categories',
+    locale: currentLocale as 'en' | 'ar' | 'ckb',
+    fallbackLocale: 'en',
+    sort: 'order',
+    where: {
+      hideInCarousel: { equals: false },
+    },
+    limit: 100,
+  })
+
+  const categories = categoriesRes.docs.map((doc: any) => ({
+    id: doc.id,
+    title: doc.title,
+    slug: doc.slug,
+    isContainer: doc.isContainer,
+    subCategories: doc.subCategories || [],
+  }))
+
   return (
     <div className={`${styles.pageWrapper} ${styles.pageWrapperDefault} ${dirClass}`}>
-      <CategoryCarousel currentLocale={currentLocale} />
+      <CategoryCarousel currentLocale={currentLocale} categories={categories} />
 
       <div className={styles.promoWrapper}>
         <div className={styles.promoLeft}>
@@ -164,16 +340,7 @@ export default async function StorefrontHome({ params, searchParams }: PageProps
           <PromoCarousel currentLocale={currentLocale} />
         </div>
       </div>
-
       <main className={styles.defaultMain}>
-        <Suspense fallback={<SectionSkeleton />}>
-          <CaseOffersSection currentLocale={currentLocale} isRtl={isRtl} />
-        </Suspense>
-
-        <Suspense fallback={<SectionSkeleton />}>
-          <DiscountsSection currentLocale={currentLocale} isRtl={isRtl} />
-        </Suspense>
-
         <Suspense fallback={<SectionSkeleton cards={8} />}>
           <CategorySections currentLocale={currentLocale} isRtl={isRtl} />
         </Suspense>
