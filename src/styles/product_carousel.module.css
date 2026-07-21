@@ -226,7 +226,7 @@
   font-weight: 700;
   cursor: pointer;
   transition: background-color 0.2s;
-  font-family: var(--pc-text-font, inherit);
+  font-family: 'Rudaw';
 }
 
 /* ---------- Quick View Modal Backdrop ---------- */

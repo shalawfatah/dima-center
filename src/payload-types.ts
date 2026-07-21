@@ -75,6 +75,8 @@ export interface Config {
     promotions: Promotion;
     'pc-builds': PcBuild;
     'case-offers': CaseOffer;
+    'ui-categories': UiCategory;
+    'ui-products': UiProduct;
     'payload-kv': PayloadKv;
     'payload-locked-documents': PayloadLockedDocument;
     'payload-preferences': PayloadPreference;
@@ -90,6 +92,8 @@ export interface Config {
     promotions: PromotionsSelect<false> | PromotionsSelect<true>;
     'pc-builds': PcBuildsSelect<false> | PcBuildsSelect<true>;
     'case-offers': CaseOffersSelect<false> | CaseOffersSelect<true>;
+    'ui-categories': UiCategoriesSelect<false> | UiCategoriesSelect<true>;
+    'ui-products': UiProductsSelect<false> | UiProductsSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
     'payload-preferences': PayloadPreferencesSelect<false> | PayloadPreferencesSelect<true>;
@@ -326,6 +330,87 @@ export interface PcBuild {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "ui-categories".
+ */
+export interface UiCategory {
+  id: number;
+  title: string;
+  /**
+   * Used for direct links (e.g., laptop, monitor). Leave empty if this is a main container.
+   */
+  slug?: string | null;
+  isContainer?: boolean | null;
+  /**
+   * If checked, this category will be ignored when fetching categories for UI carousels.
+   */
+  hideInCarousel?: boolean | null;
+  subCategories?:
+    | {
+        title: string;
+        /**
+         * Slug matching the external ERP/db category slug (e.g., cpu, gpu).
+         */
+        slug: string;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * Used to control horizontal sorting in the UI.
+   */
+  order?: number | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "ui-products".
+ */
+export interface UiProduct {
+  id: number;
+  title: string;
+  description?: string | null;
+  image?: (number | null) | Media;
+  /**
+   * Determines where or how this item is displayed (e.g., Offers, Promotions, Banners).
+   */
+  uiCategory: number | UiCategory;
+  /**
+   * Optional CRM/DB Category mapping if this UI item targets a specific catalog category.
+   */
+  category?: (number | null) | Category;
+  /**
+   * Choose what happens when the user clicks this item.
+   */
+  linkType?: ('none' | 'product' | 'static') | null;
+  /**
+   * Select the CRM product this item points to.
+   */
+  linkedProduct?: (number | null) | Product;
+  /**
+   * Enter a custom route (e.g. /custom-landing) or external URL (https://...).
+   */
+  staticUrl?: string | null;
+  /**
+   * Sorting priority within its UI Category.
+   */
+  order?: number | null;
+  /**
+   * Optional arbitrary key-value payload for custom UI attributes (badge labels, custom colors, specs).
+   */
+  metadata?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-kv".
  */
 export interface PayloadKv {
@@ -379,6 +464,14 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'case-offers';
         value: number | CaseOffer;
+      } | null)
+    | ({
+        relationTo: 'ui-categories';
+        value: number | UiCategory;
+      } | null)
+    | ({
+        relationTo: 'ui-products';
+        value: number | UiProduct;
       } | null);
   globalSlug?: string | null;
   user: {
@@ -570,6 +663,44 @@ export interface CaseOffersSelect<T extends boolean = true> {
   description?: T;
   price?: T;
   discountedPrice?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "ui-categories_select".
+ */
+export interface UiCategoriesSelect<T extends boolean = true> {
+  title?: T;
+  slug?: T;
+  isContainer?: T;
+  hideInCarousel?: T;
+  subCategories?:
+    | T
+    | {
+        title?: T;
+        slug?: T;
+        id?: T;
+      };
+  order?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "ui-products_select".
+ */
+export interface UiProductsSelect<T extends boolean = true> {
+  title?: T;
+  description?: T;
+  image?: T;
+  uiCategory?: T;
+  category?: T;
+  linkType?: T;
+  linkedProduct?: T;
+  staticUrl?: T;
+  order?: T;
+  metadata?: T;
   updatedAt?: T;
   createdAt?: T;
 }

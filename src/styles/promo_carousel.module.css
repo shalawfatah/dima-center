@@ -124,7 +124,7 @@
   left: 50%;
   transform: translateX(-50%);
   display: flex;
-  gap: 8px;
+  gap: 16px;
   z-index: 10;
   background: rgba(0, 0, 0, 0.3);
   padding: 6px 12px;
@@ -133,8 +133,8 @@
 }
 
 .dotIndicator {
-  width: 10px;
-  height: 10px;
+  width: 16px;
+  height: 16px;
   border-radius: 50%;
   border: none;
   padding: 0;
