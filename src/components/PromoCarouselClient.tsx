@@ -20,6 +20,18 @@ function getLocalizedField(field: any, currentLocale: string): string {
   return field[currentLocale] || field.en || field.ar || field.ckb || ''
 }
 
+// 🎯 Safe helper to extract category slug from populated relation
+function getCategorySlug(product: any): string {
+  if (!product || typeof product !== 'object') return 'all'
+
+  const catObj = product.category || product.uiCategory
+  if (typeof catObj === 'object' && catObj?.slug) {
+    return catObj.slug
+  }
+
+  return 'all'
+}
+
 export default function PromoCarouselClient({
   promotions,
   currentLocale,
@@ -66,16 +78,17 @@ export default function PromoCarouselClient({
             const title = getLocalizedField(promo.title, currentLocale)
             const description = getLocalizedField(promo.description, currentLocale)
 
-            // Resolve dynamic links based on UIProducts schema (linkType: 'product' | 'static' | 'none')
+            // Resolve dynamic links matching the rest of the application (category_slug/product_id)
             let targetUrl: string | null = null
             let shouldLink = false
 
             if (promo.linkType === 'product' && promo.linkedProduct) {
-              const prodId =
-                typeof promo.linkedProduct === 'object'
-                  ? promo.linkedProduct.id
-                  : promo.linkedProduct
-              targetUrl = `/${currentLocale}/products/${prodId}`
+              const linked = promo.linkedProduct
+              const prodId = typeof linked === 'object' ? linked.id : linked
+              const catSlug = getCategorySlug(linked)
+
+              // 🎯 Resolves to /[locale]/[category_slug]/[id]
+              targetUrl = `/${currentLocale}/${catSlug}/${prodId}`
               shouldLink = true
             } else if (promo.linkType === 'static' && promo.staticUrl) {
               targetUrl = promo.staticUrl.startsWith('http')
