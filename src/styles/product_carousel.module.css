@@ -492,16 +492,16 @@
   width: 40px;
   height: 40px;
   border-radius: 50%;
-  background-color: rgba(255, 255, 255, 0.9);
+  background-color: #ffb83c;
   border: 1px solid #e5e7eb;
-  color: #1f2937;
+  color: #000000;
   cursor: pointer;
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
   transition: all 0.2s ease;
 }
 
 .pc-arrow:hover {
-  background-color: #ffffff;
+  background-color: #ffcb6b;
   transform: translateY(-50%) scale(1.08);
 }
 

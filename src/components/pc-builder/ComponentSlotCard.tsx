@@ -1,90 +1,142 @@
-'use client'
-
 import Image from 'next/image'
-import { getLocalizedTitle, getProductImageUrl } from './getLocalizedTitle'
+import { getDiscountedPrice } from '@/utils/pc_builder_pricing'
+import styles from '@/styles/pc_builder.module.css'
 
-interface SlotLabels {
-  clear: string
-  change: string
-  choose: string
-  noPart: string
+const MULTI_QUANTITY_SLOTS = ['ram', 'storage', 'ssd', 'hdd', 'memory', 'm-2', 'm2']
+
+export interface SlotLabels {
+  clear?: string
+  change?: string
+  choose?: string
+  noPart?: string
 }
 
-interface ComponentSlotCardProps {
+export interface ComponentSlotCardProps {
   slot: any
   chosenItem: any
-  currentLocale: string
-  labels: SlotLabels
+  t?: Record<string, string>
+  currentLocale?: string
+  labels?: SlotLabels
+  getLocalizedTitle: (product: any) => string
   onOpen: (slotKey: string) => void
   onRemove: (slotKey: string) => void
+  onQuantityChange: (slotKey: string, delta: number) => void
 }
 
 export default function ComponentSlotCard({
   slot,
   chosenItem,
-  currentLocale,
+  t,
   labels,
+  getLocalizedTitle,
   onOpen,
   onRemove,
+  onQuantityChange,
 }: ComponentSlotCardProps) {
-  const itemImageUrl = getProductImageUrl(chosenItem)
+  const itemImageUrl = chosenItem?.featuredImage?.url || chosenItem?.meta?.image?.url
+  const qty = chosenItem?.quantity || 1
+
+  const originalPrice = chosenItem ? (Number(chosenItem.price) || 0) * qty : 0
+  const finalItemPrice = chosenItem ? getDiscountedPrice(chosenItem) * qty : 0
+  const hasItemDiscount = chosenItem ? !!chosenItem.hasDiscount : false
+  const isMultiSlot = MULTI_QUANTITY_SLOTS.includes(
+    slot.key.toLowerCase() || slot.categorySlug.toLowerCase(),
+  )
+
+  const text = labels || (t as SlotLabels) || {}
 
   return (
-    <div onClick={() => onOpen(slot.key)} className="pc-builder-component-card">
-      <div className="pc-builder-card-meta">
-        <div className="pc-builder-thumb-box">
+    <div onClick={() => onOpen(slot.key)} className={styles['pc-builder-component-card']}>
+      <div className={styles['pc-builder-card-meta']}>
+        <div className={styles['pc-builder-thumb-box']}>
           {itemImageUrl ? (
             <Image
-              height={100}
-              width={100}
+              sizes="100px"
+              width="100"
+              height="100"
               src={itemImageUrl}
-              alt={getLocalizedTitle(chosenItem, currentLocale)}
-              className="object-cover w-full h-full"
+              alt={getLocalizedTitle(chosenItem)}
+              className={styles['pc-builder-thumb-image']}
             />
           ) : (
             <Image
-              height={50}
-              width={50}
-              src={(slot as any).defaultImage || `/categories/${slot.key}.png`}
+              sizes="50px"
+              width="100"
+              height="100"
+              className={styles['pc-builder-thumb-image']}
+              src={(slot as any).defaultImage || `/categories/${slot.key.toLowerCase()}.png`}
               alt={slot.label}
-              className="object-contain opacity-60 w-4/5 h-4/5"
             />
           )}
         </div>
-
         <div>
-          <span className="pc-builder-slot-label">{slot.label}</span>
+          <span className={styles['pc-builder-slot-label']}>{slot.label}</span>
           {chosenItem ? (
-            <div className="pc-builder-chosen-title">
-              {getLocalizedTitle(chosenItem, currentLocale)}
-              <span className="pc-builder-chosen-price">(${chosenItem.price})</span>
+            <div className={styles['pc-builder-chosen-title']}>
+              {qty > 1 && <strong className={styles['pc-builder-qty-highlight']}>{qty}x </strong>}
+              {getLocalizedTitle(chosenItem)}{' '}
+              <span className={styles['pc-builder-chosen-price']}>
+                {hasItemDiscount ? (
+                  <>
+                    <span className={styles['pc-builder-price-original']}>(${originalPrice})</span>
+                    <span className={styles['pc-builder-price-final']}>(${finalItemPrice})</span>
+                  </>
+                ) : (
+                  <span>(${originalPrice})</span>
+                )}
+              </span>
             </div>
           ) : (
-            <div className="pc-builder-empty-slot">{labels.noPart}</div>
+            <div className={styles['pc-builder-empty-slot']}>
+              {text?.noPart || 'No Part Selected'}
+            </div>
           )}
         </div>
       </div>
 
-      <div className="pc-builder-actions-group">
+      <div className={styles['pc-builder-actions-group']}>
+        {chosenItem && isMultiSlot && (
+          <div className={styles['pc-builder-main-stepper']} onClick={(e) => e.stopPropagation()}>
+            <button
+              type="button"
+              onClick={() => onQuantityChange(slot.key, -1)}
+              className={styles['pc-builder-slot-qty-btn']}
+              disabled={qty <= 1}
+            >
+              -
+            </button>
+            <span className={styles['pc-builder-slot-qty-num']}>{qty}</span>
+            <button
+              type="button"
+              onClick={() => onQuantityChange(slot.key, 1)}
+              className={styles['pc-builder-slot-qty-btn']}
+            >
+              +
+            </button>
+          </div>
+        )}
+
         {chosenItem && (
           <button
+            type="button"
             onClick={(e) => {
               e.stopPropagation()
               onRemove(slot.key)
             }}
-            className="pc-builder-btn clear"
+            className={`${styles['pc-builder-btn']} ${styles.clear}`}
           >
-            {labels.clear}
+            {text?.clear || 'Clear'}
           </button>
         )}
         <button
+          type="button"
           onClick={(e) => {
             e.stopPropagation()
             onOpen(slot.key)
           }}
-          className="pc-builder-btn action"
+          className={`${styles['pc-builder-btn']} ${styles.action}`}
         >
-          {chosenItem ? labels.change : labels.choose}
+          {chosenItem ? text?.change || 'Change' : text?.choose || 'Choose'}
         </button>
       </div>
     </div>

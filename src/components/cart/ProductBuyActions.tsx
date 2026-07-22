@@ -1,5 +1,6 @@
 'use client'
 
+import { useState, useEffect } from 'react'
 import { usePathname } from 'next/navigation'
 import OrderButton from '../OrderButton'
 
@@ -16,16 +17,19 @@ export default function ProductBuyActions({
   iqdPrice,
   currentLocale,
 }: ProductBuyActionsProps) {
-  // 1. Get the exact path (e.g., "/ckb/products/4339")
   const pathname = usePathname()
+  const [origin, setOrigin] = useState('')
 
-  // 2. Build the full link dynamically
-  const origin = typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3000'
-  const productUrl = `${origin}${pathname}`
+  // Read window.location.origin AFTER hydration finishes
+  useEffect(() => {
+    setOrigin(window.location.origin)
+  }, [])
 
-  // 3. Format prices
-  const formattedIqd = iqdPrice.toLocaleString()
-  const formattedUsd = finalPrice.toLocaleString()
+  const productUrl = origin ? `${origin}${pathname}` : pathname
+
+  // Explicitly pass a locale ('en-US') so Server and Client format numbers identically
+  const formattedIqd = iqdPrice.toLocaleString('en-US')
+  const formattedUsd = finalPrice.toLocaleString('en-US')
   const displayPrice = `${formattedIqd} IQD (~$${formattedUsd})`
 
   return (

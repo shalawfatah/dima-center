@@ -4,9 +4,12 @@ interface SeoParams {
   locale: string
 }
 
+// TODO: replace with your real production domain, or read from an env var
+// (e.g. process.env.NEXT_PUBLIC_SITE_URL) so it's easy to swap per environment.
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.dima-center.com'
+
 export async function getStorefrontMetadata(params: SeoParams): Promise<Metadata> {
   const locale = params.locale || 'en'
-
   const seo = {
     en: {
       title: 'Dima Center | Premium PC Components Shop',
@@ -24,18 +27,22 @@ export async function getStorefrontMetadata(params: SeoParams): Promise<Metadata
         'باشترین پارچەکانی کۆمپیوتەر لە عێراق بەدەستبهێنە: پڕۆسێسەر، کارتی شاشە، مازەربۆرد و ئێکسسواراتی یاریکردن بە گونجاوترین نرخ.',
     },
   }
-
   const currentSeo = seo[locale as 'en' | 'ar' | 'ckb'] || seo.en
 
   return {
     title: currentSeo.title,
     description: currentSeo.description,
     alternates: {
-      // 🎯 Fixed: Cast the languages object to allow string indexing for non-standard ISO macro-tags
+      canonical: `${SITE_URL}/${locale}`,
+      // Hreflang hrefs must be absolute (scheme + host) or search engines
+      // will flag them as invalid, even though they resolve fine in-browser.
       languages: {
-        en: '/en',
-        ar: '/ar',
-        ckb: '/ckb',
+        en: `${SITE_URL}/en`,
+        ar: `${SITE_URL}/ar`,
+        ckb: `${SITE_URL}/ckb`,
+        // x-default tells engines which version to fall back to when no
+        // language/region matches the searcher — point it at your default locale.
+        'x-default': `${SITE_URL}/en`,
       } as Record<string, string>,
     },
     icons: {

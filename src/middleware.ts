@@ -21,5 +21,5 @@ export function middleware(request: NextRequest) {
 
 export const config = {
   // Matcher ignoring internal files, payload admin dashboard, and api routes
-  matcher: ['/((?!_next|admin|api|favicon.ico).*)'],
+  matcher: ['/((?!_next|admin|api|favicon.ico|.*\\..*).*)'],
 }

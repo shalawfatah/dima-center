@@ -1,92 +1,102 @@
-'use client'
-
-import { getExchangeLabel } from './getLocalizedTitle'
-
-interface SummaryLabels {
-  summary: string
-  configName: string
-  totalPrice: string
-  saving: string
-  saveBtn: string
-  loginPrompt: string
-  signIn: string
-  saveSuffix: string
-}
+import React from 'react'
+import { exchangeLabel, phoneAriaLabel, pickLocale } from '@/utils/pc_builder_translations'
+import { submitLabel, whatsappPriceNotice } from '@/utils/pc_build_items'
+import styles from '@/styles/pc_builder.module.css'
 
 interface BuildSummarySidebarProps {
-  buildName: string
-  onNameChange: (value: string) => void
-  totalPrice: number
-  exchangeRate: number
+  t: Record<string, string>
   currentLocale: string
-  user: any
-  isSaving: boolean
+  mounted: boolean
+  buildName: string
+  setBuildName: (name: string) => void
+  totalPrice: number
+  totalOriginalPrice: number
+  dynamicExchangeRate: number
+  buyerNumber: string
+  setBuyerNumber: (value: string) => void
   hasSelections: boolean
-  onSave: () => void
-  labels: SummaryLabels
+  onSubmit: (e: React.FormEvent<HTMLFormElement>) => void
+  fontFam: string
 }
 
 export default function BuildSummarySidebar({
-  buildName,
-  onNameChange,
-  totalPrice,
-  exchangeRate,
+  t,
   currentLocale,
-  user,
-  isSaving,
+  mounted,
+  buildName,
+  setBuildName,
+  totalPrice,
+  totalOriginalPrice,
+  dynamicExchangeRate,
+  buyerNumber,
+  setBuyerNumber,
   hasSelections,
-  onSave,
-  labels,
+  onSubmit,
+  fontFam,
 }: BuildSummarySidebarProps) {
-  return (
-    <div className="pc-builder-sidebar">
-      <div className="pc-builder-summary-card">
-        <h3 className="pc-builder-summary-heading">{labels.summary}</h3>
+  const submitDisabled = !mounted || !hasSelections
 
-        <div className="pc-builder-field-group">
-          <label className="pc-builder-input-label">{labels.configName}</label>
+  return (
+    <div className={styles['pc-builder-sidebar']}>
+      <div className={styles['pc-builder-summary-card']}>
+        <h3 className={styles['pc-builder-summary-heading']}>{t.summary}</h3>
+
+        <div className={styles['pc-builder-field-group']}>
+          <label htmlFor="pc-builder-build-name" className={styles['pc-builder-input-label']}>
+            {t.configName}
+          </label>
           <input
             type="text"
-            value={buildName}
-            onChange={(e) => onNameChange(e.target.value)}
-            className="pc-builder-text-input"
+            id="pc-builder-build-name"
+            value={mounted ? buildName : ''}
+            onChange={(e) => setBuildName(e.target.value)}
+            className={styles['pc-builder-text-input']}
           />
         </div>
 
-        {/* Dynamic IQD exchange rate, sourced from Payload Generals config */}
-        <div className="pc-builder-exchange-container">
-          <span className="pc-builder-exchange-label">{getExchangeLabel(currentLocale)}</span>
-          <span className="pc-builder-exchange-value">
-            {(totalPrice * exchangeRate).toLocaleString()} د.ع
+        <div className={styles['pc-builder-exchange-container']}>
+          <span className={styles['pc-builder-exchange-label']}>
+            {pickLocale(exchangeLabel, currentLocale)}
+          </span>
+          <span className={styles['pc-builder-exchange-value']}>
+            {(totalPrice * dynamicExchangeRate).toLocaleString()} د.ع
           </span>
         </div>
 
-        <div className="pc-builder-price-row">
-          <span className="pc-builder-price-label">{labels.totalPrice}</span>
-          <span className="pc-builder-price-value">${totalPrice.toLocaleString()}</span>
+        <div className={styles['pc-builder-price-row']}>
+          <span className={styles['pc-builder-price-label']}>{t.totalPrice}</span>
+          <div className={styles['pc-builder-total-price-wrap']}>
+            {totalOriginalPrice > totalPrice && (
+              <span className={styles['pc-builder-total-original']}>
+                ${totalOriginalPrice.toLocaleString()}
+              </span>
+            )}
+            <span className={styles['pc-builder-price-value']}>${totalPrice.toLocaleString()}</span>
+          </div>
         </div>
 
-        {user ? (
+        <div className={styles['pc-builder-whatsapp-notice']}>
+          ℹ️ {whatsappPriceNotice[currentLocale] || whatsappPriceNotice.en}
+        </div>
+
+        <form onSubmit={onSubmit} className={styles['pc-builder-order-form']}>
+          <input
+            type="tel"
+            value={buyerNumber}
+            onChange={(e) => setBuyerNumber(e.target.value)}
+            required
+            className={styles['pc-builder-phone-input']}
+            aria-label={pickLocale(phoneAriaLabel, currentLocale)}
+          />
           <button
-            onClick={onSave}
-            disabled={isSaving || !hasSelections}
-            className="pc-builder-submit-btn"
-            style={{
-              cursor: !hasSelections ? 'not-allowed' : 'pointer',
-              opacity: !hasSelections || isSaving ? 0.6 : 1,
-            }}
+            type="submit"
+            disabled={submitDisabled}
+            className={`${styles['pc-builder-submit-btn']} ${submitDisabled ? styles.disabled : ''}`}
+            style={{ fontFamily: fontFam }}
           >
-            {isSaving ? labels.saving : labels.saveBtn}
+            {submitLabel[currentLocale] || submitLabel.en}
           </button>
-        ) : (
-          <div className="pc-builder-auth-notice">
-            {labels.loginPrompt} <br />
-            <a href={`/${currentLocale}/login`} className="pc-builder-auth-link">
-              {labels.signIn}
-            </a>{' '}
-            {labels.saveSuffix}
-          </div>
-        )}
+        </form>
       </div>
     </div>
   )
