@@ -165,7 +165,10 @@ export default function SearchBar({ locale: initialLocale }: { locale: string })
                   key={item.id || idx}
                   className={styles.resultsItem}
                   onClick={() => {
-                    router.push(`/${locale}/product/${item.slug || item.id}`)
+                    const category = item.categorySlug || 'product' // Fallback if missing
+                    const productIdentifier = item.slug || item.id
+
+                    router.push(`/${locale}/${category}/${productIdentifier}`)
                     setShowDropdown(false)
                     setIsMobileOpen(false)
                   }}

@@ -99,3 +99,8 @@ export interface ExtendedProductCarouselProps extends ProductCarouselProps {
   cardWidth?: number
   cardHeight?: number
 }
+
+export interface SearchPageProps {
+  params: Promise<{ locale: string }>
+  searchParams: Promise<{ q?: string; [key: string]: any }>
+}

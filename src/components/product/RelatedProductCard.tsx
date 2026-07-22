@@ -6,9 +6,31 @@ import ProductPriceDisplay from './ProductPriceDisplay'
 import { RelatedProductCardProps } from '@/types/types'
 import styles from '@/styles/related_product_card.module.css'
 
-// Extending the imported interface locally so we don't pollute the shared types file
-type ExtendedRelatedProductCardProps = RelatedProductCardProps & {
-  basePath?: string
+/**
+ * Safely extracts image URL from both Products (featuredImage) and UIProducts (image)
+ */
+function resolveProductImage(item: any): string | null {
+  if (!item) return null
+
+  // 1. Check for `featuredImage` (Products collection)
+  const featImg = item.featuredImage
+  if (featImg && typeof featImg === 'object' && featImg.url) {
+    return featImg.url
+  }
+  if (typeof featImg === 'string') {
+    return featImg
+  }
+
+  // 2. Check for `image` (UIProducts collection)
+  const uiImg = item.image
+  if (uiImg && typeof uiImg === 'object' && uiImg.url) {
+    return uiImg.url
+  }
+  if (typeof uiImg === 'string') {
+    return uiImg
+  }
+
+  return null
 }
 
 export default function RelatedProductCard({
@@ -16,20 +38,46 @@ export default function RelatedProductCard({
   currentLocale,
   isRtl,
   exchangeRate,
-  basePath = 'products', // Default parameter fallback
-}: ExtendedRelatedProductCardProps) {
-  const itemImgObj = item.featuredImage && typeof item.featuredImage === 'object'
-  const itemImgUrl = itemImgObj ? (item.featuredImage as any).url : null
+}: RelatedProductCardProps) {
+  // 🎯 Resolve image for both Products and UIProducts
+  const itemImgUrl = resolveProductImage(item)
+
+  // 1. Dynamic Category Slug Resolution
+  let categorySlug = 'products'
+  const categoryObj = item?.category || item?.uiCategory
+
+  if (item?.categorySlug) {
+    categorySlug = item.categorySlug
+  } else if (categoryObj && typeof categoryObj === 'object') {
+    const rawSlug = categoryObj.slug
+    if (typeof rawSlug === 'object' && rawSlug !== null) {
+      categorySlug =
+        rawSlug[currentLocale] ||
+        rawSlug.en ||
+        rawSlug.ckb ||
+        rawSlug.ar ||
+        Object.values(rawSlug)[0] ||
+        'products'
+    } else if (typeof rawSlug === 'string') {
+      categorySlug = rawSlug
+    }
+  }
+
+  // 2. Resolve Product Identifier (prefer slug over id)
+  const productIdentifier = item?.slug || item?.id
+
+  // 3. Construct Dynamic Path -> /[locale]/[categorySlug]/[productIdentifier]
+  const productHref = `/${currentLocale}/${categorySlug}/${productIdentifier}`
 
   const priceSpecs = calculateProductPrice({
     ...item,
-    hasDiscount: item.hasDiscount ?? false,
+    hasDiscount: item?.hasDiscount ?? false,
   } as any)
   const usdPrice = Number(priceSpecs.finalPrice)
   const iqdPrice = usdPrice * exchangeRate
 
   return (
-    <Link href={`/${currentLocale}/${basePath}/${item.id}`} className={styles.cardLink}>
+    <Link href={productHref} className={styles.cardLink}>
       <div className={styles.card}>
         {priceSpecs.isDiscounted && (
           <DiscountBadge
@@ -47,7 +95,7 @@ export default function RelatedProductCard({
               width={400}
               height={400}
               src={itemImgUrl}
-              alt={item.title ?? 'image'}
+              alt={item?.title ?? 'Product image'}
               className={styles.image}
             />
           ) : (
@@ -55,7 +103,7 @@ export default function RelatedProductCard({
           )}
         </div>
 
-        <h4 className={styles.title}>{item.title}</h4>
+        <h4 className={styles.title}>{item?.title || item?.name}</h4>
 
         <ProductPriceDisplay
           variant="card"

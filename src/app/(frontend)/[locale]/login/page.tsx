@@ -151,6 +151,7 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
     try {
       const relatedData = await payload.find({
         collection: targetCollection,
+        depth: 2,
         locale: currentLocale as 'en' | 'ar' | 'ckb',
         where: {
           and: [{ [categoryKey]: { equals: categoryId } }, { id: { not_equals: product.id } }],

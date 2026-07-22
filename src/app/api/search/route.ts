@@ -59,8 +59,6 @@ export async function GET(request: Request) {
   const { searchParams } = new URL(request.url)
   const query = searchParams.get('q') || ''
 
-  // Extract the target locale from search component parameters, fallback to 'en'
-  const currentLocale = searchParams.get('locale') || 'en'
   const targetLimit = 8
 
   if (query.trim().length < 1) {
@@ -120,10 +118,18 @@ export async function GET(request: Request) {
     }
 
     // 3. Format payload output structural objects so it matches the SearchBar layout constraints exactly
+    // In your route handler:
     const sanitizedResults = combinedDocs.map((doc: any) => {
+      // Extract category slug safely from Payload's populated category object
+      const categorySlug =
+        typeof doc.category === 'object' && doc.category !== null
+          ? doc.category.slug || 'all'
+          : 'all'
+
       return {
         id: doc.id,
-        // Keeps the full localized title object structure intact so multi-language fallback parsing works
+        slug: doc.slug || doc.id,
+        categorySlug, // <-- Pass category slug to frontend
         title: doc.title,
         name: doc.name,
         price: doc.price,

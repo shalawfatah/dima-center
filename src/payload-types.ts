@@ -72,9 +72,7 @@ export interface Config {
     orders: Order;
     media: Media;
     categories: Category;
-    promotions: Promotion;
     'pc-builds': PcBuild;
-    'case-offers': CaseOffer;
     'ui-categories': UiCategory;
     'ui-products': UiProduct;
     'payload-kv': PayloadKv;
@@ -89,9 +87,7 @@ export interface Config {
     orders: OrdersSelect<false> | OrdersSelect<true>;
     media: MediaSelect<false> | MediaSelect<true>;
     categories: CategoriesSelect<false> | CategoriesSelect<true>;
-    promotions: PromotionsSelect<false> | PromotionsSelect<true>;
     'pc-builds': PcBuildsSelect<false> | PcBuildsSelect<true>;
-    'case-offers': CaseOffersSelect<false> | CaseOffersSelect<true>;
     'ui-categories': UiCategoriesSelect<false> | UiCategoriesSelect<true>;
     'ui-products': UiProductsSelect<false> | UiProductsSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
@@ -245,64 +241,6 @@ export interface Order {
   user: number | User;
   total: number;
   status?: ('processing' | 'completed') | null;
-  updatedAt: string;
-  createdAt: string;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "promotions".
- */
-export interface Promotion {
-  id: number;
-  title: string;
-  description?: string | null;
-  image: number | Media;
-  type?: ('generic' | 'product' | 'offer') | null;
-  relatedProduct?: (number | null) | Product;
-  relatedOffer?: (number | null) | CaseOffer;
-  /**
-   * Optional URL if this links to an external site or specific page instead of a product or offer.
-   */
-  linkUrl?: string | null;
-  isActive?: boolean | null;
-  updatedAt: string;
-  createdAt: string;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "case-offers".
- */
-export interface CaseOffer {
-  id: number;
-  title: string;
-  /**
-   * Used in the URL (e.g., mega-gaming-pc-offer)
-   */
-  slug: string;
-  featured_image: number | Media;
-  description?: {
-    root: {
-      type: string;
-      children: {
-        type: any;
-        version: number;
-        [k: string]: unknown;
-      }[];
-      direction: ('ltr' | 'rtl') | null;
-      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
-      indent: number;
-      version: number;
-    };
-    [k: string]: unknown;
-  } | null;
-  /**
-   * Original retail price of the full build
-   */
-  price: number;
-  /**
-   * Optional promotional price (leave blank if not discounted)
-   */
-  discountedPrice?: number | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -462,16 +400,8 @@ export interface PayloadLockedDocument {
         value: number | Category;
       } | null)
     | ({
-        relationTo: 'promotions';
-        value: number | Promotion;
-      } | null)
-    | ({
         relationTo: 'pc-builds';
         value: number | PcBuild;
-      } | null)
-    | ({
-        relationTo: 'case-offers';
-        value: number | CaseOffer;
       } | null)
     | ({
         relationTo: 'ui-categories';
@@ -623,22 +553,6 @@ export interface CategoriesSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "promotions_select".
- */
-export interface PromotionsSelect<T extends boolean = true> {
-  title?: T;
-  description?: T;
-  image?: T;
-  type?: T;
-  relatedProduct?: T;
-  relatedOffer?: T;
-  linkUrl?: T;
-  isActive?: T;
-  updatedAt?: T;
-  createdAt?: T;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "pc-builds_select".
  */
 export interface PcBuildsSelect<T extends boolean = true> {
@@ -657,20 +571,6 @@ export interface PcBuildsSelect<T extends boolean = true> {
         case?: T;
         cooler?: T;
       };
-  updatedAt?: T;
-  createdAt?: T;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "case-offers_select".
- */
-export interface CaseOffersSelect<T extends boolean = true> {
-  title?: T;
-  slug?: T;
-  featured_image?: T;
-  description?: T;
-  price?: T;
-  discountedPrice?: T;
   updatedAt?: T;
   createdAt?: T;
 }

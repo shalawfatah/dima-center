@@ -1,0 +1,138 @@
+.page {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background-color: #fafafa;
+}
+
+.page[dir='rtl'] .priceBlock {
+  text-align: left;
+}
+
+.page[dir='ltr'] .priceBlock {
+  text-align: right;
+}
+
+.main {
+  flex: 1;
+  padding: 3rem max(1.5rem, calc((100% - 1800px) / 2));
+}
+
+.heading {
+  font-family: 'Rudaw';
+  font-size: 1.75rem;
+  font-weight: 700;
+  margin-bottom: 1.5rem;
+  color: #000;
+}
+
+.highlight {
+  color: #0070f3;
+}
+
+.emptyState {
+  background: #fff;
+  border: 1px solid #eef0f2;
+  border-radius: 12px;
+  padding: 4rem 2rem;
+  text-align: center;
+  color: #666;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+}
+
+.cardLink {
+  text-decoration: none;
+  color: inherit;
+}
+
+.card {
+  display: flex;
+  background: #fff;
+  border: 1px solid #eef0f2;
+  border-radius: 12px;
+  padding: 1.25rem;
+  gap: 1.5rem;
+  align-items: center;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.01);
+}
+
+.index {
+  font-size: 12px;
+  font-weight: bold;
+  color: #aaa;
+  min-width: 20px;
+}
+
+.imageWrapper {
+  width: 80px;
+  position: relative;
+  height: 80px;
+  background: #f4f6f8;
+  border-radius: 8px;
+  overflow: hidden;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.image {
+  object-fit: contain;
+}
+
+.imagePlaceholder {
+  font-size: 20px;
+}
+
+.details {
+  flex: 1;
+}
+
+.category {
+  font-size: 11px;
+  text-transform: uppercase;
+  color: #0070f3;
+  font-weight: 700;
+}
+
+.title {
+  font-size: 1.15rem;
+  margin: 2px 0 6px 0;
+  font-weight: 600;
+  color: #000;
+}
+
+.description {
+  font-size: 14px;
+  color: #666;
+  margin: 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.priceBlock {
+  flex-shrink: 0;
+}
+
+.price {
+  font-size: 1.4rem;
+  font-weight: 800;
+  color: #000;
+}
+
+.condition {
+  font-size: 11px;
+  background: #f0fdf4;
+  color: #16a34a;
+  padding: 2px 6px;
+  border-radius: 4px;
+  text-transform: uppercase;
+  font-weight: bold;
+}
