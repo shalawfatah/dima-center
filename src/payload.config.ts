@@ -59,7 +59,7 @@ export default buildConfig({
       bucket: process.env.S3_BUCKET || '',
       config: {
         // 🎯 FIX: Correct S3 API Route endpoint format for Supabase
-        endpoint: process.env.NEXT_PUBLIC_S3_ENDPOIN,
+        endpoint: process.env.NEXT_PUBLIC_S3_ENDPOINT,
         credentials: {
           accessKeyId: process.env.S3_ACCESS_KEY_ID || '',
           secretAccessKey: process.env.S3_SECRET_ACCESS_KEY || '',
