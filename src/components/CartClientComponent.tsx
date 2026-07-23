@@ -16,7 +16,7 @@ interface CartItem {
 
 interface CartClientComponentProps {
   currentLocale: string
-  whatsappNumber?: string // 👈 Added dynamic WhatsApp number prop
+  whatsappNumber?: string // Receives the general settings phone number
 }
 
 // 🎯 Quick Iraqi phone helper
@@ -54,8 +54,12 @@ export default function CartClientComponent({
 
   const saveCart = (updatedItems: CartItem[]) => {
     setCartItems(updatedItems)
-    localStorage.setItem('cart', JSON.stringify(updatedItems))
-    window.dispatchEvent(new Event('cart-updated'))
+    try {
+      localStorage.setItem('cart', JSON.stringify(updatedItems))
+      window.dispatchEvent(new Event('cart-updated'))
+    } catch (err) {
+      console.error('Failed to persist cart to localStorage:', err)
+    }
   }
 
   const updateQuantity = (id: string, delta: number) => {
@@ -105,8 +109,8 @@ export default function CartClientComponent({
       .map(
         (item, index) =>
           `${index + 1}. *${item.title}*\n` +
-          `   Qty: ${item.quantity} × ${item.price.toLocaleString()} ${t.currency}\n` +
-          `   Link: ${window.location.origin}/${currentLocale}/products/${item.id}`,
+          `    Qty: ${item.quantity} × ${item.price.toLocaleString()} ${t.currency}\n` +
+          `    Link: ${window.location.origin}/${currentLocale}/products/${item.id}`,
       )
       .join('\n\n')
 
@@ -118,7 +122,7 @@ export default function CartClientComponent({
       `*Total Amount:* ${totalAmount.toLocaleString()} ${t.currency}\n` +
       `*Buyer Number:* ${buyerNumber}`
 
-    // 🟢 Dynamic WhatsApp number from props
+    // 🟢 Dynamic seller phone number normalized from props
     const cleanSellerNumber = normalizeIraqiNumber(whatsappNumber)
     const encodedMessage = encodeURIComponent(orderMessage)
     const waLink = `https://wa.me/${cleanSellerNumber}?text=${encodedMessage}`

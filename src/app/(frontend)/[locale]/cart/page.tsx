@@ -52,9 +52,9 @@ export default async function CartPage({ params }: CartPageProps) {
     slug: 'general-settings',
   })
 
-  // 2. Extract WhatsApp number with safe type casting
-  const whatsappNumber = (settings as Record<string, any>)?.whatsappNumber || '9647701414269'
+  // 2. Extract phone directly from payload schema (with fallback)
+  const phoneNumber = settings?.phone || '9647701414269'
 
-  // 3. Pass it down to the client component
-  return <CartClientComponent currentLocale={locale} whatsappNumber={whatsappNumber} />
+  // 3. Pass down to the client component
+  return <CartClientComponent currentLocale={locale} whatsappNumber={phoneNumber} />
 }

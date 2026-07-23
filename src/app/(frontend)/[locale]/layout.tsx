@@ -59,14 +59,14 @@ export default async function LocalizedLayout({ children, params }: LayoutProps)
   ])
 
   // Extract WhatsApp number dynamically (fallback to default if empty)
-  const whatsappNumber = (generalSettings as Record<string, any>)?.whatsappNumber || '9647701414269'
+  const phoneNumber = generalSettings?.phone || '9647701414269'
 
   return (
     <div>
       <FullNavbar currentLocale={currentLocale} />
       <EventBanner bannerData={activeEvent} currentLocale={currentLocale} isRtl={isRtl} />
       {children}
-      <WhatsappComponent phoneNumber={whatsappNumber} businessName="Customer Support" />
+      <WhatsappComponent phoneNumber={phoneNumber} businessName="Customer Support" />
       <Footer currentLocale={currentLocale} />
     </div>
   )
