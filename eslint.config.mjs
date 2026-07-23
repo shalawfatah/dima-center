@@ -1,27 +1,19 @@
-import { dirname } from 'path'
-import { fileURLToPath } from 'url'
-import { FlatCompat } from '@eslint/eslintrc'
+import { defineConfig, globalIgnores } from 'eslint/config'
+import nextVitals from 'eslint-config-next/core-web-vitals'
+import nextTypescript from 'eslint-config-next/typescript'
 
-const __filename = fileURLToPath(import.meta.url)
-const __dirname = dirname(__filename)
+const eslintConfig = defineConfig([
+  globalIgnores([
+    '.next/**',
+    'src/payload-types.ts',
+    'src/payload-generated-schema.ts',
+    'payload.config.ts',
+    'next.config.mjs',
+  ]),
 
-const compat = new FlatCompat({
-  baseDirectory: __dirname,
-})
+  ...nextVitals,
+  ...nextTypescript,
 
-const eslintConfig = [
-  // 1. GLOBAL IGNORES MUST GO FIRST TO PREVENT CIRLCULAR PLUGIN LOOPS
-  {
-    ignores: [
-      '.next/',
-      'src/payload-types.ts',
-      'src/payload-generated-schema.ts',
-      'payload.config.ts',
-      'next.config.mjs',
-    ],
-  },
-  // 2. EXTENSIONS AND CUSTOM RULES FOLLOW BELOW
-  ...compat.extends('next/core-web-vitals', 'next/typescript'),
   {
     rules: {
       '@typescript-eslint/ban-ts-comment': 'warn',
@@ -41,6 +33,6 @@ const eslintConfig = [
       ],
     },
   },
-]
+])
 
 export default eslintConfig
