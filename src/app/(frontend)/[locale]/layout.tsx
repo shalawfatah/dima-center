@@ -1,8 +1,12 @@
 export const dynamic = 'force-dynamic'
 
 import { Metadata } from 'next'
+import { getPayload } from 'payload'
+import config from '@/payload.config'
 import Footer from '@/components/Footer'
 import FullNavbar from '@/components/FullNavbar'
+import { EventBanner } from '@/components/EventBanner'
+import { fetchActiveEvent } from '@/utils/fetch_active_events'
 
 interface LayoutProps {
   children: React.ReactNode
@@ -26,7 +30,6 @@ export async function generateMetadata({
       languages: {
         en: `${baseUrl}/en`,
         ar: `${baseUrl}/ar`,
-        // Note: 'ku' is standard for Kurdish, mapping perfectly to your 'ckb' route variant
         ku: `${baseUrl}/ckb`,
         'x-default': `${baseUrl}/en`,
       },
@@ -37,13 +40,25 @@ export async function generateMetadata({
 export default async function LocalizedLayout({ children, params }: LayoutProps) {
   const { locale } = await params
 
+  // 1. Sanitize locale (fallback to 'en' if invalid)
+  const currentLocale = locale === 'en' || locale === 'ar' || locale === 'ckb' ? locale : 'en'
+
+  // 2. Compute isRtl
+  const isRtl = currentLocale === 'ar' || currentLocale === 'ckb'
+
+  // 3. Initialize Payload CMS instance
+  const payload = await getPayload({ config })
+
+  // 4. Fetch active event banner data
+  const activeEvent = await fetchActiveEvent(payload, currentLocale)
+  console.log('ae ', activeEvent)
+
   return (
     <div>
-      <FullNavbar currentLocale={locale} />
-
+      <FullNavbar currentLocale={currentLocale} />
+      <EventBanner bannerData={activeEvent} currentLocale={currentLocale} isRtl={isRtl} />
       {children}
-
-      <Footer currentLocale={locale} />
+      <Footer currentLocale={currentLocale} />
     </div>
   )
 }

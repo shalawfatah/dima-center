@@ -1,9 +1,7 @@
 import { postgresAdapter } from '@payloadcms/db-postgres'
 import { Media } from './collections/Media'
-import { Orders } from './collections/Orders'
 import { s3Storage } from '@payloadcms/storage-s3'
 import { Categories } from './collections/Categories'
-import { PCBuilds } from './collections/PCBuilds'
 import { lexicalEditor } from '@payloadcms/richtext-lexical'
 import path from 'path'
 import { buildConfig } from 'payload'
@@ -13,6 +11,7 @@ import { Users } from './collections/Users'
 import { GeneralSettings } from './globals/GeneralSettings'
 import { UICategories } from './collections/UICategories'
 import { UIProducts } from './collections/UIProducts'
+import { Events } from './collections/Events'
 
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
@@ -22,7 +21,7 @@ export default buildConfig({
     user: Users.slug,
     disable: false,
   },
-  collections: [Users, Products, Orders, Media, Categories, PCBuilds, UICategories, UIProducts],
+  collections: [Users, Products, Media, Categories, UICategories, UIProducts, Events],
   globals: [GeneralSettings],
   editor: lexicalEditor({}),
   secret: process.env.PAYLOAD_SECRET || '',

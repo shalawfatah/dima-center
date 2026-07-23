@@ -18,6 +18,7 @@ import Image from 'next/image'
 import CategoryCarousel from '@/components/CategoryCarousel'
 import SectionSkeleton from '@/components/SectionSkeleton'
 import { MINIMAL_PRODUCT_FIELDS } from '@/utils/homepage-helpers'
+import { EventBanner } from '@/components/EventBanner'
 
 const PCBuilderSection = dynamic(() => import('@/components/PCBuilderSection'), {
   loading: () => <div className={styles.pcBuilderSkeleton} />,

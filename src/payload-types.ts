@@ -69,12 +69,11 @@ export interface Config {
   collections: {
     users: User;
     products: Product;
-    orders: Order;
     media: Media;
     categories: Category;
-    'pc-builds': PcBuild;
     'ui-categories': UiCategory;
     'ui-products': UiProduct;
+    events: Event;
     'payload-kv': PayloadKv;
     'payload-locked-documents': PayloadLockedDocument;
     'payload-preferences': PayloadPreference;
@@ -84,12 +83,11 @@ export interface Config {
   collectionsSelect: {
     users: UsersSelect<false> | UsersSelect<true>;
     products: ProductsSelect<false> | ProductsSelect<true>;
-    orders: OrdersSelect<false> | OrdersSelect<true>;
     media: MediaSelect<false> | MediaSelect<true>;
     categories: CategoriesSelect<false> | CategoriesSelect<true>;
-    'pc-builds': PcBuildsSelect<false> | PcBuildsSelect<true>;
     'ui-categories': UiCategoriesSelect<false> | UiCategoriesSelect<true>;
     'ui-products': UiProductsSelect<false> | UiProductsSelect<true>;
+    events: EventsSelect<false> | EventsSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
     'payload-preferences': PayloadPreferencesSelect<false> | PayloadPreferencesSelect<true>;
@@ -234,40 +232,6 @@ export interface Media {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "orders".
- */
-export interface Order {
-  id: number;
-  user: number | User;
-  total: number;
-  status?: ('processing' | 'completed') | null;
-  updatedAt: string;
-  createdAt: string;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "pc-builds".
- */
-export interface PcBuild {
-  id: number;
-  name: string;
-  user: number | User;
-  totalPrice: number;
-  components?: {
-    cpu?: (number | null) | Product;
-    gpu?: (number | null) | Product;
-    motherboard?: (number | null) | Product;
-    ram?: (number | null) | Product;
-    storage?: (number | null) | Product;
-    psu?: (number | null) | Product;
-    case?: (number | null) | Product;
-    cooler?: (number | null) | Product;
-  };
-  updatedAt: string;
-  createdAt: string;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "ui-categories".
  */
 export interface UiCategory {
@@ -357,6 +321,36 @@ export interface UiProduct {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "events".
+ */
+export interface Event {
+  id: number;
+  isActive?: boolean | null;
+  textColor?: ('light' | 'dark') | null;
+  bannerHeight: 'small' | 'medium' | 'large';
+  mediaType: 'image' | 'svg' | 'video';
+  title: string;
+  description?: string | null;
+  backgroundImage?: (number | null) | Media;
+  /**
+   * Paste inline <svg> markup or external SVG URL here
+   */
+  backgroundSvg?: string | null;
+  /**
+   * Upload MP4 / WebM file from media gallery
+   */
+  backgroundVideo?: (number | null) | Media;
+  enableLink?: boolean | null;
+  linkUrl?: string | null;
+  linkLabel?: string | null;
+  openInNewTab?: boolean | null;
+  startDate?: string | null;
+  endDate?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-kv".
  */
 export interface PayloadKv {
@@ -388,10 +382,6 @@ export interface PayloadLockedDocument {
         value: number | Product;
       } | null)
     | ({
-        relationTo: 'orders';
-        value: number | Order;
-      } | null)
-    | ({
         relationTo: 'media';
         value: number | Media;
       } | null)
@@ -400,16 +390,16 @@ export interface PayloadLockedDocument {
         value: number | Category;
       } | null)
     | ({
-        relationTo: 'pc-builds';
-        value: number | PcBuild;
-      } | null)
-    | ({
         relationTo: 'ui-categories';
         value: number | UiCategory;
       } | null)
     | ({
         relationTo: 'ui-products';
         value: number | UiProduct;
+      } | null)
+    | ({
+        relationTo: 'events';
+        value: number | Event;
       } | null);
   globalSlug?: string | null;
   user: {
@@ -513,17 +503,6 @@ export interface ProductsSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "orders_select".
- */
-export interface OrdersSelect<T extends boolean = true> {
-  user?: T;
-  total?: T;
-  status?: T;
-  updatedAt?: T;
-  createdAt?: T;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "media_select".
  */
 export interface MediaSelect<T extends boolean = true> {
@@ -548,29 +527,6 @@ export interface CategoriesSelect<T extends boolean = true> {
   title?: T;
   slug?: T;
   parent?: T;
-  updatedAt?: T;
-  createdAt?: T;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "pc-builds_select".
- */
-export interface PcBuildsSelect<T extends boolean = true> {
-  name?: T;
-  user?: T;
-  totalPrice?: T;
-  components?:
-    | T
-    | {
-        cpu?: T;
-        gpu?: T;
-        motherboard?: T;
-        ram?: T;
-        storage?: T;
-        psu?: T;
-        case?: T;
-        cooler?: T;
-      };
   updatedAt?: T;
   createdAt?: T;
 }
@@ -611,6 +567,29 @@ export interface UiProductsSelect<T extends boolean = true> {
   staticUrl?: T;
   order?: T;
   metadata?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "events_select".
+ */
+export interface EventsSelect<T extends boolean = true> {
+  isActive?: T;
+  textColor?: T;
+  bannerHeight?: T;
+  mediaType?: T;
+  title?: T;
+  description?: T;
+  backgroundImage?: T;
+  backgroundSvg?: T;
+  backgroundVideo?: T;
+  enableLink?: T;
+  linkUrl?: T;
+  linkLabel?: T;
+  openInNewTab?: T;
+  startDate?: T;
+  endDate?: T;
   updatedAt?: T;
   createdAt?: T;
 }
