@@ -1,0 +1,203 @@
+/* Floating Trigger Button */
+.floatingBtn {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background-color: #25d366;
+  color: #ffffff;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+  z-index: 9999;
+  transition:
+    transform 0.2s ease,
+    background-color 0.2s ease;
+}
+
+.floatingBtn:hover {
+  transform: scale(1.05);
+  background-color: #20ba5a;
+}
+
+/* Chat Window - Desktop Standard */
+.windowContainer {
+  position: fixed;
+  bottom: 90px;
+  right: 20px;
+  width: 360px;
+  height: 480px;
+  background-color: #ffffff;
+  border-radius: 16px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  z-index: 9998;
+  animation: slideUp 0.25s ease-out forwards;
+}
+
+/* Mobile Responsiveness: Almost Full Screen */
+@media (max-width: 640px) {
+  .windowContainer {
+    right: 4vw;
+    left: 4vw;
+    bottom: 90px;
+    width: 92vw;
+    height: 78vh;
+    border-radius: 16px;
+  }
+}
+
+/* Header */
+.header {
+  background-color: #075e54;
+  color: #ffffff;
+  padding: 14px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.headerInfo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.avatarWrapper {
+  position: relative;
+}
+
+.avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+  background-color: #ece5dd;
+}
+
+.onlineDot {
+  position: absolute;
+  bottom: 2px;
+  right: 0;
+  width: 10px;
+  height: 10px;
+  background-color: #25d366;
+  border: 2px solid #075e54;
+  border-radius: 50%;
+}
+
+.title {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.subtitle {
+  margin: 2px 0 0 0;
+  font-size: 12px;
+  opacity: 0.85;
+}
+
+.closeBtn {
+  background: transparent;
+  border: none;
+  color: #ffffff;
+  font-size: 18px;
+  cursor: pointer;
+  opacity: 0.8;
+}
+
+.closeBtn:hover {
+  opacity: 1;
+}
+
+/* Body / Chat Area */
+.chatBody {
+  flex: 1;
+  background-color: #e5ddd5;
+  background-image: radial-gradient(#d1c7bd 1px, transparent 1px);
+  background-size: 12px 12px;
+  padding: 16px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.bubble {
+  background-color: #ffffff;
+  padding: 10px 14px;
+  border-radius: 0px 12px 12px 12px;
+  max-width: 80%;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
+  position: relative;
+}
+
+.bubbleText {
+  margin: 0;
+  font-size: 14px;
+  color: #111827;
+  line-height: 1.4;
+}
+
+.bubbleTime {
+  display: block;
+  font-size: 10px;
+  color: #6b7280;
+  text-align: right;
+  margin-top: 4px;
+}
+
+/* Footer / Input Form */
+.footer {
+  padding: 10px;
+  background-color: #f0f0f0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.input {
+  flex: 1;
+  padding: 10px 14px;
+  border-radius: 20px;
+  border: 1px solid #e0e0e0;
+  outline: none;
+  font-size: 14px;
+  background-color: #ffffff;
+}
+
+.sendBtn {
+  background-color: #075e54;
+  color: #ffffff;
+  border: none;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.2s;
+}
+
+.sendBtn:hover {
+  background-color: #128c7e;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
