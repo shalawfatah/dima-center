@@ -16,6 +16,7 @@ interface CartItem {
 
 interface CartClientComponentProps {
   currentLocale: string
+  whatsappNumber?: string // 👈 Added dynamic WhatsApp number prop
 }
 
 // 🎯 Quick Iraqi phone helper
@@ -26,7 +27,10 @@ function normalizeIraqiNumber(number: string): string {
   return digits
 }
 
-export default function CartClientComponent({ currentLocale }: CartClientComponentProps) {
+export default function CartClientComponent({
+  currentLocale,
+  whatsappNumber = '9647701414269', // Fallback default
+}: CartClientComponentProps) {
   const isRtl = currentLocale === 'ar' || currentLocale === 'ckb'
   const [cartItems, setCartItems] = useState<CartItem[]>([])
   const [isLoading, setIsLoading] = useState<boolean>(true)
@@ -44,7 +48,7 @@ export default function CartClientComponent({ currentLocale }: CartClientCompone
     } catch (err) {
       console.error('Error reading cart data:', err)
     } finally {
-      setIsLoading(false) // 👈 Changed from isLoading(false) to setIsLoading(false)
+      setIsLoading(false)
     }
   }, [])
 
@@ -88,7 +92,7 @@ export default function CartClientComponent({ currentLocale }: CartClientCompone
   const totalAmount = cartItems.reduce((acc, item) => acc + item.price * item.quantity, 0)
 
   // 🎯 Handles gathering all cart items, building the text list, and redirecting.
-  const handleWhatsAppCheckout = (e: React.SubmitEvent) => {
+  const handleWhatsAppCheckout = (e: React.FormEvent) => {
     e.preventDefault()
 
     if (!buyerNumber.trim()) {
@@ -114,8 +118,8 @@ export default function CartClientComponent({ currentLocale }: CartClientCompone
       `*Total Amount:* ${totalAmount.toLocaleString()} ${t.currency}\n` +
       `*Buyer Number:* ${buyerNumber}`
 
-    const sellerNumber = '9647701414269'
-    const cleanSellerNumber = normalizeIraqiNumber(sellerNumber)
+    // 🟢 Dynamic WhatsApp number from props
+    const cleanSellerNumber = normalizeIraqiNumber(whatsappNumber)
     const encodedMessage = encodeURIComponent(orderMessage)
     const waLink = `https://wa.me/${cleanSellerNumber}?text=${encodedMessage}`
 

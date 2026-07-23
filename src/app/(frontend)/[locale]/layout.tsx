@@ -50,15 +50,23 @@ export default async function LocalizedLayout({ children, params }: LayoutProps)
   // 3. Initialize Payload CMS instance
   const payload = await getPayload({ config })
 
-  // 4. Fetch active event banner data
-  const activeEvent = await fetchActiveEvent(payload, currentLocale)
+  // 4. Fetch active event banner data & general settings concurrently
+  const [activeEvent, generalSettings] = await Promise.all([
+    fetchActiveEvent(payload, currentLocale),
+    payload.findGlobal({
+      slug: 'general-settings',
+    }),
+  ])
+
+  // Extract WhatsApp number dynamically (fallback to default if empty)
+  const whatsappNumber = (generalSettings as Record<string, any>)?.whatsappNumber || '9647701414269'
 
   return (
     <div>
       <FullNavbar currentLocale={currentLocale} />
       <EventBanner bannerData={activeEvent} currentLocale={currentLocale} isRtl={isRtl} />
       {children}
-      <WhatsappComponent phoneNumber="9647701414269" businessName="Customer Support" />
+      <WhatsappComponent phoneNumber={whatsappNumber} businessName="Customer Support" />
       <Footer currentLocale={currentLocale} />
     </div>
   )

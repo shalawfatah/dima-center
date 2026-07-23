@@ -1,4 +1,6 @@
 import type { Metadata } from 'next'
+import { getPayload } from 'payload'
+import config from '@/payload.config'
 import { getStorefrontMetadata } from '@/utils/seo'
 import CartClientComponent from '@/components/CartClientComponent'
 
@@ -43,5 +45,16 @@ export async function generateMetadata({ params }: CartPageProps): Promise<Metad
 
 export default async function CartPage({ params }: CartPageProps) {
   const { locale } = await params
-  return <CartClientComponent currentLocale={locale} />
+
+  // 1. Fetch general settings from Payload CMS
+  const payload = await getPayload({ config })
+  const settings = await payload.findGlobal({
+    slug: 'general-settings',
+  })
+
+  // 2. Extract WhatsApp number with safe type casting
+  const whatsappNumber = (settings as Record<string, any>)?.whatsappNumber || '9647701414269'
+
+  // 3. Pass it down to the client component
+  return <CartClientComponent currentLocale={locale} whatsappNumber={whatsappNumber} />
 }

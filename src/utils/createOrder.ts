@@ -5,7 +5,7 @@ interface Product {
   url: string
 }
 
-function normalizeIraqiNumber(number: string): string {
+export function normalizeIraqiNumber(number: string): string {
   let digits = number.replace(/\D/g, '')
   if (digits.startsWith('0')) digits = digits.slice(1) // drop leading 0
   if (!digits.startsWith('964')) digits = '964' + digits // add country code if missing
@@ -26,7 +26,5 @@ export function createOrder(
 
   const cleanSellerNumber: string = normalizeIraqiNumber(sellerNumber)
   const encodedMessage: string = encodeURIComponent(message)
-  const waLink: string = `https://wa.me/${cleanSellerNumber}?text=${encodedMessage}`
-
-  return waLink // open this URL (e.g. window.open(waLink))
+  return `https://wa.me/${cleanSellerNumber}?text=${encodedMessage}`
 }
