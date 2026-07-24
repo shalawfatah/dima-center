@@ -641,6 +641,17 @@ export interface GeneralSetting {
   id: number;
   slogan?: string | null;
   logo?: (number | null) | Media;
+  pcBuilder?: {
+    backgroundImage?: (number | null) | Media;
+    foregroundImage?: (number | null) | Media;
+  };
+  header?: {
+    /**
+     * Enter a valid CSS color code (e.g. #1E293B or rgba(0,0,0,0.8)).
+     */
+    backgroundColor?: string | null;
+    eventLogoSticker?: (number | null) | Media;
+  };
   /**
    * Used across the system to calculate IQD pricing dynamically.
    */
@@ -665,6 +676,18 @@ export interface GeneralSetting {
 export interface GeneralSettingsSelect<T extends boolean = true> {
   slogan?: T;
   logo?: T;
+  pcBuilder?:
+    | T
+    | {
+        backgroundImage?: T;
+        foregroundImage?: T;
+      };
+  header?:
+    | T
+    | {
+        backgroundColor?: T;
+        eventLogoSticker?: T;
+      };
   exchangeRate?: T;
   email?: T;
   phone?: T;
