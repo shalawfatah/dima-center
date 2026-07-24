@@ -20,6 +20,21 @@ export default buildConfig({
   admin: {
     user: Users.slug,
     disable: false,
+    components: {
+      graphics: {
+        Icon: '@/components/CustomIcon',
+        Logo: '@/components/CustomIcon',
+      },
+    },
+    meta: {
+      icons: [
+        {
+          rel: 'icon',
+          type: 'image/x-icon',
+          url: '/dima.ico', // Points to public/dima.ico
+        },
+      ],
+    },
   },
   collections: [Users, Products, Media, Categories, UICategories, UIProducts, Events],
   globals: [GeneralSettings],
