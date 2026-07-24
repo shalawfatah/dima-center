@@ -59,11 +59,21 @@ export default function PromoCarouselClient({
 
   useEffect(() => {
     if (!emblaApi) return
+
+    // Register event listeners
     emblaApi.on('select', onSelect)
     emblaApi.on('reInit', onSelect)
-    onSelect(emblaApi)
-  }, [emblaApi, onSelect])
 
+    // Defer initial sync to avoid synchronous setState inside the effect body
+    queueMicrotask(() => {
+      onSelect(emblaApi)
+    })
+
+    return () => {
+      emblaApi.off('select', onSelect)
+      emblaApi.off('reInit', onSelect)
+    }
+  }, [emblaApi, onSelect])
   const scrollToSlide = (index: number) => {
     if (!emblaApi) return
     emblaApi.scrollTo(index)
@@ -97,12 +107,6 @@ export default function PromoCarouselClient({
               shouldLink = true
             }
 
-            // Category badge label (localized)
-            const categoryTitle =
-              promo.uiCategory && typeof promo.uiCategory === 'object'
-                ? getLocalizedField(promo.uiCategory.title, currentLocale)
-                : null
-
             const slideContent = (
               <div className={styles.promoWrapper} style={{ textAlign: isRtl ? 'right' : 'left' }}>
                 {/* 🖼️ BACKGROUND IMAGE & OVERLAY */}
@@ -123,11 +127,6 @@ export default function PromoCarouselClient({
 
                 {/* ✍️ TEXT CONTENT LAYER */}
                 <div className={styles.textContent}>
-                  {categoryTitle && (
-                    <span className={`${styles.badge} ${styles.badgeProduct}`}>
-                      {categoryTitle}
-                    </span>
-                  )}
                   {title && <h2 className={styles.title}>{title}</h2>}
                   {description && <p className={styles.description}>{description}</p>}
                 </div>

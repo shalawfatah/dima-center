@@ -29,10 +29,6 @@ export default function PcBuilderClient({
 }: PcBuilderClientProps & { generals?: GeneralSettingsData }) {
   const [mounted, setMounted] = useState(false)
 
-  const [buildName, setBuildName] = useLocalStorageState<string>(
-    'pc_build_name',
-    'My Dream Rig Build',
-  )
   const [selections, setSelections] = useLocalStorageState<Record<string, any>>(
     'pc_build_selections',
     {},
@@ -45,9 +41,11 @@ export default function PcBuilderClient({
 
   const dynamicExchangeRate = generals?.exchangeRate ?? 1500
 
-  // Signal layout mounting sequence to prevent layout flashes
+  // Signal layout mounting sequence to prevent layout flashes without synchronous setState warning
   useEffect(() => {
-    setMounted(true)
+    queueMicrotask(() => {
+      setMounted(true)
+    })
   }, [])
 
   usePcBuilderUrlSync({ mounted, products, currentLocale, setSelections })
@@ -102,7 +100,7 @@ export default function PcBuilderClient({
     return calculateBuildTotals(selections)
   }, [selections, mounted])
 
-  const handleWhatsAppBuildOrder = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleWhatsAppBuildOrder = (e: React.SubmitEvent<HTMLFormElement>) => {
     e.preventDefault()
     if (!buyerNumber.trim()) {
       alert(phoneErrorLabel[currentLocale] || phoneErrorLabel.en)
@@ -114,7 +112,7 @@ export default function PcBuilderClient({
     }
 
     const waMessageText = buildWhatsAppOrderMessage({
-      buildName,
+      buildName: 'Custom PC Build',
       selections,
       componentSlots: COMPONENT_SLOTS,
       totalPrice,
@@ -199,8 +197,6 @@ export default function PcBuilderClient({
           t={t}
           currentLocale={currentLocale}
           mounted={mounted}
-          buildName={buildName}
-          setBuildName={setBuildName}
           totalPrice={totalPrice}
           totalOriginalPrice={totalOriginalPrice}
           dynamicExchangeRate={dynamicExchangeRate}

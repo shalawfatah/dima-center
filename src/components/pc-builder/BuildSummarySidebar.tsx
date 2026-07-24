@@ -7,15 +7,13 @@ interface BuildSummarySidebarProps {
   t: Record<string, string>
   currentLocale: string
   mounted: boolean
-  buildName: string
-  setBuildName: (name: string) => void
   totalPrice: number
   totalOriginalPrice: number
   dynamicExchangeRate: number
   buyerNumber: string
   setBuyerNumber: (value: string) => void
   hasSelections: boolean
-  onSubmit: (e: React.FormEvent<HTMLFormElement>) => void
+  onSubmit: (e: React.SubmitEvent<HTMLFormElement>) => void
   fontFam: string
 }
 
@@ -23,8 +21,6 @@ export default function BuildSummarySidebar({
   t,
   currentLocale,
   mounted,
-  buildName,
-  setBuildName,
   totalPrice,
   totalOriginalPrice,
   dynamicExchangeRate,
@@ -40,19 +36,6 @@ export default function BuildSummarySidebar({
     <div className={styles['pc-builder-sidebar']}>
       <div className={styles['pc-builder-summary-card']}>
         <h3 className={styles['pc-builder-summary-heading']}>{t.summary}</h3>
-
-        <div className={styles['pc-builder-field-group']}>
-          <label htmlFor="pc-builder-build-name" className={styles['pc-builder-input-label']}>
-            {t.configName}
-          </label>
-          <input
-            type="text"
-            id="pc-builder-build-name"
-            value={mounted ? buildName : ''}
-            onChange={(e) => setBuildName(e.target.value)}
-            className={styles['pc-builder-text-input']}
-          />
-        </div>
 
         <div className={styles['pc-builder-exchange-container']}>
           <span className={styles['pc-builder-exchange-label']}>

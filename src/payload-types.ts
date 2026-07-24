@@ -137,7 +137,7 @@ export interface UserAuthOperations {
  */
 export interface User {
   id: number;
-  role: 'admin' | 'customer';
+  role: 'super-admin' | 'admin' | 'customer';
   updatedAt: string;
   createdAt: string;
   email: string;
