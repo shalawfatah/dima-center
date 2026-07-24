@@ -12,7 +12,6 @@ export const search_styles = () => `
     justify-content: space-between; 
     padding: 0.50rem 2rem; 
     gap: 1.5rem;
-    background: var(--brand-background);
     position: relative;
     z-index: 1000;
   }

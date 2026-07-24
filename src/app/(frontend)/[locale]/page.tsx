@@ -306,16 +306,29 @@ export default async function StorefrontHome({ params, searchParams }: PageProps
 
   // 🏠 DEFAULT HOME VIEW
   const payload = await getPayload({ config })
-  const categoriesRes = await payload.find({
-    collection: 'ui-categories',
-    locale: currentLocale as 'en' | 'ar' | 'ckb',
-    fallbackLocale: 'en',
-    sort: 'order',
-    where: {
-      hideInCarousel: { equals: false },
-    },
-    limit: 100,
-  })
+
+  // Fetch UI Categories and General Settings in parallel
+  const [categoriesRes, generalSettings] = await Promise.all([
+    payload.find({
+      collection: 'ui-categories',
+      locale: currentLocale as 'en' | 'ar' | 'ckb',
+      fallbackLocale: 'en',
+      sort: 'order',
+      where: {
+        hideInCarousel: { equals: false },
+      },
+      limit: 100,
+    }),
+    payload
+      .findGlobal({
+        slug: 'general-settings',
+        depth: 1, // Ensures image relations (backgroundImage, foregroundImage) return full objects
+      })
+      .catch((err) => {
+        console.error('Error querying general-settings:', err)
+        return null
+      }),
+  ])
 
   const categories = categoriesRes.docs.map((doc: any) => ({
     id: doc.id,
@@ -325,13 +338,21 @@ export default async function StorefrontHome({ params, searchParams }: PageProps
     subCategories: doc.subCategories || [],
   }))
 
+  const pcBuilderBg = generalSettings?.pcBuilder?.backgroundImage
+  const pcBuilderFg = generalSettings?.pcBuilder?.foregroundImage
+
   return (
     <div className={`${styles.pageWrapper} ${styles.pageWrapperDefault} ${dirClass}`}>
       <CategoryCarousel currentLocale={currentLocale} categories={categories} />
 
       <div className={styles.promoWrapper}>
         <div className={styles.promoLeft}>
-          <PCBuilderSection currentLocale={currentLocale} isRtl={isRtl} />
+          <PCBuilderSection
+            currentLocale={currentLocale}
+            isRtl={isRtl}
+            backgroundImage={pcBuilderBg}
+            foregroundImage={pcBuilderFg}
+          />
         </div>
       </div>
 
