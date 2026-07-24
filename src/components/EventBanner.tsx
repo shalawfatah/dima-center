@@ -123,34 +123,12 @@ export const EventBanner: React.FC<EventBannerProps> = ({
   const videoUrl = typeof backgroundVideo === 'object' ? backgroundVideo?.url : undefined
 
   const ContentBody = (
-    <div
-      className={`${styles.contentLayer} ${textClass} ${directionClass}`}
-      style={{
-        display: 'flex',
-        flexDirection: 'column',
-        justifyContent: 'center',
-        alignItems: isRtl ? 'flex-end' : 'flex-start',
-        textAlign: isRtl ? 'right' : 'left',
-        width: '100%',
-      }}
-    >
-      {displayTitle && (
-        <h2
-          className={`${styles.title} ${titleSizeClass}`}
-          style={{ textAlign: isRtl ? 'right' : 'left', width: '100%' }}
-        >
-          {displayTitle}
-        </h2>
-      )}
+    <div className={`${styles.contentLayer} ${textClass} ${directionClass} ${heightClass}`}>
+      <div className={styles.textGroup}>
+        {displayTitle && <h2 className={`${styles.title} ${titleSizeClass}`}>{displayTitle}</h2>}
 
-      {displayDescription && (
-        <p
-          className={styles.description}
-          style={{ textAlign: isRtl ? 'right' : 'left', width: '100%' }}
-        >
-          {displayDescription}
-        </p>
-      )}
+        {displayDescription && <p className={styles.description}>{displayDescription}</p>}
+      </div>
 
       {enableLink && linkUrl && displayLinkLabel && (
         <span className={`${styles.ctaButton} ${buttonClass}`}>{displayLinkLabel}</span>
@@ -177,7 +155,13 @@ export const EventBanner: React.FC<EventBannerProps> = ({
               dangerouslySetInnerHTML={{ __html: backgroundSvg }}
             />
           ) : (
-            <img src={backgroundSvg} alt="" className={styles.mediaCover} />
+            <Image
+              height={800}
+              width={800}
+              src={backgroundSvg}
+              alt=""
+              className={styles.mediaCover}
+            />
           ))}
 
         {mediaType === 'video' && videoUrl && (
