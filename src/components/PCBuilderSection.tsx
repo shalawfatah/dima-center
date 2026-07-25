@@ -37,7 +37,7 @@ export default function PCBuilderSection({
   const fgUrl = getImageUrl(foregroundImage)
 
   return (
-    <section className={styles.section} dir={isRtl ? 'rtl' : 'ltr'}>
+    <section className={styles.section} dir="ltr">
       {/* Background Image */}
       {bgUrl && (
         <Image
@@ -51,9 +51,12 @@ export default function PCBuilderSection({
         />
       )}
 
-      {/* Foreground Image Wrapper - Handled completely via CSS */}
+      {/* 🎯 Explicitly force position/alignment to the LEFT */}
       {fgUrl && (
-        <div className={styles.visual}>
+        <div
+          className={styles.visual}
+          style={{ left: 0, right: 'auto', marginLeft: 0, marginRight: 'auto' }}
+        >
           <Image
             src={fgUrl}
             alt="PC Builder Foreground"
