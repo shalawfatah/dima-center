@@ -2,15 +2,24 @@
 
 import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
+import { usePathname } from 'next/navigation'
 import styles from '@/styles/languages.module.css'
 
 interface LanguagesProps {
   currentLocale: string
 }
 
+// 🎯 Safe side-effect helper outside React's render/hook lifecycle
+function setLocaleCookie(code: string) {
+  if (typeof document !== 'undefined') {
+    document.cookie = `NEXT_LOCALE=${code}; path=/; max-age=31536000; SameSite=Lax`
+  }
+}
+
 export default function Languages({ currentLocale }: LanguagesProps) {
   const [isOpen, setIsOpen] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
+  const pathname = usePathname()
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -29,9 +38,19 @@ export default function Languages({ currentLocale }: LanguagesProps) {
   ]
 
   const currentLang = languages.find((l) => l.code === currentLocale) || languages[0]
-
-  // 🌍 Check if the layout direction is Right-to-Left
   const isRtl = currentLocale === 'ar' || currentLocale === 'ckb'
+
+  const handleLanguageChange = (code: string) => {
+    setLocaleCookie(code)
+    setIsOpen(false)
+  }
+
+  const getTargetHref = (targetCode: string) => {
+    if (!pathname) return `/${targetCode}`
+    const segments = pathname.split('/')
+    segments[1] = targetCode
+    return segments.join('/') || `/${targetCode}`
+  }
 
   return (
     <div ref={dropdownRef} className={styles.container}>
@@ -40,7 +59,6 @@ export default function Languages({ currentLocale }: LanguagesProps) {
         className={styles.trigger}
         aria-label="Change language"
       >
-        {/* 🌐 Dynamically switch between the globe icon and the flag */}
         <span className={styles.iconWrapper}>
           {isOpen ? (
             currentLang.flag
@@ -83,8 +101,8 @@ export default function Languages({ currentLocale }: LanguagesProps) {
           {languages.map((lang) => (
             <Link
               key={lang.code}
-              href={`/${lang.code}`}
-              onClick={() => setIsOpen(false)}
+              href={getTargetHref(lang.code)}
+              onClick={() => handleLanguageChange(lang.code)}
               className={`${styles.langLink} ${
                 currentLocale === lang.code ? styles.langLinkActive : ''
               }`}

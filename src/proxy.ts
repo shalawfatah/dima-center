@@ -13,7 +13,10 @@ export function proxy(request: NextRequest) {
 
   if (pathnameHasLocale) return NextResponse.next()
 
-  request.nextUrl.pathname = `/${defaultLocale}${pathname}`
+  const savedLocale = request.cookies.get('NEXT_LOCALE')?.value
+  const targetLocale = locales.includes(savedLocale as string) ? savedLocale : defaultLocale
+
+  request.nextUrl.pathname = `/${targetLocale}${pathname}`
   return NextResponse.redirect(request.nextUrl)
 }
 
