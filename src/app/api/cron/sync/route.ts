@@ -1,13 +1,19 @@
 import { NextResponse } from 'next/server'
-import { executeDifferentialSync } from '../../../../scripts/importBruskCatalog'
+import { executeDifferentialSync } from '@/scripts/importBruskCatalog'
 
-export const maxDuration = 300 // Allows execution up to 5 minutes on Vercel Pro if needed
+// Runs on Netlify's scheduler — no public trigger, no secret needed for this to fire.
+// Cron is UTC. 06:00 & 12:00 UTC = 09:00 & 15:00 Istanbul time (UTC+3, currently).
+// If Istanbul shifts to UTC+2 for standard time, adjust to '0 7,13 * * *' to keep 9am/3pm local.
+export const config = {
+  type: 'experimental-scheduled',
+  schedule: '0 6,12 * * *',
+}
 
 export async function GET(request: Request) {
-  // Protect your endpoint using a secret token so strangers can't trigger it
+  // Keep the secret check so you can still manually trigger this via URL for testing/debugging,
+  // but it's not required for the scheduled invocation itself.
   const { searchParams } = new URL(request.url)
   const authSecret = searchParams.get('secret')
-
   if (authSecret !== process.env.CRON_SECRET) {
     return new NextResponse('Unauthorized', { status: 401 })
   }

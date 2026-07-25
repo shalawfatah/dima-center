@@ -3,38 +3,7 @@ dotenv.config()
 
 import { getPayload } from 'payload'
 import config from '../payload.config'
-
-interface ExternalCategory {
-  _id: string
-  name: string
-}
-
-interface ExternalItem {
-  _id: string
-  name: string
-  barcode?: string
-  price: number
-  currency: string
-  websitePrice?: number
-  websitePriceCurrency?: string
-  quantity?: number
-  category?: string
-  brand?: string
-  description?: string
-}
-
-interface ExternalInventory {
-  _id: string
-  name: string
-}
-
-interface ExternalStock {
-  _id: string
-  name: string
-  code?: string
-  barcode?: string
-  totalQuantity: number
-}
+import { ExternalCategory, ExternalItem, ExternalInventory, ExternalStock } from '@/types/types'
 
 function slugify(text: string): string {
   return text
@@ -46,9 +15,6 @@ function slugify(text: string): string {
     .replace(/\-\-+/g, '-')
 }
 
-// Bruska represents USD sometimes as "usd" and sometimes literally as the
-// symbol "$". Normalize both currency fields down to a known code so we can
-// reliably tell which of price / websitePrice is dollars vs dinar.
 function normalizeCurrency(c?: string): 'usd' | 'iqd' | null {
   if (!c) return null
   const v = c.trim().toLowerCase()
@@ -57,13 +23,6 @@ function normalizeCurrency(c?: string): 'usd' | 'iqd' | null {
   return null
 }
 
-// Items from /items carry two price fields: `price`/`currency` and
-// `websitePrice`/`websitePriceCurrency`. In practice these are usually one
-// USD value and one IQD value, but the currency isn't guaranteed to be
-// pinned to a specific field, so we resolve both by inspecting the actual
-// currency string on each side rather than assuming positions.
-// If only one side is present, we derive the other using the branch's
-// live exchange rate (from /items/ex_rate_change/:branchId) as a fallback.
 function resolveDualPrices(
   item: ExternalItem,
   exRate: number | null,
