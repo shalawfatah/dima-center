@@ -30,7 +30,7 @@ export default async function PromoCarousel({ currentLocale }: PromoCarouselProp
   const promoData = await payload.find({
     collection: 'ui-products',
     locale: currentLocale as 'en' | 'ar' | 'ckb',
-    fallbackLocale: 'en', // Automatically fallback to English if string is missing
+    fallbackLocale: 'ckb', // Automatically fallback to English if string is missing
     draft: true, // 👈 CRITICAL: Fetch drafts too in case items aren't published
     overrideAccess: true, // 👈 Bypasses access control restriction checks on local API
     where: {
@@ -49,7 +49,7 @@ export default async function PromoCarousel({ currentLocale }: PromoCarouselProp
     const fallbackData = await payload.find({
       collection: 'ui-products',
       locale: currentLocale as 'en' | 'ar' | 'ckb',
-      fallbackLocale: 'en',
+      fallbackLocale: 'ckb',
       draft: true,
       overrideAccess: true,
       where: {

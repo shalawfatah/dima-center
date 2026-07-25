@@ -26,7 +26,7 @@ export default async function CategorySections({
       limit: 100,
       sort: 'order',
       locale: currentLocale as 'en' | 'ar' | 'ckb',
-      fallbackLocale: 'en', // 🎯 Ensures UI Category titles fall back to English
+      fallbackLocale: 'ckb', // 🎯 Fallback to Central Kurdish if translation is missing
     })
     .catch((err) => {
       console.error('Failed to fetch ui-categories', err)
@@ -41,14 +41,14 @@ export default async function CategorySections({
 
   if (allLeafSlugs.length === 0) return null
 
-  // 3. Query BOTH 'products' AND 'ui-products' with explicit fallbackLocale: 'en'
+  // 3. Query BOTH 'products' AND 'ui-products' with fallbackLocale: 'ckb'
   const [productsBulk, uiProductsBulk] = await Promise.all([
     payload
       .find({
         collection: 'products',
         depth: 1,
         locale: currentLocale as 'en' | 'ar' | 'ckb',
-        fallbackLocale: 'en', // 🎯 Payload will return English if CKB is missing
+        fallbackLocale: 'ckb', // 🎯 Fallback to Central Kurdish if translation is missing
         where: {
           and: [{ 'category.slug': { in: allLeafSlugs } }, { stock: { greater_than: 0 } }],
         },
@@ -62,7 +62,7 @@ export default async function CategorySections({
         collection: 'ui-products',
         depth: 1,
         locale: currentLocale as 'en' | 'ar' | 'ckb',
-        fallbackLocale: 'en', // 🎯 Payload will return English if CKB is missing
+        fallbackLocale: 'ckb', // 🎯 Fallback to Central Kurdish if translation is missing
         where: {
           or: [
             { 'category.slug': { in: allLeafSlugs } },

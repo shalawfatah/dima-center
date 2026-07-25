@@ -74,12 +74,14 @@ function sanitizeString(val: any): string | null {
 /**
  * 🎯 Robust Localized & Fallback Text Extractor
  * Priority Order:
- * 1. Requested Locale string or property (e.g., product.title_ckb or product.title)
- * 2. English fallback (e.g., product.title_en or product.title.en)
- * 3. Arabic fallback
- * 4. Rich Text / AST content (if present)
- * 5. Alternative candidate fields (name, productName, label)
+ * 1. Direct raw string on product[fieldType]
+ * 2. Localized dictionary object: Requested Locale -> CKB -> EN -> AR -> First available string
+ * 3. Rich Text / AST content (if present)
+ * 4. Explicit fallback properties on root level (e.g. title_ckb, titleCkb, title_en)
+ * 5. Candidate fallback fields (name, productName, label, slug)
  */
+// @/utils/product_helpers.ts
+
 export function getFallbackText(
   product: ProductItem | any,
   fieldType: LocalizableField,
@@ -87,26 +89,22 @@ export function getFallbackText(
 ): string {
   if (!product) return ''
 
-  // 1. Check direct localized properties like title_ckb, title_en, description_ar
-  const langKey = currentLocale === 'ar' || currentLocale === 'ckb' ? currentLocale : 'en'
-  const localizedKey = `${fieldType}_${langKey}`
-  const directLocalizedProp = sanitizeString(product[localizedKey])
-  if (directLocalizedProp) {
-    return directLocalizedProp
+  // Safe internal string sanitizer
+  const sanitize = (val: any): string | null => {
+    if (typeof val === 'string' && val.trim() !== '') return val.trim()
+    return null
   }
 
-  // 2. Fetch target field or alternative name candidates
-  const rawVal = product[fieldType] ?? product.name ?? product.productName ?? product.label
+  // 1. Get raw field from current product level
+  const rawVal = product[fieldType]
 
-  // 3. Direct non-empty string
-  const directString = sanitizeString(rawVal)
-  if (directString) {
-    return directString
-  }
+  // 2. Direct non-empty string
+  const directStr = sanitize(rawVal)
+  if (directStr) return directStr
 
-  // 4. Handle localized objects or Rich Text ASTs
+  // 3. Localized object or Lexical/Slate AST
   if (typeof rawVal === 'object' && rawVal !== null) {
-    // Rich Text field handling (Lexical / Slate AST)
+    // Rich Text AST check
     if (rawVal.root || Array.isArray(rawVal.children)) {
       try {
         const children = rawVal.root?.children || rawVal.children || []
@@ -116,33 +114,59 @@ export function getFallbackText(
           .trim()
         if (text) return text
       } catch (e) {
-        // Fallthrough to object checking
+        // Fallthrough
       }
     }
 
-    // Localized dictionary fallback sequence: Requested Locale -> English -> Arabic -> Kurdish -> Any non-empty string
-    const localizedStr =
-      sanitizeString(rawVal[currentLocale]) ||
-      sanitizeString(rawVal.en) ||
-      sanitizeString(rawVal.ar) ||
-      sanitizeString(rawVal.ckb) ||
-      Object.values(rawVal).map(sanitizeString).find(Boolean)
+    // Localized dictionary resolution
+    const objectMatch =
+      sanitize(rawVal[currentLocale]) ||
+      sanitize(rawVal.ckb) ||
+      sanitize(rawVal.en) ||
+      sanitize(rawVal.ar) ||
+      Object.values(rawVal)
+        .map(sanitize)
+        .find((v): v is string => v !== null)
 
-    if (localizedStr) {
-      return localizedStr
-    }
+    if (objectMatch) return objectMatch
   }
 
-  // 5. Explicit fallback checks across English properties if everything above was empty
-  const explicitEnFallback =
-    sanitizeString(product[`${fieldType}_en`]) ||
-    sanitizeString(product.title_en) ||
-    sanitizeString(product.name) ||
-    sanitizeString(product.productName) ||
-    sanitizeString(product.label)
+  // 4. Flattened top-level properties (e.g. title_ar, titleAr)
+  const topLevelMatch =
+    sanitize(product[`${fieldType}_${currentLocale}`]) ||
+    sanitize(product[`${fieldType}_ckb`]) ||
+    sanitize(product[`${fieldType}Ckb`]) ||
+    sanitize(product[`${fieldType}_en`]) ||
+    sanitize(product[`${fieldType}En`]) ||
+    sanitize(product[`${fieldType}_ar`]) ||
+    sanitize(product[`${fieldType}Ar`])
 
-  if (explicitEnFallback) {
-    return explicitEnFallback
+  if (topLevelMatch) return topLevelMatch
+
+  // 5. Check candidate fallbacks (name, label, slug)
+  const fallbackCandidates =
+    sanitize(product.name) ||
+    sanitize(product.productName) ||
+    sanitize(product.label) ||
+    sanitize(product.slug)
+
+  if (fallbackCandidates) return fallbackCandidates
+
+  // 6. UI-PRODUCT FIX: If this is a ui-product/case offer wrapping a linked product,
+  // recursively search the linked product or uiCategory for the missing text!
+  if (product.linkedProduct && typeof product.linkedProduct === 'object') {
+    const linkedText = getFallbackText(product.linkedProduct, fieldType, currentLocale)
+    if (linkedText) return linkedText
+  }
+
+  if (product.uiCategory && typeof product.uiCategory === 'object') {
+    const categoryText = getFallbackText(product.uiCategory, fieldType, currentLocale)
+    if (categoryText) return categoryText
+  }
+
+  if (product.category && typeof product.category === 'object') {
+    const categoryText = getFallbackText(product.category, fieldType, currentLocale)
+    if (categoryText) return categoryText
   }
 
   return ''

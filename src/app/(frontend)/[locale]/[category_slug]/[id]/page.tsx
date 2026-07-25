@@ -115,7 +115,7 @@ async function fetchProductById(id: string, locale: string, payload: any) {
       collection: 'products',
       id: numericId,
       locale,
-      fallbackLocale: 'en', // 🎯 Ensures missing CKB fields fallback to English
+      fallbackLocale: 'ckb', // 🎯 Ensures missing CKB fields fallback to English
       depth: 1,
     })
     if (product) return { product, collectionName: 'products' as const }
@@ -129,7 +129,7 @@ async function fetchProductById(id: string, locale: string, payload: any) {
       collection: 'ui-products',
       id: numericId,
       locale,
-      fallbackLocale: 'en', // 🎯 Ensures missing CKB fields fallback to English
+      fallbackLocale: 'ckb', // 🎯 Ensures missing CKB fields fallback to English
       depth: 1,
     })
     if (uiProduct) return { product: uiProduct, collectionName: 'ui-products' as const }
@@ -241,7 +241,7 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
       const relatedData = await payload.find({
         collection: targetCollection,
         locale: currentLocale as 'en' | 'ar' | 'ckb',
-        fallbackLocale: 'en', // 🎯 Added fallback locale here as well
+        fallbackLocale: 'ckb', // 🎯 Added fallback locale here as well
         where: {
           and: [{ [categoryKey]: { equals: categoryId } }, { id: { not_equals: product.id } }],
         },
