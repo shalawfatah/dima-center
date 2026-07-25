@@ -6,9 +6,8 @@ import Link from 'next/link'
 import Image from 'next/image'
 import styles from '@/styles/pc_builder_section.module.css'
 import PCBuilderBottomSVG from './pc-builder/PCBuilderBottomSVG'
-import type { Media } from '@/payload-types' // 👈 Import Payload's generated Media type
+import type { Media } from '@/payload-types'
 
-// 1. Combine Payload's Media interface with number, string, and null
 type MediaItem = Media | string | number | null
 
 interface ExtendedPCBuilderSectionProps extends PCBuilderSectionProps {
@@ -27,7 +26,6 @@ export default function PCBuilderSection({
   const textFont = isRegionalLocale ? '"Rudaw", sans-serif' : 'inherit'
   const copy = COPY[currentLocale] || COPY.en
 
-  // 2. Safely extract string URL handling null/number/object cases
   const getImageUrl = (media?: MediaItem): string | null => {
     if (!media || typeof media === 'number') return null
     if (typeof media === 'string') return media
@@ -53,33 +51,15 @@ export default function PCBuilderSection({
         />
       )}
 
-      {/* Foreground Image Wrapper */}
+      {/* Foreground Image Wrapper - Handled completely via CSS */}
       {fgUrl && (
-        <div
-          className={styles.visual}
-          style={{
-            position: 'absolute',
-            zIndex: 2,
-            opacity: 1,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            maxHeight: '100%',
-            ...(isRtl ? { right: 'auto', left: 20 } : { left: 'auto', right: 20 }),
-          }}
-        >
+        <div className={styles.visual}>
           <Image
             src={fgUrl}
             alt="PC Builder Foreground"
             width={240}
             height={240}
-            style={{
-              width: 'auto',
-              height: '100%',
-              maxHeight: '180px',
-              objectFit: 'contain',
-              opacity: 1,
-            }}
+            className={styles.fgImage}
           />
         </div>
       )}

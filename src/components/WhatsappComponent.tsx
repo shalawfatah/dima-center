@@ -11,7 +11,7 @@ interface WhatsappComponentProps {
 
 export const WhatsappComponent: React.FC<WhatsappComponentProps> = ({
   phoneNumber = '9647701414269',
-  businessName = 'Support Team',
+  businessName,
 }) => {
   const [isOpen, setIsOpen] = useState(false)
 

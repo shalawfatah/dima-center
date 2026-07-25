@@ -3,6 +3,7 @@
 import { useRouter, useSearchParams, usePathname } from 'next/navigation'
 import { useState, useEffect, useRef } from 'react'
 import styles from '@/styles/search.module.css'
+import Image from 'next/image'
 
 const searchCache: Record<string, any[]> = {}
 
@@ -44,6 +45,102 @@ function SearchIcon({ color = '#334155', size = 18 }: { color?: string; size?: n
   )
 }
 
+interface SearchResultsDropdownProps {
+  showDropdown: boolean
+  searchTerm: string
+  isLoading: boolean
+  results: any[]
+  locale: string
+  onSelectResult: (category: string, productIdentifier: string) => void
+}
+
+function SearchResultsDropdown({
+  showDropdown,
+  searchTerm,
+  isLoading,
+  results,
+  locale,
+  onSelectResult,
+}: SearchResultsDropdownProps) {
+  if (!showDropdown || searchTerm.trim().length < 1) return null
+
+  const getLocalizedText = (val: any) => {
+    if (!val) return ''
+    if (typeof val === 'string') return val
+    if (typeof val === 'object') {
+      return val[locale] || val.en || val.ckb || val.ar || Object.values(val)[0] || ''
+    }
+    return String(val)
+  }
+
+  const getImageUrl = (item: any): string | null => {
+    const img = item.image || item.thumbnail || item.media || item.featuredImage
+    if (!img) return null
+    if (typeof img === 'string') return img
+    if (typeof img === 'object') {
+      return img.url || img.sizes?.thumbnail?.url || img.sizes?.card?.url || null
+    }
+    return null
+  }
+
+  return (
+    <div className={styles.searchResultsDropdown}>
+      {isLoading ? (
+        <div className={styles.searchStatusItem}>Loading...</div>
+      ) : results.length > 0 ? (
+        <ul className={styles.resultsList}>
+          {results.map((item, idx) => {
+            const displayTitle = getLocalizedText(item.title || item.name)
+
+            // 🎯 Handle raw price formatting & symbol prepending
+            const rawPrice =
+              typeof item.price === 'object' ? getLocalizedText(item.price) : item.price
+
+            const displayPrice =
+              rawPrice !== null && rawPrice !== undefined && rawPrice !== ''
+                ? String(rawPrice).startsWith('$')
+                  ? rawPrice
+                  : `$${rawPrice}`
+                : null
+
+            const imageUrl = getImageUrl(item)
+            const category = item.categorySlug || 'product'
+            const productIdentifier = item.slug || item.id
+
+            return (
+              <li
+                key={item.id || idx}
+                className={styles.resultsItem}
+                onClick={() => onSelectResult(category, productIdentifier)}
+              >
+                <div className={styles.resultsLeftCol}>
+                  <span className={styles.resultTitle}>{displayTitle}</span>
+                </div>
+                <div className={styles.resultsRightCol}>
+                  {displayPrice && <span className={styles.resultPrice}>{displayPrice}</span>}
+                  {imageUrl && (
+                    <div className={styles.thumbWrapper}>
+                      <Image
+                        width={200}
+                        height={200}
+                        src={imageUrl}
+                        alt={displayTitle}
+                        className={styles.resultThumb}
+                      />
+                    </div>
+                  )}
+                </div>
+              </li>
+            )
+          })}
+        </ul>
+      ) : (
+        <div className={styles.searchStatusItem}>No results found</div>
+      )}
+    </div>
+  )
+}
+
 export default function SearchBar({ locale: initialLocale }: { locale: string }) {
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -62,31 +159,42 @@ export default function SearchBar({ locale: initialLocale }: { locale: string })
   const locale = ['en', 'ar', 'ckb'].includes(segments[1]) ? segments[1] : initialLocale || 'en'
   const isRtl = locale === 'ar' || locale === 'ckb'
 
-  // Debounced search logic
-  useEffect(() => {
-    const trimmed = searchTerm.trim()
+  // Handles state reset directly on user interaction (prevents ESLint react-hooks/set-state-in-effect)
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value
+    setSearchTerm(value)
 
-    if (trimmed.length < 1) {
+    if (value.trim().length < 1) {
       setResults([])
       setShowDropdown(false)
-      return
+      setIsLoading(false)
     }
+  }
+
+  // Effect only fires asynchronous operations
+  useEffect(() => {
+    const trimmed = searchTerm.trim()
+    if (trimmed.length < 1) return
 
     const cacheKey = `${trimmed.toLowerCase()}_${locale}`
 
     if (searchCache[cacheKey]) {
-      setResults(searchCache[cacheKey])
-      setShowDropdown(true)
-      setIsLoading(false)
-      return
+      const cached = searchCache[cacheKey]
+      const timer = setTimeout(() => {
+        setResults(cached)
+        setShowDropdown(true)
+        setIsLoading(false)
+      }, 0)
+      return () => clearTimeout(timer)
     }
 
-    setIsLoading(true)
-    const delayDebounceFn = setTimeout(async () => {
-      const data = await fetchSearchResults(trimmed, locale)
-      setResults(data)
-      setShowDropdown(true)
-      setIsLoading(false)
+    const delayDebounceFn = setTimeout(() => {
+      setIsLoading(true)
+      fetchSearchResults(trimmed, locale).then((data) => {
+        setResults(data)
+        setShowDropdown(true)
+        setIsLoading(false)
+      })
     }, 250)
 
     return () => clearTimeout(delayDebounceFn)
@@ -106,16 +214,23 @@ export default function SearchBar({ locale: initialLocale }: { locale: string })
   // Focus mobile input on open
   useEffect(() => {
     if (isMobileOpen) {
-      setTimeout(() => mobileInputRef.current?.focus(), 50)
+      const timer = setTimeout(() => mobileInputRef.current?.focus(), 50)
+      return () => clearTimeout(timer)
     }
   }, [isMobileOpen])
 
-  const handleSearchSubmit = (e: React.FormEvent) => {
+  const handleSearchSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     if (!searchTerm.trim()) return
     router.push(`/${locale}/search?q=${encodeURIComponent(searchTerm.trim())}`)
     setIsMobileOpen(false)
     setShowDropdown(false)
+  }
+
+  const handleSelectResult = (category: string, productIdentifier: string) => {
+    router.push(`/${locale}/${category}/${productIdentifier}`)
+    setShowDropdown(false)
+    setIsMobileOpen(false)
   }
 
   const placeholders: Record<string, string> = {
@@ -124,80 +239,9 @@ export default function SearchBar({ locale: initialLocale }: { locale: string })
     ckb: 'گەڕان بۆ پرۆسێسەر، کارتی شاشە، لاپتۆپ...',
   }
 
-  const RenderSearchResults = () => {
-    if (!showDropdown || searchTerm.trim().length < 1) return null
-
-    // Helper function to safely extract localized or string values
-    const getLocalizedText = (val: any) => {
-      if (!val) return ''
-      if (typeof val === 'string') return val
-      if (typeof val === 'object') {
-        return val[locale] || val.en || val.ckb || val.ar || Object.values(val)[0] || ''
-      }
-      return String(val)
-    }
-
-    // Helper function to resolve image URL from various API formats
-    const getImageUrl = (item: any): string | null => {
-      const img = item.image || item.thumbnail || item.media || item.featuredImage
-      if (!img) return null
-      if (typeof img === 'string') return img
-      if (typeof img === 'object') {
-        return img.url || img.sizes?.thumbnail?.url || img.sizes?.card?.url || null
-      }
-      return null
-    }
-
-    return (
-      <div className={styles.searchResultsDropdown}>
-        {isLoading ? (
-          <div className={styles.searchStatusItem}>Loading...</div>
-        ) : results.length > 0 ? (
-          <ul className={styles.resultsList}>
-            {results.map((item, idx) => {
-              const displayTitle = getLocalizedText(item.title || item.name)
-              const displayPrice =
-                typeof item.price === 'object' ? getLocalizedText(item.price) : item.price
-              const imageUrl = getImageUrl(item)
-
-              return (
-                <li
-                  key={item.id || idx}
-                  className={styles.resultsItem}
-                  onClick={() => {
-                    const category = item.categorySlug || 'product' // Fallback if missing
-                    const productIdentifier = item.slug || item.id
-
-                    router.push(`/${locale}/${category}/${productIdentifier}`)
-                    setShowDropdown(false)
-                    setIsMobileOpen(false)
-                  }}
-                >
-                  <div className={styles.resultsLeftCol}>
-                    <span className={styles.resultTitle}>{displayTitle}</span>
-                  </div>
-                  <div className={styles.resultsRightCol}>
-                    {displayPrice && <span className={styles.resultPrice}>{displayPrice}</span>}
-                    {imageUrl && (
-                      <div className={styles.thumbWrapper}>
-                        <img src={imageUrl} alt={displayTitle} className={styles.resultThumb} />
-                      </div>
-                    )}
-                  </div>
-                </li>
-              )
-            })}
-          </ul>
-        ) : (
-          <div className={styles.searchStatusItem}>No results found</div>
-        )}
-      </div>
-    )
-  }
-
   return (
     <div className={styles.searchComponentRoot} ref={containerRef}>
-      {/* 📱 Mobile Toggle Icon Button with #ffcb6b Background */}
+      {/* 📱 Mobile Toggle Icon Button */}
       <button
         type="button"
         aria-label="Toggle search"
@@ -212,7 +256,7 @@ export default function SearchBar({ locale: initialLocale }: { locale: string })
         <input
           type="text"
           value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
+          onChange={handleInputChange}
           placeholder={placeholders[locale] || placeholders.en}
           className={styles.desktopInput}
           onFocus={() => setShowDropdown(searchTerm.trim().length >= 1)}
@@ -224,7 +268,15 @@ export default function SearchBar({ locale: initialLocale }: { locale: string })
         >
           <SearchIcon color="#808080" size={16} />
         </button>
-        <RenderSearchResults />
+
+        <SearchResultsDropdown
+          showDropdown={showDropdown}
+          searchTerm={searchTerm}
+          isLoading={isLoading}
+          results={results}
+          locale={locale}
+          onSelectResult={handleSelectResult}
+        />
       </form>
 
       {/* 📱 Mobile Overlay */}
@@ -238,7 +290,7 @@ export default function SearchBar({ locale: initialLocale }: { locale: string })
               ref={mobileInputRef}
               type="text"
               value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              onChange={handleInputChange}
               placeholder={placeholders[locale] || placeholders.en}
               className={styles.mobileInput}
             />
@@ -258,7 +310,15 @@ export default function SearchBar({ locale: initialLocale }: { locale: string })
             ✕
           </button>
         </div>
-        <RenderSearchResults />
+
+        <SearchResultsDropdown
+          showDropdown={showDropdown}
+          searchTerm={searchTerm}
+          isLoading={isLoading}
+          results={results}
+          locale={locale}
+          onSelectResult={handleSelectResult}
+        />
       </div>
     </div>
   )

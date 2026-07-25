@@ -1,24 +1,59 @@
 'use client'
 
 import React, { useState } from 'react'
+import { usePathname } from 'next/navigation'
 import styles from '@/styles/whatsapp.module.css'
 
 interface WhatsappWindowProps {
   phoneNumber: string // Format with country code, e.g. "9647501234567"
   businessName?: string
   avatarUrl?: string
+  locale?: string
   onClose: () => void
 }
 
 export const WhatsappWindow: React.FC<WhatsappWindowProps> = ({
   phoneNumber,
-  businessName = 'Customer Support',
-  avatarUrl = '/whatsapp-avatar.png',
+  businessName,
+  avatarUrl = '/dima.ico', // Updated to favicon/icon path
+  locale: propLocale,
   onClose,
 }) => {
   const [message, setMessage] = useState('')
+  const pathname = usePathname()
 
-  const handleSendMessage = (e: React.SubmitEvent) => {
+  // Detect locale from route if not explicitly passed as prop
+  const segments = pathname ? pathname.split('/') : []
+  const locale = propLocale || (['en', 'ar', 'ckb'].includes(segments[1]) ? segments[1] : 'en')
+  const isRtl = locale === 'ar' || locale === 'ckb'
+
+  // Localized Strings
+  const translations: Record<
+    string,
+    { businessName: string; greeting: string; placeholder: string }
+  > = {
+    en: {
+      businessName: 'Dima Center Support',
+      greeting: "Hello! 👋 How can we help you, let's chat through WhatsApp!",
+      placeholder: 'Type a message...',
+    },
+    ckb: {
+      businessName: 'سەنتەری دیما',
+      greeting: 'سڵاو! 👋 پێویستت بە یارمەتییە، دەتوانین بە وەتسئاپ لەگەڵتابین',
+      placeholder: 'پەیامێک بنووسە...',
+    },
+    ar: {
+      businessName: 'دعم مركز دیما',
+      greeting: 'مرحباً! 👋 كيف يمكننا مساعدتك؟ يسعدنا التواصل معك عبر واتساب!',
+      placeholder: 'اكتب رسالة...',
+    },
+  }
+
+  const currentText = translations[locale] || translations.en
+  // Use passed businessName only if explicitly provided, otherwise fallback to localized name
+  const resolvedBusinessName = businessName || currentText.businessName
+
+  const handleSendMessage = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     if (!message.trim()) return
 
@@ -33,17 +68,16 @@ export const WhatsappWindow: React.FC<WhatsappWindowProps> = ({
   }
 
   return (
-    <div className={styles.windowContainer}>
+    <div className={styles.windowContainer} style={{ direction: isRtl ? 'rtl' : 'ltr' }}>
       {/* Header */}
       <div className={styles.header}>
         <div className={styles.headerInfo}>
           <div className={styles.avatarWrapper}>
-            <img src={avatarUrl} alt={businessName} className={styles.avatar} />
+            <img src={avatarUrl} alt={resolvedBusinessName} className={styles.avatar} />
             <span className={styles.onlineDot} />
           </div>
           <div>
-            <h4 className={styles.title}>{businessName}</h4>
-            <p className={styles.subtitle}>Typically replies in a few minutes</p>
+            <h4 className={styles.title}>{resolvedBusinessName}</h4>
           </div>
         </div>
         <button onClick={onClose} className={styles.closeBtn} aria-label="Close">
@@ -54,7 +88,7 @@ export const WhatsappWindow: React.FC<WhatsappWindowProps> = ({
       {/* Message Area */}
       <div className={styles.chatBody}>
         <div className={styles.bubble}>
-          <p className={styles.bubbleText}>Hello! 👋 How can we help you today?</p>
+          <p className={styles.bubbleText}>{currentText.greeting}</p>
           <span className={styles.bubbleTime}>
             {new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
           </span>
@@ -67,11 +101,17 @@ export const WhatsappWindow: React.FC<WhatsappWindowProps> = ({
           type="text"
           value={message}
           onChange={(e) => setMessage(e.target.value)}
-          placeholder="Type a message..."
+          placeholder={currentText.placeholder}
           className={styles.input}
         />
         <button type="submit" className={styles.sendBtn} aria-label="Send message">
-          <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+          <svg
+            viewBox="0 0 24 24"
+            width="20"
+            height="20"
+            fill="currentColor"
+            style={{ transform: isRtl ? 'scaleX(-1)' : 'none' }}
+          >
             <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z" />
           </svg>
         </button>

@@ -66,7 +66,7 @@ export default async function LocalizedLayout({ children, params }: LayoutProps)
       <FullNavbar currentLocale={currentLocale} />
       <EventBanner bannerData={activeEvent} currentLocale={currentLocale} isRtl={isRtl} />
       {children}
-      <WhatsappComponent phoneNumber={phoneNumber} businessName="Customer Support" />
+      <WhatsappComponent phoneNumber={phoneNumber} />
       <Footer currentLocale={currentLocale} />
     </div>
   )
