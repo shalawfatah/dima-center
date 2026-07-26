@@ -3,11 +3,8 @@
   position: relative;
   z-index: 999;
   font-family: 'Rudaw', sans-serif;
-  width: max-content;
-  max-width: calc(100% - 2.2rem);
   margin: 0 auto;
   background-color: #ffb83c;
-  border-radius: 0.4rem;
   padding: 0.4rem 1rem;
 }
 
@@ -149,6 +146,8 @@
   -webkit-overflow-scrolling: touch;
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
   z-index: 1001;
+  margin-left: 1rem;
+  margin-right: 1rem;
 }
 
 .mobile-item-link {
@@ -185,7 +184,6 @@
 @media (max-width: 900px) {
   .nav-wrapper {
     width: auto;
-    margin: 0 1.1rem;
   }
 
   .nav-container {

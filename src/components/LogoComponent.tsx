@@ -45,6 +45,8 @@ export default function LogoComponent({
         display: 'flex',
         alignItems: 'center',
         position: 'relative',
+        background: '#fff',
+        borderRadius: '12px',
         flexShrink: 0,
       }}
     >

@@ -136,3 +136,19 @@ export interface ExternalStock {
   barcode?: string
   totalQuantity: number
 }
+
+export interface CategoryItem {
+  id?: string
+  title: string
+  slug?: string
+  isContainer?: boolean
+  subCategories?: Array<{
+    title: string
+    slug: string
+  }>
+}
+
+export interface CategoryDropdownNavProps {
+  currentLocale: string
+  categories: CategoryItem[]
+}

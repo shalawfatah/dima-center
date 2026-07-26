@@ -1,8 +1,7 @@
 'use client'
 
-import React, { useState } from 'react'
+import React from 'react'
 import { WhatsappBtn } from './WhatsappBtn'
-import { WhatsappWindow } from './WhatsappWindow'
 
 interface WhatsappComponentProps {
   phoneNumber?: string
@@ -11,20 +10,14 @@ interface WhatsappComponentProps {
 
 export const WhatsappComponent: React.FC<WhatsappComponentProps> = ({
   phoneNumber = '9647701414269',
-  businessName,
 }) => {
-  const [isOpen, setIsOpen] = useState(false)
+  const handleClick = () => {
+    // Strip out non-numeric characters (+, spaces, dashes)
+    const cleanNumber = phoneNumber.replace(/[^0-9]/g, '')
+    const whatsappUrl = `https://wa.me/${cleanNumber}`
 
-  return (
-    <div>
-      {isOpen && (
-        <WhatsappWindow
-          phoneNumber={phoneNumber}
-          businessName={businessName}
-          onClose={() => setIsOpen(false)}
-        />
-      )}
-      <WhatsappBtn isOpen={isOpen} onClick={() => setIsOpen(!isOpen)} />
-    </div>
-  )
+    window.open(whatsappUrl, '_blank', 'noopener,noreferrer')
+  }
+
+  return <WhatsappBtn onClick={handleClick} />
 }

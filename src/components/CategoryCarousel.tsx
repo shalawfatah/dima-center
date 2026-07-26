@@ -4,22 +4,7 @@ import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import styles from '@/styles/category_carousel.module.css'
-
-export interface CategoryItem {
-  id?: string
-  title: string
-  slug?: string
-  isContainer?: boolean
-  subCategories?: Array<{
-    title: string
-    slug: string
-  }>
-}
-
-interface CategoryDropdownNavProps {
-  currentLocale: string
-  categories: CategoryItem[]
-}
+import { CategoryDropdownNavProps } from '@/types/types'
 
 export default function CategoryDropdownNav({
   currentLocale,
@@ -29,17 +14,21 @@ export default function CategoryDropdownNav({
   const [activeDropdown, setActiveDropdown] = useState<number | null>(null)
   const [isHamOpen, setIsHamOpen] = useState<boolean>(false)
   const navRef = useRef<HTMLDivElement>(null)
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null)
 
   const isRtl = currentLocale === 'ar' || currentLocale === 'ckb'
   const titleFont = isRtl ? '"Rudaw", sans-serif' : 'system-ui, sans-serif'
 
-  // Lock body scroll on mobile when hamburger drawer is open
+  // Lock body scroll ONLY on mobile screen sizes when drawer is open
   useEffect(() => {
-    if (isHamOpen) {
+    const isMobile = window.innerWidth <= 900
+
+    if (isHamOpen && isMobile) {
       document.body.style.overflow = 'hidden'
     } else {
       document.body.style.overflow = ''
     }
+
     return () => {
       document.body.style.overflow = ''
     }
@@ -56,6 +45,18 @@ export default function CategoryDropdownNav({
     document.addEventListener('mousedown', handleClickOutside)
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [])
+
+  // Mouse handlers for desktop hover with delay buffer
+  const handleMouseEnter = (index: number) => {
+    if (timeoutRef.current) clearTimeout(timeoutRef.current)
+    setActiveDropdown(index)
+  }
+
+  const handleMouseLeave = () => {
+    timeoutRef.current = setTimeout(() => {
+      setActiveDropdown(null)
+    }, 150) // 150ms buffer prevents accidental closure when moving mouse to menu
+  }
 
   const handleToggleDropdown = (index: number) => {
     setActiveDropdown((prev) => (prev === index ? null : index))
@@ -100,7 +101,12 @@ export default function CategoryDropdownNav({
             const isOpen = activeDropdown === index
 
             return (
-              <div key={category.id || index} className={styles['nav-item-wrapper']}>
+              <div
+                key={category.id || index}
+                className={styles['nav-item-wrapper']}
+                onMouseEnter={() => handleMouseEnter(index)}
+                onMouseLeave={handleMouseLeave}
+              >
                 <button
                   type="button"
                   onClick={() => handleToggleDropdown(index)}
