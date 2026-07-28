@@ -62,25 +62,23 @@ export default buildConfig({
     s3Storage({
       collections: {
         [Media.slug]: {
-          disablePayloadAccessControl: true, // ⚡ Directly stream assets from Supabase CDN bypasses function overload
+          disablePayloadAccessControl: true,
           generateFileURL: ({ filename }: { filename: string }) => {
-            // ⚡ Tells Payload exactly how to read the public URL from Supabase
-            const projectRef = 'crqqyejtyxqbehfechcg'
-            const bucketName = process.env.S3_BUCKET || ''
-            return `https://${projectRef}.supabase.co/storage/v1/object/public/${bucketName}/${filename}`
+            const endpoint = process.env.NEXT_PUBLIC_S3_ENDPOINT || 'https://s3.dima.center'
+            const bucketName = process.env.S3_BUCKET || 'media'
+            return `${endpoint}/${bucketName}/${filename}`
           },
         },
       },
-      bucket: process.env.S3_BUCKET || '',
+      bucket: process.env.S3_BUCKET || 'media',
       config: {
-        // 🎯 FIX: Correct S3 API Route endpoint format for Supabase
         endpoint: process.env.NEXT_PUBLIC_S3_ENDPOINT,
         credentials: {
           accessKeyId: process.env.S3_ACCESS_KEY_ID || '',
           secretAccessKey: process.env.S3_SECRET_ACCESS_KEY || '',
         },
-        region: process.env.S3_REGION || '',
-        forcePathStyle: true,
+        region: process.env.S3_REGION || 'garage',
+        forcePathStyle: true, // Standard requirement for self-hosted MinIO/Garage S3
       },
     }),
   ],
