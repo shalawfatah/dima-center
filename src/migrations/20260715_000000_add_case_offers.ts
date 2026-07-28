@@ -25,7 +25,7 @@ export async function up({ payload, req }: MigrateUpArgs): Promise<void> {
       CONSTRAINT "case_offers_locales_locale_parent_unique" UNIQUE("locale", "parent_id")
     );
 
-    -- Add foreign key constraint to link locales back to parent case_offers
+    -- Add foreign key constraint to link locales back to parent case_offers safely
     DO $$ 
     BEGIN
       IF NOT EXISTS (
