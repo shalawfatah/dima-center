@@ -6,6 +6,7 @@ const defaultLocale = 'ckb'
 
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl
+
   const isMaintenanceMode = process.env.MAINTENANCE_MODE === 'true'
 
   const isBypassPath =
@@ -15,6 +16,11 @@ export function proxy(request: NextRequest) {
     pathname.startsWith('/_next') ||
     pathname.includes('.')
 
+  // Admin/api/media/etc. should never touch locale routing or maintenance logic
+  if (isBypassPath) {
+    return NextResponse.next()
+  }
+
   const hasBypassCookie =
     request.cookies.get('payload-token')?.value || request.cookies.get('bypass_maintenance')?.value
   const hasBypassParam = request.nextUrl.searchParams.get('preview') === 'true'
@@ -23,7 +29,10 @@ export function proxy(request: NextRequest) {
     const url = request.nextUrl.clone()
     url.searchParams.delete('preview')
     const response = NextResponse.redirect(url)
-    response.cookies.set('bypass_maintenance', 'true', { path: '/' })
+    response.cookies.set('bypass_maintenance', 'true', {
+      path: '/',
+      maxAge: 60 * 60 * 4, // 4 hours — adjust to taste
+    })
     return response
   }
 
@@ -33,13 +42,12 @@ export function proxy(request: NextRequest) {
   )
   const savedLocale = request.cookies.get('NEXT_LOCALE')?.value
   const targetLocale = locales.includes(savedLocale as string) ? savedLocale : defaultLocale
-
   const currentLocale = pathnameHasLocale ? pathname.split('/')[1] : targetLocale
 
   const isMaintenancePath =
     pathname === `/${currentLocale}/maintenance` || pathname === '/maintenance'
 
-  if (isMaintenanceMode && !isBypassPath && !hasBypassCookie && !isMaintenancePath) {
+  if (isMaintenanceMode && !hasBypassCookie && !isMaintenancePath) {
     const url = request.nextUrl.clone()
     url.pathname = `/${currentLocale}/maintenance`
     return NextResponse.redirect(url)
