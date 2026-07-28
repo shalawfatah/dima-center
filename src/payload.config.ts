@@ -62,12 +62,7 @@ export default buildConfig({
     s3Storage({
       collections: {
         [Media.slug]: {
-          disablePayloadAccessControl: true,
-          generateFileURL: ({ filename }: { filename: string }) => {
-            const endpoint = process.env.NEXT_PUBLIC_S3_ENDPOINT || 'https://s3.dima.center'
-            const bucketName = process.env.S3_BUCKET || 'media'
-            return `${endpoint}/${bucketName}/${filename}`
-          },
+          disablePayloadAccessControl: false,
         },
       },
       bucket: process.env.S3_BUCKET || 'media',
