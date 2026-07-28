@@ -1,3 +1,4 @@
+// src/app/maintenance/page.tsx
 import Image from 'next/image'
 
 export default function MaintenancePage() {
@@ -72,13 +73,13 @@ export default function MaintenancePage() {
           padding: '1rem 0',
         }}
       >
-        {/* GIF Container - Controlled ~400x280px sizing */}
+        {/* GIF Container (~380x250px) */}
         <div
           style={{
             position: 'relative',
             width: '100%',
-            maxWidth: '480px',
-            height: '400px',
+            maxWidth: '380px',
+            height: '250px',
             borderRadius: '16px',
             overflow: 'hidden',
             marginBottom: '1.5rem',
@@ -121,6 +122,16 @@ export default function MaintenancePage() {
 
           {/* Kurdish (RTL) */}
           <div dir="rtl" style={{ marginBottom: '1rem' }}>
+            <h2
+              style={{
+                fontSize: '1.25rem',
+                fontWeight: 700,
+                color: '#60a5fa',
+                margin: '0 0 0.25rem 0',
+              }}
+            >
+              کاری تێدا دەکرێت
+            </h2>
             <p style={{ fontSize: '0.95rem', color: '#cbd5e1', margin: 0 }}>
               وێبسایتەکەمان بەمزوانە دەکەوێتە کار
             </p>
