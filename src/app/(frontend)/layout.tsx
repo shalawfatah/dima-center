@@ -4,13 +4,14 @@ import { getPayload } from 'payload'
 import config from '@/payload.config'
 import { headers } from 'next/headers'
 import { CartProvider } from '../../components/cart/CartContext'
+import { DynamicFonts } from '@/components/DynamicFonts' // 👈 Import the injector component
 
 export default async function LocalizedLayout({
   children,
   params,
 }: {
   children: React.ReactNode
-  params: Promise<{ locale?: string }> // 👈 Changed to optional to satisfy Next.js static routing
+  params: Promise<{ locale?: string }>
 }) {
   // 1. Await and extract the locale from route params, fallback to 'en' if undefined
   const { locale = 'en' } = await params
@@ -23,6 +24,10 @@ export default async function LocalizedLayout({
 
   return (
     <html lang={locale} dir={isRtl ? 'rtl' : 'ltr'}>
+      <head>
+        {/* 👈 Inject dynamic font-face definitions & CSS variable overrides */}
+        <DynamicFonts locale={locale} />
+      </head>
       <body>
         <CartProvider user={user} currentLocale={locale}>
           {children}

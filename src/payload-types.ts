@@ -217,7 +217,7 @@ export interface Category {
  */
 export interface Media {
   id: number;
-  alt: string;
+  alt?: string | null;
   updatedAt: string;
   createdAt: string;
   url?: string | null;
@@ -641,6 +641,20 @@ export interface GeneralSetting {
   id: number;
   slogan?: string | null;
   logo?: (number | null) | Media;
+  typography?: {
+    kurdish?: {
+      headingFont?: (number | null) | Media;
+      bodyFont?: (number | null) | Media;
+    };
+    arabic?: {
+      headingFont?: (number | null) | Media;
+      bodyFont?: (number | null) | Media;
+    };
+    english?: {
+      headingFont?: (number | null) | Media;
+      bodyFont?: (number | null) | Media;
+    };
+  };
   pcBuilder?: {
     backgroundImage?: (number | null) | Media;
     foregroundImage?: (number | null) | Media;
@@ -676,6 +690,28 @@ export interface GeneralSetting {
 export interface GeneralSettingsSelect<T extends boolean = true> {
   slogan?: T;
   logo?: T;
+  typography?:
+    | T
+    | {
+        kurdish?:
+          | T
+          | {
+              headingFont?: T;
+              bodyFont?: T;
+            };
+        arabic?:
+          | T
+          | {
+              headingFont?: T;
+              bodyFont?: T;
+            };
+        english?:
+          | T
+          | {
+              headingFont?: T;
+              bodyFont?: T;
+            };
+      };
   pcBuilder?:
     | T
     | {

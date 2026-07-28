@@ -5,8 +5,6 @@ export const Media: CollectionConfig = {
   admin: {
     useAsTitle: 'filename',
   },
-  // 🔐 Open read permissions so the storefront layout can show images publicly
-
   access: {
     read: () => true, // Anyone can view images
     create: ({ req: { user } }) => Boolean(user), // Only logged-in users can upload
@@ -22,8 +20,8 @@ export const Media: CollectionConfig = {
     {
       name: 'alt',
       type: 'text',
-      required: true,
-      localized: true, // Let's translate image labels for accessibility
+      required: false,
+      localized: true,
     },
   ],
 }

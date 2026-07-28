@@ -6,7 +6,6 @@
   "type": "module",
   "scripts": {
     "build": "cross-env NODE_OPTIONS=\"--no-deprecation --max-old-space-size=8000\" next build",
-    "postbuild": "payload migrate",
     "dev": "cross-env NODE_OPTIONS=--no-deprecation next dev",
     "import-data": "node ./node_modules/tsx/dist/cli.mjs src/scripts/importBruskCatalog.ts",
     "devsafe": "rm -rf .next && cross-env NODE_OPTIONS=--no-deprecation next dev",

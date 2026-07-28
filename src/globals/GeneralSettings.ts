@@ -21,6 +21,95 @@ export const GeneralSettings: GlobalConfig = {
       label: 'Company Logo',
       required: false,
     },
+    // === 🎨 TYPOGRAPHY & FONTS ===
+    {
+      name: 'typography',
+      type: 'group',
+      label: 'Typography & Custom Fonts',
+      fields: [
+        // --- Kurdish Fonts ---
+        {
+          name: 'kurdish',
+          type: 'group',
+          label: 'Kurdish Fonts',
+          fields: [
+            {
+              type: 'row',
+              fields: [
+                {
+                  name: 'headingFont',
+                  type: 'relationship',
+                  relationTo: 'media',
+                  label: 'Kurdish Heading Font',
+                  admin: { width: '50%' },
+                },
+                {
+                  name: 'bodyFont',
+                  type: 'relationship',
+                  relationTo: 'media',
+                  label: 'Kurdish Body Font',
+                  admin: { width: '50%' },
+                },
+              ],
+            },
+          ],
+        },
+        // --- Arabic Fonts ---
+        {
+          name: 'arabic',
+          type: 'group',
+          label: 'Arabic Fonts',
+          fields: [
+            {
+              type: 'row',
+              fields: [
+                {
+                  name: 'headingFont',
+                  type: 'relationship',
+                  relationTo: 'media',
+                  label: 'Arabic Heading Font',
+                  admin: { width: '50%' },
+                },
+                {
+                  name: 'bodyFont',
+                  type: 'relationship',
+                  relationTo: 'media',
+                  label: 'Arabic Body Font',
+                  admin: { width: '50%' },
+                },
+              ],
+            },
+          ],
+        },
+        // --- English Fonts ---
+        {
+          name: 'english',
+          type: 'group',
+          label: 'English Fonts',
+          fields: [
+            {
+              type: 'row',
+              fields: [
+                {
+                  name: 'headingFont',
+                  type: 'relationship',
+                  relationTo: 'media',
+                  label: 'English Heading Font',
+                  admin: { width: '50%' },
+                },
+                {
+                  name: 'bodyFont',
+                  type: 'relationship',
+                  relationTo: 'media',
+                  label: 'English Body Font',
+                  admin: { width: '50%' },
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    },
     // === 💻 PC BUILDER SETTINGS ===
     {
       name: 'pcBuilder',
