@@ -15,18 +15,6 @@ const nextConfig: NextConfig = {
         hostname: 's3.dima.center',
         pathname: '/**',
       },
-      // Supabase S3 API endpoint domain
-      {
-        protocol: 'https',
-        hostname: 'crqqyejtyxqbehfechcg.storage.supabase.co',
-        pathname: '/**',
-      },
-      // Supabase REST endpoint domain (for backwards compatibility)
-      {
-        protocol: 'https',
-        hostname: 'crqqyejtyxqbehfechcg.supabase.co',
-        pathname: '/**',
-      },
     ],
     localPatterns: [
       {
