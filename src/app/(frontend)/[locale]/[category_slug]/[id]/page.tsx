@@ -113,6 +113,9 @@ async function fetchProductById(id: string, locale: string, payload: any) {
   try {
     const product = await payload.findByID({
       collection: 'products',
+      where: {
+        stock: { greater_than: 0 },
+      },
       id: numericId,
       locale,
       fallbackLocale: 'ckb', // 🎯 Ensures missing CKB fields fallback to English

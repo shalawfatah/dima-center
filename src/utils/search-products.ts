@@ -91,17 +91,22 @@ export async function searchProducts(
     // Query 'all' locales so Payload leaves the raw localized data structure intact.
     locale: 'all',
     where: {
-      or: [
-        { 'title.en': { contains: query } },
-        { 'title.ar': { contains: query } },
-        { 'title.ckb': { contains: query } },
-        { 'description.en': { contains: query } },
-        { 'description.ar': { contains: query } },
-        { 'description.ckb': { contains: query } },
-        { 'category.title.en': { contains: query } },
-        { 'category.title.ar': { contains: query } },
-        { 'category.title.ckb': { contains: query } },
-        { 'category.slug': { contains: query } },
+      and: [
+        { stock: { greater_than: 0 } }, // 👈 Exclude items with 0 stock
+        {
+          or: [
+            { 'title.en': { contains: query } },
+            { 'title.ar': { contains: query } },
+            { 'title.ckb': { contains: query } },
+            { 'description.en': { contains: query } },
+            { 'description.ar': { contains: query } },
+            { 'description.ckb': { contains: query } },
+            { 'category.title.en': { contains: query } },
+            { 'category.title.ar': { contains: query } },
+            { 'category.title.ckb': { contains: query } },
+            { 'category.slug': { contains: query } },
+          ],
+        },
       ],
     },
     depth: 2,

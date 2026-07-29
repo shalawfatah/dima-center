@@ -20,7 +20,7 @@
 .nav-wrapper.fit-content {
   width: fit-content;
   max-width: 100%;
-  margin: 0 auto;
+  margin: 0.5rem auto;
   border-radius: 999px; /* Floating pill layout for fit-content mode */
 }
 

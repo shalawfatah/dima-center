@@ -12,15 +12,12 @@ function findCategorySlugFromQuery(query: string): string | null {
   for (const lang of languages) {
     const groups = MAIN_CATEGORY_GROUPS[lang] || []
     for (const group of groups) {
-      // 1. Direct check against the top-level main category title (e.g., "Laptop", "Monitor")
       if (group.title.toLowerCase() === cleanQuery && group.slug) {
         return group.slug
       }
 
-      // 2. Deep check down into the subcategories arrays
       if (group.subCategories) {
         for (const sub of group.subCategories) {
-          // Extracts structural text identifiers inside brackets if present, e.g., "المعالج (CPU)" -> "cpu"
           const titleMatchesClean = sub.title.toLowerCase() === cleanQuery
           const slugMatchesClean = sub.slug.toLowerCase() === cleanQuery
           const structuralBracketMatch = sub.title.toLowerCase().includes(`(${cleanQuery})`)
@@ -33,7 +30,6 @@ function findCategorySlugFromQuery(query: string): string | null {
     }
   }
 
-  // Common developer shorthands fallback that may not match structural UI translations directly
   const commonShorthands: Record<string, string> = {
     gpus: 'gpu',
     cpus: 'cpu',
@@ -68,18 +64,23 @@ export async function GET(request: Request) {
   try {
     const payload = await getPayload({ config })
 
-    // 1. Primary Text Search: Title and Description get top placement priority
+    // 1. Primary Text Search: Enforce stock > 0 alongside query text checks
     const textSearch = await payload.find({
       collection: 'products',
-      locale: 'all', // Returns all localizations structural objects
+      locale: 'all',
       where: {
-        or: [
-          { 'title.en': { contains: query } },
-          { 'title.ar': { contains: query } },
-          { 'title.ckb': { contains: query } },
-          { 'description.en': { contains: query } },
-          { 'description.ar': { contains: query } },
-          { 'description.ckb': { contains: query } },
+        and: [
+          { stock: { greater_than: 0 } }, // 👈 Filters out 0 stock products
+          {
+            or: [
+              { 'title.en': { contains: query } },
+              { 'title.ar': { contains: query } },
+              { 'title.ckb': { contains: query } },
+              { 'description.en': { contains: query } },
+              { 'description.ar': { contains: query } },
+              { 'description.ckb': { contains: query } },
+            ],
+          },
         ],
       },
       limit: targetLimit,
@@ -87,7 +88,7 @@ export async function GET(request: Request) {
 
     let combinedDocs = [...textSearch.docs]
 
-    // 2. Fallback Category Checking: If results layout isn't full yet, scan structural configuration
+    // 2. Fallback Category Checking: Enforce stock > 0 here as well
     if (combinedDocs.length < targetLimit) {
       const detectedSlug = findCategorySlugFromQuery(query)
 
@@ -95,19 +96,22 @@ export async function GET(request: Request) {
         const existingIds = new Set(combinedDocs.map((doc) => String(doc.id)))
         const remainingLimit = targetLimit - combinedDocs.length
 
-        // Fetch products that possess this matching category relationship
         const categorySearch = await payload.find({
           collection: 'products',
           locale: 'all',
           where: {
-            'category.slug': {
-              equals: detectedSlug,
-            },
+            and: [
+              { stock: { greater_than: 0 } }, // 👈 Filters out 0 stock products here too
+              {
+                'category.slug': {
+                  equals: detectedSlug,
+                },
+              },
+            ],
           },
-          limit: remainingLimit * 2, // Pull slight extra buffer to safely account for deduplication
+          limit: remainingLimit * 2,
         })
 
-        // Inject non-duplicate category entries cleanly to the bottom of the stack
         for (const catDoc of categorySearch.docs) {
           if (combinedDocs.length >= targetLimit) break
           if (!existingIds.has(String(catDoc.id))) {
@@ -117,10 +121,8 @@ export async function GET(request: Request) {
       }
     }
 
-    // 3. Format payload output structural objects so it matches the SearchBar layout constraints exactly
-    // In your route handler:
+    // 3. Format payload output structural objects
     const sanitizedResults = combinedDocs.map((doc: any) => {
-      // Extract category slug safely from Payload's populated category object
       const categorySlug =
         typeof doc.category === 'object' && doc.category !== null
           ? doc.category.slug || 'all'
@@ -129,7 +131,7 @@ export async function GET(request: Request) {
       return {
         id: doc.id,
         slug: doc.slug || doc.id,
-        categorySlug, // <-- Pass category slug to frontend
+        categorySlug,
         title: doc.title,
         name: doc.name,
         price: doc.price,
