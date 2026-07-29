@@ -15,9 +15,9 @@ interface PageProps {
 import type { Metadata } from 'next'
 import { getStorefrontMetadata } from '@/utils/seo'
 import Image from 'next/image'
-import CategoryCarousel from '@/components/CategoryCarousel'
 import SectionSkeleton from '@/components/SectionSkeleton'
 import { MINIMAL_PRODUCT_FIELDS } from '@/utils/homepage-helpers'
+import CategoryDropdownNav from '@/components/CategoryCarousel'
 
 const PCBuilderSection = dynamic(() => import('@/components/PCBuilderSection'), {
   loading: () => <div className={styles.pcBuilderSkeleton} />,
@@ -343,7 +343,12 @@ export default async function StorefrontHome({ params, searchParams }: PageProps
 
   return (
     <div className={`${styles.pageWrapper} ${styles.pageWrapperDefault} ${dirClass}`}>
-      <CategoryCarousel currentLocale={currentLocale} categories={categories} />
+      {/* 🎯 UPDATED HERE: Passed generalSettings prop to CategoryDropdownNav */}
+      <CategoryDropdownNav
+        currentLocale={currentLocale}
+        categories={categories}
+        generalSettings={(generalSettings as any) ?? undefined}
+      />
 
       <div className={styles.promoWrapper}>
         <div className={styles.promoLeft}>

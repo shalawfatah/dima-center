@@ -6,35 +6,60 @@ import { useRouter } from 'next/navigation'
 import styles from '@/styles/category_carousel.module.css'
 import { CategoryDropdownNavProps } from '@/types/types'
 
+// Payload GeneralSettings interface based on your schema
+export interface GeneralSettingsProps {
+  navbar?: {
+    width?: 'full' | 'fit-content'
+    backgroundColor?: string
+    textColor?: string
+  }
+}
+
+interface ComponentProps extends CategoryDropdownNavProps {
+  generalSettings?: GeneralSettingsProps
+}
+
 export default function CategoryDropdownNav({
   currentLocale,
   categories = [],
-}: CategoryDropdownNavProps) {
+  generalSettings,
+}: ComponentProps) {
   const router = useRouter()
   const [activeDropdown, setActiveDropdown] = useState<number | null>(null)
   const [isHamOpen, setIsHamOpen] = useState<boolean>(false)
   const navRef = useRef<HTMLDivElement>(null)
+
   const timeoutRef = useRef<NodeJS.Timeout | null>(null)
+  const hamTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
   const isRtl = currentLocale === 'ar' || currentLocale === 'ckb'
   const titleFont = isRtl ? '"Rudaw", sans-serif' : 'system-ui, sans-serif'
 
-  // Lock body scroll ONLY on mobile screen sizes when drawer is open
+  // Extract Payload CMS values with fallbacks
+  const navbarConfig = generalSettings?.navbar
+  const navBg = navbarConfig?.backgroundColor || '#ffb83c'
+  const navText = navbarConfig?.textColor || '#000000'
+  const isFitContent = navbarConfig?.width === 'fit-content'
+
   useEffect(() => {
     const isMobile = window.innerWidth <= 900
 
     if (isHamOpen && isMobile) {
+      const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth
+
       document.body.style.overflow = 'hidden'
+      document.body.style.paddingRight = `${scrollbarWidth}px`
     } else {
       document.body.style.overflow = ''
+      document.body.style.paddingRight = ''
     }
 
     return () => {
       document.body.style.overflow = ''
+      document.body.style.paddingRight = ''
     }
   }, [isHamOpen])
 
-  // Close open dropdowns if user clicks outside
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (navRef.current && !navRef.current.contains(event.target as Node)) {
@@ -46,7 +71,6 @@ export default function CategoryDropdownNav({
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [])
 
-  // Mouse handlers for desktop hover with delay buffer
   const handleMouseEnter = (index: number) => {
     if (timeoutRef.current) clearTimeout(timeoutRef.current)
     setActiveDropdown(index)
@@ -55,7 +79,18 @@ export default function CategoryDropdownNav({
   const handleMouseLeave = () => {
     timeoutRef.current = setTimeout(() => {
       setActiveDropdown(null)
-    }, 150) // 150ms buffer prevents accidental closure when moving mouse to menu
+    }, 150)
+  }
+
+  const handleHamMouseEnter = () => {
+    if (hamTimeoutRef.current) clearTimeout(hamTimeoutRef.current)
+    setIsHamOpen(true)
+  }
+
+  const handleHamMouseLeave = () => {
+    hamTimeoutRef.current = setTimeout(() => {
+      setIsHamOpen(false)
+    }, 150)
   }
 
   const handleToggleDropdown = (index: number) => {
@@ -64,20 +99,72 @@ export default function CategoryDropdownNav({
 
   return (
     <div
-      className={styles['nav-wrapper']}
-      style={{ direction: isRtl ? 'rtl' : 'ltr', fontFamily: titleFont }}
+      className={`${styles['nav-wrapper']} ${
+        isFitContent ? styles['fit-content'] : styles['full-width']
+      }`}
+      dir={isRtl ? 'rtl' : 'ltr'}
+      style={
+        {
+          direction: isRtl ? 'rtl' : 'ltr',
+          fontFamily: titleFont,
+          '--navbar-bg': navBg,
+          '--navbar-text': navText,
+        } as React.CSSProperties
+      }
       ref={navRef}
     >
       <div className={styles['nav-container']}>
-        {/* Hamburger Menu Button */}
-        <button
-          type="button"
-          className={styles['ham-menu-btn']}
-          onClick={() => setIsHamOpen((prev) => !prev)}
-          aria-label="Toggle navigation menu"
+        {/* Hamburger Menu Wrapper */}
+        <div
+          className={styles['ham-wrapper']}
+          onMouseEnter={handleHamMouseEnter}
+          onMouseLeave={handleHamMouseLeave}
         >
-          ☰
-        </button>
+          <button
+            type="button"
+            className={styles['ham-menu-btn']}
+            onClick={() => setIsHamOpen((prev) => !prev)}
+            aria-label="Toggle navigation menu"
+          >
+            ☰
+          </button>
+
+          {/* Floating Dropdown Panel */}
+          {isHamOpen && (
+            <div className={styles['mobile-dropdown-panel']}>
+              {categories.map((category, index) => {
+                if (!category.isContainer && category.slug) {
+                  return (
+                    <Link
+                      key={category.id || index}
+                      href={`/${currentLocale}?category=${category.slug}`}
+                      className={styles['mobile-item-link']}
+                      onClick={() => setIsHamOpen(false)}
+                    >
+                      {category.title}
+                    </Link>
+                  )
+                }
+
+                return (
+                  <div key={category.id || index} className={styles['mobile-group-section']}>
+                    <div className={styles['mobile-group-title']}>{category.title}</div>
+                    {category.subCategories?.map((sub, subIdx) => (
+                      <Link
+                        key={subIdx}
+                        href={`/${currentLocale}?category=${sub.slug}`}
+                        className={styles['mobile-sub-link']}
+                        onClick={() => setIsHamOpen(false)}
+                      >
+                        {sub.title}
+                      </Link>
+                    ))}
+                  </div>
+                )
+              })}
+            </div>
+          )}
+        </div>
 
         {/* Desktop Navigation Items Wrapper */}
         <div className={styles['desktop-nav-items']}>
@@ -137,42 +224,6 @@ export default function CategoryDropdownNav({
           })}
         </div>
       </div>
-
-      {/* Mobile Drawer */}
-      {isHamOpen && (
-        <div className={styles['mobile-dropdown-panel']}>
-          {categories.map((category, index) => {
-            if (!category.isContainer && category.slug) {
-              return (
-                <Link
-                  key={category.id || index}
-                  href={`/${currentLocale}?category=${category.slug}`}
-                  className={styles['mobile-item-link']}
-                  onClick={() => setIsHamOpen(false)}
-                >
-                  {category.title}
-                </Link>
-              )
-            }
-
-            return (
-              <div key={category.id || index} className={styles['mobile-group-section']}>
-                <div className={styles['mobile-group-title']}>{category.title}</div>
-                {category.subCategories?.map((sub, subIdx) => (
-                  <Link
-                    key={subIdx}
-                    href={`/${currentLocale}?category=${sub.slug}`}
-                    className={styles['mobile-sub-link']}
-                    onClick={() => setIsHamOpen(false)}
-                  >
-                    {sub.title}
-                  </Link>
-                ))}
-              </div>
-            )
-          })}
-        </div>
-      )}
     </div>
   )
 }

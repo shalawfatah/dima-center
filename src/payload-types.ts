@@ -666,6 +666,17 @@ export interface GeneralSetting {
     backgroundColor?: string | null;
     eventLogoSticker?: (number | null) | Media;
   };
+  navbar?: {
+    width?: ('full' | 'fit-content') | null;
+    /**
+     * e.g. #ffb83c or transparent
+     */
+    backgroundColor?: string | null;
+    /**
+     * e.g. #000000 or #ffffff
+     */
+    textColor?: string | null;
+  };
   /**
    * Used across the system to calculate IQD pricing dynamically.
    */
@@ -723,6 +734,13 @@ export interface GeneralSettingsSelect<T extends boolean = true> {
     | {
         backgroundColor?: T;
         eventLogoSticker?: T;
+      };
+  navbar?:
+    | T
+    | {
+        width?: T;
+        backgroundColor?: T;
+        textColor?: T;
       };
   exchangeRate?: T;
   email?: T;

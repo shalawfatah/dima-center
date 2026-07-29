@@ -155,6 +155,47 @@ export const GeneralSettings: GlobalConfig = {
         },
       ],
     },
+    // === 🧭 NAVBAR CONFIGURATION ===
+    {
+      name: 'navbar',
+      type: 'group',
+      label: 'Navbar Configuration',
+      fields: [
+        {
+          name: 'width',
+          type: 'select',
+          label: 'Navbar Width',
+          defaultValue: 'full',
+          options: [
+            { label: 'Full Width', value: 'full' },
+            { label: 'Fit Content / Centered', value: 'fit-content' },
+          ],
+        },
+        {
+          type: 'row',
+          fields: [
+            {
+              name: 'backgroundColor',
+              type: 'text',
+              label: 'Navbar Background Color',
+              admin: {
+                width: '50%',
+                description: 'e.g. #ffb83c or transparent',
+              },
+            },
+            {
+              name: 'textColor',
+              type: 'text',
+              label: 'Navbar Text / Item Color',
+              admin: {
+                width: '50%',
+                description: 'e.g. #000000 or #ffffff',
+              },
+            },
+          ],
+        },
+      ],
+    },
     // === 📊 FINANCIAL CONFIGURATION ===
     {
       name: 'exchangeRate',

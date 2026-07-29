@@ -3,9 +3,25 @@
   position: relative;
   z-index: 999;
   font-family: 'Rudaw', sans-serif;
-  margin: 0 auto;
-  background-color: #ffb83c;
+  background-color: var(--navbar-bg, #ffb83c);
   padding: 0.4rem 1rem;
+  box-sizing: border-box;
+  transition:
+    background-color 0.2s ease,
+    width 0.2s ease;
+}
+
+/* Payload Width Configurations */
+.nav-wrapper.full-width {
+  width: 100%;
+  margin: 0;
+}
+
+.nav-wrapper.fit-content {
+  width: fit-content;
+  max-width: 100%;
+  margin: 0 auto;
+  border-radius: 999px; /* Floating pill layout for fit-content mode */
 }
 
 .nav-container {
@@ -15,11 +31,15 @@
   gap: 1rem;
 }
 
-/* Hamburger button - Visible on desktop next to menu items */
+.ham-wrapper {
+  position: relative;
+  display: inline-block;
+}
+
 .ham-menu-btn {
   display: inline-flex !important;
   background: transparent;
-  color: #000000;
+  color: var(--navbar-text, #000000);
   border: none;
   font-size: 1.5rem;
   cursor: pointer;
@@ -28,7 +48,6 @@
   justify-content: center;
 }
 
-/* Flex desktop wrapper */
 .desktop-nav-items {
   display: flex;
   flex-direction: row;
@@ -42,12 +61,12 @@
   position: relative;
 }
 
-/* Direct Links & Dropdown Buttons */
+/* Direct Links & Dropdown Buttons using Dynamic Payload Color */
 .direct-link-btn,
 .dropdown-trigger-btn {
   font-family: 'Rudaw', sans-serif;
   background: transparent;
-  color: #000000 !important;
+  color: var(--navbar-text, #000000);
   border: none;
   font-size: 14px;
   font-weight: 600;
@@ -73,13 +92,13 @@
 
 .dropdown-trigger-btn {
   gap: 10px;
-  color: #000;
 }
 
 .dropdown-caret {
   font-size: 10px;
   opacity: 0.8;
   display: inline-block;
+  color: var(--navbar-text, #000000);
   transition: transform 0.2s ease;
 }
 
@@ -87,12 +106,12 @@
   transform: rotate(180deg);
 }
 
-/* Subcategory Dropdown Panel (Desktop) */
+/* Subcategory Dropdown Panel */
 .dropdown-menu {
   position: absolute;
   top: 100%;
   left: 0;
-  background-color: #ffffff !important;
+  background-color: #ffffff;
   border: 1px solid #e2e8f0;
   border-radius: 8px;
   box-shadow:
@@ -105,7 +124,7 @@
   flex-direction: column !important;
 }
 
-[style*='direction: rtl'] .dropdown-menu {
+[dir='rtl'] .dropdown-menu {
   left: auto;
   right: 0;
 }
@@ -113,7 +132,7 @@
 .dropdown-item-link {
   font-family: 'Rudaw', sans-serif;
   padding: 10px 16px;
-  color: #1e293b !important;
+  color: #1e293b;
   text-decoration: none;
   font-size: 13px;
   font-weight: 500;
@@ -126,10 +145,10 @@
 
 .dropdown-item-link:hover {
   background-color: #f1f5f9;
-  color: var(--brand-primary, #0070f3) !important;
+  color: var(--brand-primary, #0070f3);
 }
 
-/* Floating Scrollable Panel (Fixes Issue 2) */
+/* Hamburger Floating Dropdown Panel */
 .mobile-dropdown-panel {
   display: flex;
   flex-direction: column;
@@ -138,41 +157,54 @@
   border-radius: 12px;
   padding: 12px 0;
   position: absolute;
-  top: calc(100% + 8px);
+  top: calc(100% + 6px);
   left: 0;
-  right: 0;
-  max-height: 75vh; /* Restricts height */
-  overflow-y: auto; /* Makes inner content touch-scrollable */
+  right: auto;
+  width: max-content;
+  min-width: 220px;
+  max-width: 85vw;
+  max-height: 75vh;
+  overflow-y: auto;
   -webkit-overflow-scrolling: touch;
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
   z-index: 1001;
-  margin-left: 1rem;
-  margin-right: 1rem;
+}
+
+[dir='rtl'] .mobile-dropdown-panel {
+  left: auto;
+  right: 0;
 }
 
 .mobile-item-link {
-  padding: 10px 16px;
+  padding: 10px 20px;
   color: #000000;
   text-decoration: none;
   font-weight: 600;
   font-size: 14px;
   display: block;
+  text-align: start;
 }
 
 .mobile-group-title {
-  padding: 10px 16px 4px;
+  padding: 10px 20px 4px;
   color: #000000;
   font-weight: 700;
   font-size: 14px;
+  text-align: start;
 }
 
 .mobile-sub-link {
-  padding: 8px 16px 8px 28px;
+  padding: 8px 20px 8px 32px;
   color: #334155;
   text-decoration: none;
   font-weight: 500;
   font-size: 13px;
   display: block;
+  text-align: start;
+}
+
+[dir='rtl'] .mobile-sub-link {
+  padding: 8px 32px 8px 20px;
 }
 
 .mobile-sub-link:hover,
@@ -180,23 +212,41 @@
   background-color: #f1f5f9;
 }
 
-/* Responsive Rules */
+/* Responsive Rules (< 900px) */
 @media (max-width: 900px) {
-  .nav-wrapper {
-    width: auto;
+  .nav-wrapper.fit-content {
+    width: 100%;
+    border-radius: 0;
   }
 
   .nav-container {
     justify-content: flex-start;
   }
 
-  /* Hide row links on mobile; only hamburger button remains visible */
   .desktop-nav-items {
     display: none !important;
+  }
+
+  .ham-wrapper {
+    position: static;
   }
 
   .ham-menu-btn {
     position: static;
     transform: none;
+  }
+
+  .mobile-dropdown-panel {
+    position: absolute;
+    top: calc(100% + 8px);
+    left: 1rem;
+    right: 1rem;
+    width: auto;
+    max-width: none;
+  }
+
+  [dir='rtl'] .mobile-dropdown-panel {
+    left: 1rem;
+    right: 1rem;
   }
 }
