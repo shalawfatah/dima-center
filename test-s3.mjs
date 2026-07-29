@@ -2,7 +2,7 @@ import { S3Client, GetObjectCommand } from '@aws-sdk/client-s3'
 import 'dotenv/config'
 
 const client = new S3Client({
-  endpoint: process.env.NEXT_PUBLIC_S3_ENDPOINT,
+  endpoint: process.env.S3_ENDPOINT,
   region: process.env.S3_REGION,
   forcePathStyle: true,
   credentials: {

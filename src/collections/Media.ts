@@ -11,10 +11,9 @@ export const Media: CollectionConfig = {
     update: ({ req: { user } }) => Boolean(user), // Only logged-in users can edit
     delete: ({ req: { user } }) => Boolean(user), // Only logged-in users can delete
   },
-  // Activating the internal Upload engine layer
   upload: {
-    staticDir: 'public/media', // Saves images straight to your Next.js public directory
     mimeTypes: ['image/*'], // Restricts uploads exclusively to valid image file types
+    // staticDir removed — files now go to Garage via s3Storage, not local disk
   },
   fields: [
     {
