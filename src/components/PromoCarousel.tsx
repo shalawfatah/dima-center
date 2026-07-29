@@ -21,18 +21,16 @@ export default async function PromoCarousel({ currentLocale }: PromoCarouselProp
 
   const promoCategory = categoryResult.docs[0]
 
-  // DEBUG 1: Did we find the category?
   if (!promoCategory) {
     return null
   }
 
-  // 2. Fetch UI Products linked to this category ID or slug
+  // 1. Fetch UI Products with locale: 'all' so every translation object is passed to client
   const promoData = await payload.find({
     collection: 'ui-products',
-    locale: currentLocale as 'en' | 'ar' | 'ckb',
-    fallbackLocale: 'ckb', // Automatically fallback to English if string is missing
-    draft: true, // 👈 CRITICAL: Fetch drafts too in case items aren't published
-    overrideAccess: true, // 👈 Bypasses access control restriction checks on local API
+    locale: 'all', // 🎯 CRITICAL FIX: Retains en, ar, and ckb keys in returned fields
+    draft: true,
+    overrideAccess: true,
     where: {
       uiCategory: {
         equals: promoCategory.id,
@@ -42,14 +40,13 @@ export default async function PromoCarousel({ currentLocale }: PromoCarouselProp
     depth: 2,
   })
 
-  // DEBUG 2: Fallback query if category ID match returns 0 (handling relation type differences)
   let promotions = promoData.docs
 
+  // 2. Fallback query with locale: 'all' as well
   if (promotions.length === 0) {
     const fallbackData = await payload.find({
       collection: 'ui-products',
-      locale: currentLocale as 'en' | 'ar' | 'ckb',
-      fallbackLocale: 'ckb',
+      locale: 'all', // 🎯 CRITICAL FIX
       draft: true,
       overrideAccess: true,
       where: {

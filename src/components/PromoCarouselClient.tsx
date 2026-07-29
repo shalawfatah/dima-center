@@ -13,11 +13,48 @@ interface PromoCarouselClientProps {
   isRtl: boolean
 }
 
-// Helper to handle client-side localization fallbacks (Target -> EN -> Any available)
+/**
+ * Safely resolves localized fields with strict fallback hierarchy:
+ * Preferred Locale -> EN -> CKB -> AR -> Any available non-empty string
+ */
 function getLocalizedField(field: any, currentLocale: string): string {
   if (!field) return ''
-  if (typeof field === 'string') return field
-  return field[currentLocale] || field.en || field.ar || field.ckb || ''
+
+  // 1. Direct string check
+  if (typeof field === 'string' && field.trim()) return field.trim()
+
+  // 2. Handle localized object structure: { en: '...', ckb: '...', ar: '...' }
+  if (typeof field === 'object' && field !== null) {
+    // A. Requested locale
+    if (
+      field[currentLocale] &&
+      typeof field[currentLocale] === 'string' &&
+      field[currentLocale].trim()
+    ) {
+      return field[currentLocale].trim()
+    }
+
+    // B. Preferred fallbacks in order
+    const priorityKeys = ['en', 'ckb', 'ar']
+    for (const key of priorityKeys) {
+      if (field[key] && typeof field[key] === 'string' && field[key].trim()) {
+        return field[key].trim()
+      }
+    }
+
+    // C. Scan all object values for ANY non-empty string
+    for (const val of Object.values(field)) {
+      if (typeof val === 'string' && val.trim()) {
+        return val.trim()
+      }
+      if (typeof val === 'object' && val !== null) {
+        const nested = getLocalizedField(val, currentLocale)
+        if (nested) return nested
+      }
+    }
+  }
+
+  return ''
 }
 
 // 🎯 Safe helper to extract category slug from populated relation
@@ -74,6 +111,7 @@ export default function PromoCarouselClient({
       emblaApi.off('reInit', onSelect)
     }
   }, [emblaApi, onSelect])
+
   const scrollToSlide = (index: number) => {
     if (!emblaApi) return
     emblaApi.scrollTo(index)
@@ -85,8 +123,13 @@ export default function PromoCarouselClient({
         <div className={styles.track} style={{ direction: isRtl ? 'rtl' : 'ltr' }}>
           {promotions.map((promo: any) => {
             const imageUrl = promo.image && typeof promo.image === 'object' ? promo.image.url : null
-            const title = getLocalizedField(promo.title, currentLocale)
-            const description = getLocalizedField(promo.description, currentLocale)
+
+            // Fallback chain: promo.title -> linkedProduct.title -> promo.name
+            const rawTitle = promo.title || promo.linkedProduct?.title || promo.name
+            const title = getLocalizedField(rawTitle, currentLocale)
+
+            const rawDescription = promo.description || promo.linkedProduct?.description
+            const description = getLocalizedField(rawDescription, currentLocale)
 
             // Resolve dynamic links matching the rest of the application (category_slug/product_id)
             let targetUrl: string | null = null
@@ -97,7 +140,7 @@ export default function PromoCarouselClient({
               const prodId = typeof linked === 'object' ? linked.id : linked
               const catSlug = getCategorySlug(linked)
 
-              // 🎯 Resolves to /[locale]/[category_slug]/[id]
+              // Resolves to /[locale]/[category_slug]/[id]
               targetUrl = `/${currentLocale}/${catSlug}/${prodId}`
               shouldLink = true
             } else if (promo.linkType === 'static' && promo.staticUrl) {
@@ -108,18 +151,18 @@ export default function PromoCarouselClient({
             }
 
             const slideContent = (
-              <div className={styles.promoWrapper} style={{ textAlign: isRtl ? 'right' : 'left' }}>
+              <div className={styles.promoWrapper} style={{ textAlign: 'center' }}>
                 {/* 🖼️ BACKGROUND IMAGE & OVERLAY */}
                 {imageUrl && (
                   <div className={styles.imageWrapper}>
                     <Image
                       src={imageUrl}
                       alt={title || 'Promotion'}
-                      width={1000}
-                      height={400}
+                      fill
+                      sizes="100vw"
                       draggable={false}
                       className={styles.bgImage}
-                      style={{ height: 'auto' }}
+                      priority={activeIndex === 0}
                     />
                     <div className={styles.overlay} />
                   </div>
