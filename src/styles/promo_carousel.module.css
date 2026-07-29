@@ -53,10 +53,11 @@
 }
 
 .bgImage {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  object-position: center;
+  position: relative !important;
+  height: 100% !important;
+  width: auto !important;
+  max-width: none !important;
+  object-fit: contain;
 }
 
 .overlay {
