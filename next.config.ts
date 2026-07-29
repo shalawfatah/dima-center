@@ -1,4 +1,3 @@
-// next.config.ts
 import { withPayload } from '@payloadcms/next/withPayload'
 import type { NextConfig } from 'next'
 import path from 'path'
