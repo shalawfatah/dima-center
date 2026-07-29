@@ -32,50 +32,55 @@ function sanitizeString(val: any): string | null {
 
 // 🎯 Safe helper to extract localized, plain text, or rich text titles with multi-locale fallback
 function resolveTitle(product: any, locale: string): string {
-  if (!product) return ''
+  if (!product) return 'Untitled Product'
 
-  // 1. Direct top-level checks (covers pre-formatted or top-level properties)
-  const directTitle =
-    sanitizeString(product.title) ||
-    sanitizeString(product.name) ||
-    sanitizeString(product.productName) ||
-    sanitizeString(product.label) ||
-    sanitizeString(product.title_en)
+  let titleProp =
+    product.title || product.name || product.productName || product.label || product.title_en
 
-  if (directTitle) return directTitle
+  if (!titleProp) return 'Untitled Product'
 
-  // 2. Localized Object or Rich Text AST
-  const rawTitle = product.title || product.name || product.productName || product.label
+  // 1. If it's a JSON-stringified object (e.g., '{"en":"...","ckb":"..."}'), parse it first
+  if (typeof titleProp === 'string' && titleProp.trim().startsWith('{')) {
+    try {
+      titleProp = JSON.parse(titleProp)
+    } catch {
+      // Keep as string if parsing fails
+    }
+  }
 
-  if (typeof rawTitle === 'object' && rawTitle !== null) {
-    // Rich Text field handling (Lexical / Slate AST)
-    if (rawTitle.root || Array.isArray(rawTitle.children)) {
+  // 2. Direct string check (clean, un-stringified text)
+  if (typeof titleProp === 'string' && titleProp.trim() !== '') {
+    return titleProp.trim()
+  }
+
+  // 3. Localized Dictionary Object or Rich Text AST
+  if (typeof titleProp === 'object' && titleProp !== null) {
+    // Rich Text field AST check (Lexical / Slate)
+    if (titleProp.root || Array.isArray(titleProp.children)) {
       try {
-        const children = rawTitle.root?.children || rawTitle.children || []
+        const children = titleProp.root?.children || titleProp.children || []
         const text = children
           .map((c: any) => c.text || c.children?.map((tc: any) => tc.text).join('') || '')
           .join(' ')
           .trim()
         if (text) return text
-      } catch (e) {
-        // Fallback below
+      } catch {
+        // Fallthrough to locale dictionary mapping below
       }
     }
 
-    // Localized dictionary handling: Requested Locale -> English -> Arabic -> Kurdish -> Any String
-    const localizedStr =
-      sanitizeString(rawTitle[locale]) ||
-      sanitizeString(rawTitle.en) ||
-      sanitizeString(rawTitle.ar) ||
-      sanitizeString(rawTitle.ckb) ||
-      Object.values(rawTitle).map(sanitizeString).find(Boolean)
+    // Extract by requested locale -> English -> Arabic -> Kurdish -> any valid string value
+    const match =
+      titleProp[locale] ||
+      titleProp.en ||
+      titleProp.ar ||
+      titleProp.ckb ||
+      Object.values(titleProp).find((v) => typeof v === 'string' && v.trim() !== '')
 
-    if (localizedStr) return localizedStr
+    if (typeof match === 'string' && match.trim() !== '') {
+      return match.trim()
+    }
   }
-
-  // 3. Fallback check for explicit english field property
-  const explicitEn = sanitizeString(product.title_en)
-  if (explicitEn) return explicitEn
 
   return 'Untitled Product'
 }
@@ -105,7 +110,7 @@ function resolveImageUrl(product: any): string | null {
   return null
 }
 
-// 🎯 Fast ID lookup helper with depth: 1 and fallbackLocale: 'en'
+// 🎯 Fast ID lookup helper with depth: 1 and fallbackLocale: 'ckb'
 async function fetchProductById(id: string, locale: string, payload: any) {
   const numericId = /^\d+$/.test(id) ? parseInt(id, 10) : id
 
@@ -118,7 +123,7 @@ async function fetchProductById(id: string, locale: string, payload: any) {
       },
       id: numericId,
       locale,
-      fallbackLocale: 'ckb', // 🎯 Ensures missing CKB fields fallback to English
+      fallbackLocale: 'ckb',
       depth: 1,
     })
     if (product) return { product, collectionName: 'products' as const }
@@ -132,7 +137,7 @@ async function fetchProductById(id: string, locale: string, payload: any) {
       collection: 'ui-products',
       id: numericId,
       locale,
-      fallbackLocale: 'ckb', // 🎯 Ensures missing CKB fields fallback to English
+      fallbackLocale: 'ckb',
       depth: 1,
     })
     if (uiProduct) return { product: uiProduct, collectionName: 'ui-products' as const }
@@ -244,7 +249,7 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
       const relatedData = await payload.find({
         collection: targetCollection,
         locale: currentLocale as 'en' | 'ar' | 'ckb',
-        fallbackLocale: 'ckb', // 🎯 Added fallback locale here as well
+        fallbackLocale: 'ckb',
         where: {
           and: [{ [categoryKey]: { equals: categoryId } }, { id: { not_equals: product.id } }],
         },
@@ -287,7 +292,7 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
     iqdPriceNum = usdPriceNum * exchangeRate
   }
 
-  // Ensure normalized product payload passed to InfoSidebar
+  // Ensure normalized product payload passed to InfoSidebar with string title
   const normalizedProduct = {
     ...product,
     title: productTitle,

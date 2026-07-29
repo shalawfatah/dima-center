@@ -64,13 +64,39 @@ function SearchResultsDropdown({
 }: SearchResultsDropdownProps) {
   if (!showDropdown || searchTerm.trim().length < 1) return null
 
-  const getLocalizedText = (val: any) => {
+  // 🎯 FIX: Parse stringified JSON dictionaries before evaluating
+  const getLocalizedText = (val: any): string => {
     if (!val) return ''
-    if (typeof val === 'string') return val
-    if (typeof val === 'object') {
-      return val[locale] || val.en || val.ckb || val.ar || Object.values(val)[0] || ''
+
+    let parsedVal = val
+
+    // If it's a stringified JSON object, parse it into an actual object first
+    if (typeof val === 'string' && val.trim().startsWith('{')) {
+      try {
+        parsedVal = JSON.parse(val)
+      } catch {
+        // Leave as string if parsing fails
+      }
     }
-    return String(val)
+
+    // Direct plain string (non-JSON)
+    if (typeof parsedVal === 'string') {
+      return parsedVal.trim()
+    }
+
+    // Localized dictionary object { en: "...", ckb: "..." }
+    if (typeof parsedVal === 'object' && parsedVal !== null) {
+      const match =
+        parsedVal[locale] ||
+        parsedVal.ckb ||
+        parsedVal.en ||
+        parsedVal.ar ||
+        Object.values(parsedVal).find((v) => typeof v === 'string' && v.trim() !== '')
+
+      if (match && typeof match === 'string') return match.trim()
+    }
+
+    return String(val || '')
   }
 
   const getImageUrl = (item: any): string | null => {
@@ -92,7 +118,6 @@ function SearchResultsDropdown({
           {results.map((item, idx) => {
             const displayTitle = getLocalizedText(item.title || item.name)
 
-            // 🎯 Handle raw price formatting & symbol prepending
             const rawPrice =
               typeof item.price === 'object' ? getLocalizedText(item.price) : item.price
 
@@ -159,7 +184,7 @@ export default function SearchBar({ locale: initialLocale }: { locale: string })
   const locale = ['en', 'ar', 'ckb'].includes(segments[1]) ? segments[1] : initialLocale || 'en'
   const isRtl = locale === 'ar' || locale === 'ckb'
 
-  // Handles state reset directly on user interaction (prevents ESLint react-hooks/set-state-in-effect)
+  // Handles state reset directly on user interaction
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value
     setSearchTerm(value)

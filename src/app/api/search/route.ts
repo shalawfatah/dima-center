@@ -55,6 +55,11 @@ export async function GET(request: Request) {
   const { searchParams } = new URL(request.url)
   const query = searchParams.get('q') || ''
 
+  // 🎯 Extract active locale passed from search fetch (defaults to 'en')
+  const reqLocale = searchParams.get('locale') || 'en'
+  const activeLocale = (['en', 'ar', 'ckb'].includes(reqLocale) ? reqLocale : 'en') as
+    'en' | 'ar' | 'ckb'
+
   const targetLimit = 8
 
   if (query.trim().length < 1) {
@@ -64,13 +69,13 @@ export async function GET(request: Request) {
   try {
     const payload = await getPayload({ config })
 
-    // 1. Primary Text Search: Enforce stock > 0 alongside query text checks
+    // 1. Primary Text Search using the requested locale for field resolution
     const textSearch = await payload.find({
       collection: 'products',
-      locale: 'all',
+      locale: activeLocale, // 👈 Passes active locale to Payload so doc.title is a clean string!
       where: {
         and: [
-          { stock: { greater_than: 0 } }, // 👈 Filters out 0 stock products
+          { stock: { greater_than: 0 } },
           {
             or: [
               { 'title.en': { contains: query } },
@@ -86,9 +91,9 @@ export async function GET(request: Request) {
       limit: targetLimit,
     })
 
-    let combinedDocs = [...textSearch.docs]
+    const combinedDocs = [...textSearch.docs]
 
-    // 2. Fallback Category Checking: Enforce stock > 0 here as well
+    // 2. Fallback Category Checking
     if (combinedDocs.length < targetLimit) {
       const detectedSlug = findCategorySlugFromQuery(query)
 
@@ -98,10 +103,10 @@ export async function GET(request: Request) {
 
         const categorySearch = await payload.find({
           collection: 'products',
-          locale: 'all',
+          locale: activeLocale, // 👈 Ensures localized fields match requested locale
           where: {
             and: [
-              { stock: { greater_than: 0 } }, // 👈 Filters out 0 stock products here too
+              { stock: { greater_than: 0 } },
               {
                 'category.slug': {
                   equals: detectedSlug,
@@ -128,12 +133,32 @@ export async function GET(request: Request) {
           ? doc.category.slug || 'all'
           : 'all'
 
+      // Helper to extract localized text if Payload still passes fallback dictionary
+      const extractString = (val: any) => {
+        if (!val) return ''
+        if (typeof val === 'string') {
+          if (val.trim().startsWith('{')) {
+            try {
+              const parsed = JSON.parse(val)
+              return parsed[activeLocale] || parsed.en || parsed.ckb || parsed.ar || ''
+            } catch {
+              return val
+            }
+          }
+          return val
+        }
+        if (typeof val === 'object') {
+          return val[activeLocale] || val.en || val.ckb || val.ar || Object.values(val)[0] || ''
+        }
+        return String(val)
+      }
+
       return {
         id: doc.id,
         slug: doc.slug || doc.id,
         categorySlug,
-        title: doc.title,
-        name: doc.name,
+        title: extractString(doc.title),
+        name: extractString(doc.name),
         price: doc.price,
         featuredImage: doc.featuredImage || doc.featured_image || null,
       }

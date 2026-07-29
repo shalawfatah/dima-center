@@ -21,6 +21,54 @@ interface ProductCardProps {
   onAddToCart: (e: React.MouseEvent, product: ProductItem) => void
 }
 
+/**
+ * Helper to guarantee title is parsed cleanly if passed as object/JSON string
+ */
+function resolveDisplayTitle(product: any, locale: string): string {
+  if (!product) return ''
+
+  // 1. If product.title is already an object { en: "...", ckb: "..." }
+  if (typeof product.title === 'object' && product.title !== null) {
+    const tObj = product.title
+    const match =
+      tObj[locale] ||
+      tObj.ckb ||
+      tObj.en ||
+      tObj.ar ||
+      Object.values(tObj).find((v) => typeof v === 'string' && v.trim() !== '')
+    if (match && typeof match === 'string') return match.trim()
+  }
+
+  // 2. If product.title is a stringified JSON string: '{"en":"...","ckb":"..."}'
+  if (typeof product.title === 'string' && product.title.trim().startsWith('{')) {
+    try {
+      const parsed = JSON.parse(product.title)
+      if (typeof parsed === 'object' && parsed !== null) {
+        const match =
+          parsed[locale] ||
+          parsed.ckb ||
+          parsed.en ||
+          parsed.ar ||
+          Object.values(parsed).find((v) => typeof v === 'string' && v.trim() !== '')
+        if (match && typeof match === 'string') return match.trim()
+      }
+    } catch {
+      // Fallback if not valid JSON
+    }
+  }
+
+  // 3. Fallback to standard getFallbackText extraction
+  const fallback = getFallbackText(product, 'title', locale)
+  if (fallback && !fallback.startsWith('{')) return fallback
+
+  // 4. Last resort safety fallback for plain strings
+  if (typeof product.title === 'string' && !product.title.startsWith('{')) {
+    return product.title.trim()
+  }
+
+  return ''
+}
+
 export default function ProductCard({
   product,
   currentLocale,
@@ -31,7 +79,8 @@ export default function ProductCard({
   onQuickView,
   onAddToCart,
 }: ProductCardProps) {
-  const currentTitle = getFallbackText(product, 'title', currentLocale)
+  // Resolve title cleanly handling raw objects, stringified objects, or standard fields
+  const currentTitle = resolveDisplayTitle(product, currentLocale)
   const imageUrl = resolveImageUrl(product)
 
   const imageAlt =
