@@ -1,15 +1,35 @@
 /* Container block in normal layout flow */
+/* Container block in normal layout flow */
 .bannerContainer {
   position: relative;
-  width: auto;
+  /* Use calc or logical inline margins to guarantee 1rem spacing on both sides */
+  width: calc(100% - 2rem);
+  max-width: 100%;
   display: block;
   overflow: hidden;
   box-sizing: border-box;
   isolation: isolate;
+  margin-top: 0;
   margin-bottom: 1rem;
-  margin-left: 1rem;
-  margin-right: 1rem;
+  margin-inline: auto; /* Centers the banner cleanly with 1rem auto-gap on left and right */
   border-radius: 8px;
+  box-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.06),
+    0 4px 12px rgba(0, 0, 0, 0.12),
+    0 12px 32px rgba(0, 0, 0, 0.08);
+}
+
+/* Fix contentLayer so it never forces overflow */
+.contentLayer {
+  position: relative;
+  z-index: 10;
+  width: 100%;
+  height: 100%;
+  max-width: 1280px;
+  margin-inline: auto;
+  padding: 1.5rem;
+  display: flex;
+  box-sizing: border-box; /* Ensures padding stays inside 100% width */
 }
 
 /* Height variants */
@@ -96,20 +116,6 @@
     rgba(255, 255, 255, 0.5) 50%,
     rgba(255, 255, 255, 0) 100%
   );
-}
-
-/* Content Layer Base */
-.contentLayer {
-  position: relative;
-  z-index: 10;
-  width: 100%;
-  height: 100%;
-  max-width: 1280px;
-  margin-left: auto;
-  margin-right: auto;
-  padding: 1.5rem;
-  display: flex;
-  box-sizing: border-box;
 }
 
 /* Normal Height (Medium/Large): Vertical Column */
