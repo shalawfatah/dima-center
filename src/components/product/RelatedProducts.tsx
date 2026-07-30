@@ -30,7 +30,6 @@ export default function RelatedProducts({
           fontFamily: '"Rudaw", sans-serif',
           fontSize: '1.5rem',
           fontWeight: '600',
-          color: '#1e293b',
         }}
       >
         {headingLabel[currentLocale] || headingLabel.en}
@@ -42,9 +41,9 @@ export default function RelatedProducts({
         </p>
       ) : (
         <div className={styles['related-grid']}>
-          {safeItems.map((item) => (
+          {safeItems.map((item, index) => (
             <RelatedProductCard
-              key={item?.id ?? Math.random()}
+              key={item?.id ?? `related-${index}`}
               item={item}
               currentLocale={currentLocale}
               isRtl={isRtl}

@@ -13,6 +13,11 @@ export async function DynamicFonts({ locale }: { locale: string }) {
   // 1. Resolve Site Background Color (fallback to #f3f3f3 if empty)
   const siteBgColor = settings?.siteBackground?.backgroundColor || '#f3f3f3'
 
+  // 2. Resolve Typography Text Colors (fallback to #000000 if empty)
+  const typography = settings?.typography
+  const headingTextColor = typography?.titleColor || '#000000'
+  const bodyTextColor = typography?.bodyColor || '#000000'
+
   // Helper to resolve font media URLs safely
   const getMediaUrl = (media: any): string | null => {
     if (typeof media === 'object' && media !== null && 'url' in media && media.url) {
@@ -22,8 +27,7 @@ export async function DynamicFonts({ locale }: { locale: string }) {
     return null
   }
 
-  // 2. Resolve locale-specific fonts from typography settings
-  const typography = settings?.typography
+  // 3. Resolve locale-specific fonts from typography settings
   let localeFonts: { headingFont?: any; bodyFont?: any } | undefined
 
   if (locale === 'ckb') {
@@ -37,7 +41,7 @@ export async function DynamicFonts({ locale }: { locale: string }) {
   const headingFontUrl = getMediaUrl(localeFonts?.headingFont)
   const bodyFontUrl = getMediaUrl(localeFonts?.bodyFont)
 
-  // 3. Build dynamic @font-face and CSS variable definitions
+  // 4. Build dynamic @font-face definitions
   let fontStyles = ''
 
   if (headingFontUrl) {
@@ -69,6 +73,8 @@ export async function DynamicFonts({ locale }: { locale: string }) {
       :root {
         /* Injected dynamically from Payload settings */
         --brand-background: ${siteBgColor};
+        --heading-text-color: ${headingTextColor};
+        --body-text-color: ${bodyTextColor};
         ${headingFontUrl ? `--heading-font: 'DynamicHeadingFont', 'Rudaw', sans-serif;` : ''}
         ${bodyFontUrl ? `--body-font: 'DynamicBodyFont', 'Sarchia', sans-serif;` : ''}
       }

@@ -652,6 +652,14 @@ export interface GeneralSetting {
     backgroundColor?: string | null;
   };
   typography?: {
+    /**
+     * Default color for h1, h2, h3, etc. (e.g. #000000 or #f8fafc).
+     */
+    titleColor?: string | null;
+    /**
+     * Default color for paragraphs and general text (e.g. #333333 or #94a3b8).
+     */
+    bodyColor?: string | null;
     kurdish?: {
       headingFont?: (number | null) | Media;
       bodyFont?: (number | null) | Media;
@@ -720,6 +728,8 @@ export interface GeneralSettingsSelect<T extends boolean = true> {
   typography?:
     | T
     | {
+        titleColor?: T;
+        bodyColor?: T;
         kurdish?:
           | T
           | {

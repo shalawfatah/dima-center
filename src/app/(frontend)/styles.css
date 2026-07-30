@@ -5,6 +5,10 @@
   --brand-background: #f3f3f3;
   --heading-font: 'Rudaw', 'Roboto Mono', sans-serif;
   --body-font: 'Sarchia', system-ui, sans-serif;
+
+  /* Color Variables */
+  --heading-text-color: #000000;
+  --body-text-color: #000000;
 }
 
 * {
@@ -29,10 +33,10 @@ body {
   font-size: 18px;
   line-height: 32px;
   margin: 0;
-  color: rgb(255, 255, 255);
+  color: var(--body-text-color); /* Updated from rgb(255, 255, 255) */
 }
 
-/* Dynamic Heading Fonts */
+/* Dynamic Heading Fonts & Colors */
 h1,
 h2,
 h3,
@@ -42,6 +46,7 @@ h6,
 .headline-text {
   font-family: var(--heading-font);
   font-weight: bold;
+  color: var(--heading-text-color); /* Applied heading color variable */
 }
 
 h1 {
@@ -82,9 +87,11 @@ a {
   font-style: normal;
   font-display: swap;
 }
+
 section {
   background-color: var(--brand-background);
 }
+
 main {
   background-color: var(--brand-background);
 }

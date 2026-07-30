@@ -176,7 +176,6 @@ export default function PromoCarouselClient({
               </div>
             )
 
-            // Render clickable Link ONLY when linkType specifies a valid URL
             return shouldLink && targetUrl ? (
               <Link key={promo.id} href={targetUrl} className={styles.slide} draggable={false}>
                 {slideContent}

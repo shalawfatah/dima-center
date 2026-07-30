@@ -63,6 +63,33 @@ export const GeneralSettings: GlobalConfig = {
       type: 'group',
       label: 'Typography & Custom Fonts',
       fields: [
+        // --- Global Typography Colors ---
+        {
+          type: 'row',
+          fields: [
+            {
+              name: 'titleColor',
+              type: 'text',
+              label: 'Title / Heading Color',
+              defaultValue: '#000000',
+              admin: {
+                width: '50%',
+                description: 'Default color for h1, h2, h3, etc. (e.g. #000000 or #f8fafc).',
+              },
+            },
+            {
+              name: 'bodyColor',
+              type: 'text',
+              label: 'Body Text Color',
+              defaultValue: '#333333',
+              admin: {
+                width: '50%',
+                description:
+                  'Default color for paragraphs and general text (e.g. #333333 or #94a3b8).',
+              },
+            },
+          ],
+        },
         // --- Kurdish Fonts ---
         {
           name: 'kurdish',
@@ -176,7 +203,7 @@ export const GeneralSettings: GlobalConfig = {
       fields: [
         {
           name: 'backgroundColor',
-          type: 'text', // Standard hex string like "#ffffff" or "rgba(...)"
+          type: 'text',
           label: 'Header Background Color',
           admin: {
             description: 'Enter a valid CSS color code (e.g. #1E293B or rgba(0,0,0,0.8)).',
@@ -237,7 +264,7 @@ export const GeneralSettings: GlobalConfig = {
       name: 'exchangeRate',
       type: 'number',
       label: 'Daily Exchange Rate (1 USD to IQD)',
-      defaultValue: 1500, // Typically 1500 or 1320 depending on market/official rate
+      defaultValue: 1500,
       required: true,
       admin: {
         description: 'Used across the system to calculate IQD pricing dynamically.',
@@ -265,7 +292,7 @@ export const GeneralSettings: GlobalConfig = {
       name: 'address',
       type: 'textarea',
       label: 'Physical Address',
-      localized: true, // Addresses change format/script depending on language
+      localized: true,
     },
     // === 🌐 SOCIAL MEDIA LINKS ===
     {

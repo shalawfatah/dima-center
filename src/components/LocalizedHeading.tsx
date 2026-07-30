@@ -25,7 +25,6 @@ export default function LocalizedHeading({
     <h2
       style={{
         fontFamily: '"Rudaw", sans-serif',
-        color: '#1e293b',
         fontSize: '1.65rem',
         marginBottom: '1.5rem',
         fontWeight: '700',

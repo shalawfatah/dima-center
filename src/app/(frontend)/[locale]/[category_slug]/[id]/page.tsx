@@ -20,16 +20,6 @@ interface ProductPageProps {
   }>
 }
 
-/**
- * Safe helper to sanitize string values
- */
-function sanitizeString(val: any): string | null {
-  if (typeof val === 'string' && val.trim() !== '') {
-    return val.trim()
-  }
-  return null
-}
-
 // 🎯 Safe helper to extract localized, plain text, or rich text titles with multi-locale fallback
 function resolveTitle(product: any, locale: string): string {
   if (!product) return 'Untitled Product'

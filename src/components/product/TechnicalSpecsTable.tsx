@@ -80,7 +80,7 @@ export default function TechnicalSpecsTable({
           </tbody>
         </table>
       ) : (
-        <p style={{ color: '#888', fontSize: '14px', padding: '1rem 0' }}>
+        <p style={{ fontSize: '14px', padding: '1rem 0' }}>
           {emptyLabel[currentLocale] || emptyLabel.en}
         </p>
       )}
