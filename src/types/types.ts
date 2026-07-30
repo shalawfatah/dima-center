@@ -152,3 +152,22 @@ export interface CategoryDropdownNavProps {
   currentLocale: string
   categories: CategoryItem[]
 }
+
+export interface SlotLabels {
+  clear?: string
+  change?: string
+  choose?: string
+  noPart?: string
+}
+
+export interface ComponentSlotCardProps {
+  slot: any
+  chosenItem: any
+  t?: Record<string, string>
+  currentLocale?: string
+  labels?: SlotLabels
+  getLocalizedTitle: (product: any) => string
+  onOpen: (slotKey: string) => void
+  onRemove: (slotKey: string) => void
+  onQuantityChange: (slotKey: string, delta: number) => void
+}

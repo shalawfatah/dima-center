@@ -641,6 +641,16 @@ export interface GeneralSetting {
   id: number;
   slogan?: string | null;
   logo?: (number | null) | Media;
+  /**
+   * Enter a valid CSS color (e.g., #fff, transparent, or rgba(0,0,0,0.5)).
+   */
+  logoBackgroundColor?: string | null;
+  siteBackground?: {
+    /**
+     * Sets the default background color for the entire site (e.g. #ffffff, #0f172a, or transparent).
+     */
+    backgroundColor?: string | null;
+  };
   typography?: {
     kurdish?: {
       headingFont?: (number | null) | Media;
@@ -701,6 +711,12 @@ export interface GeneralSetting {
 export interface GeneralSettingsSelect<T extends boolean = true> {
   slogan?: T;
   logo?: T;
+  logoBackgroundColor?: T;
+  siteBackground?:
+    | T
+    | {
+        backgroundColor?: T;
+      };
   typography?:
     | T
     | {

@@ -305,12 +305,12 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
         flexDirection: 'column',
         minHeight: '100vh',
         direction: isRtl ? 'rtl' : 'ltr',
-        background: '#f3f3f3',
+        backgroundColor: 'var(--brand-background)', // 👈 Fixed outer container background
       }}
     >
       <main
         style={{
-          background: '#f3f3f3',
+          backgroundColor: 'var(--brand-background)', // 👈 Quoted CSS variable name properly
           flex: '1',
           padding: '2rem max(1.5rem, calc((100% - 1800px)/2))',
         }}

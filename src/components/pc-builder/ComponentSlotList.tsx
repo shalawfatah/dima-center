@@ -1,7 +1,8 @@
 'use client'
 
 import { COMPONENT_SLOTS } from '@/utils/pc_build_items'
-import ComponentSlotCard, { SlotLabels } from './ComponentSlotCard'
+import ComponentSlotCard from './ComponentSlotCard'
+import { SlotLabels } from '@/types/types'
 
 interface ComponentSlotsListProps {
   selections: Record<string, any>

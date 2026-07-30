@@ -166,7 +166,7 @@ html {
 .pageWrapperFiltered {
   width: 100%;
   padding: 2rem max(1.5rem, calc((100% - 1400px) / 2));
-  background-color: #f3f3f3;
+  background-color: var(--brand-background);
   min-height: 100vh;
 }
 

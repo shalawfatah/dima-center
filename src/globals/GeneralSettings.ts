@@ -15,11 +15,47 @@ export const GeneralSettings: GlobalConfig = {
       localized: true, // Localized so you can have it in en, ckb, ar
     },
     {
-      name: 'logo',
-      type: 'relationship',
-      relationTo: 'media',
-      label: 'Company Logo',
-      required: false,
+      type: 'row',
+      fields: [
+        {
+          name: 'logo',
+          type: 'relationship',
+          relationTo: 'media',
+          label: 'Company Logo',
+          required: false,
+          admin: {
+            width: '50%',
+          },
+        },
+        {
+          name: 'logoBackgroundColor',
+          type: 'text',
+          label: 'Logo Background Color',
+          defaultValue: 'transparent',
+          admin: {
+            width: '50%',
+            description: 'Enter a valid CSS color (e.g., #fff, transparent, or rgba(0,0,0,0.5)).',
+          },
+        },
+      ],
+    },
+    // === 🎨 SITE BACKGROUND ===
+    {
+      name: 'siteBackground',
+      type: 'group',
+      label: 'Site Background',
+      fields: [
+        {
+          name: 'backgroundColor',
+          type: 'text',
+          label: 'Overall Background Color',
+          defaultValue: '#ffffff',
+          admin: {
+            description:
+              'Sets the default background color for the entire site (e.g. #ffffff, #0f172a, or transparent).',
+          },
+        },
+      ],
     },
     // === 🎨 TYPOGRAPHY & FONTS ===
     {

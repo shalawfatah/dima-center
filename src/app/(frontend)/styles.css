@@ -24,8 +24,8 @@ body,
 }
 
 body {
-  /* Dynamic Body Font */
   font-family: var(--body-font);
+  background-color: var(--brand-background);
   font-size: 18px;
   line-height: 32px;
   margin: 0;
@@ -58,7 +58,7 @@ a {
   color: currentColor;
 }
 
-/* Keep your local static @font-face declarations below as guaranteed fallbacks */
+/* Fallback static font declarations */
 @font-face {
   font-family: 'Rudaw';
   src: url('/fonts/rudaw_regular_new.ttf') format('truetype');
@@ -81,4 +81,10 @@ a {
   font-weight: normal;
   font-style: normal;
   font-display: swap;
+}
+section {
+  background-color: var(--brand-background);
+}
+main {
+  background-color: var(--brand-background);
 }

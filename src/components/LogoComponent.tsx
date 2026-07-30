@@ -16,12 +16,14 @@ export type MediaItem =
 export interface LogoComponentProps {
   currentLocale: string
   logoImg?: MediaItem
+  logoBackgroundColor?: string | null
   eventLogoSticker?: MediaItem
 }
 
 export default function LogoComponent({
   currentLocale,
   logoImg,
+  logoBackgroundColor,
   eventLogoSticker,
 }: LogoComponentProps) {
   // Helper to extract a valid src for Next.js Image component
@@ -45,7 +47,7 @@ export default function LogoComponent({
         display: 'flex',
         alignItems: 'center',
         position: 'relative',
-        background: '#fff',
+        background: logoBackgroundColor || 'transparent',
         borderRadius: '12px',
         flexShrink: 0,
       }}

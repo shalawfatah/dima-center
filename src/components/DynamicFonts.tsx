@@ -1,121 +1,79 @@
 import { getPayload } from 'payload'
-import configPromise from '@payload-config'
-
-type MediaObj = { url?: string } | null | undefined
+import config from '@/payload.config'
 
 export async function DynamicFonts({ locale }: { locale: string }) {
-  const payload = await getPayload({ config: configPromise })
+  const payload = await getPayload({ config })
 
-  // Fetch general-settings global from Payload
+  // Fetch settings from Payload for the active locale
   const settings = await payload.findGlobal({
     slug: 'general-settings',
-    depth: 1, // Populate the media relationships
+    locale: locale as 'en' | 'ar' | 'ckb',
   })
 
+  // 1. Resolve Site Background Color (fallback to #f3f3f3 if empty)
+  const siteBgColor = settings?.siteBackground?.backgroundColor || '#f3f3f3'
+
+  // Helper to resolve font media URLs safely
+  const getMediaUrl = (media: any): string | null => {
+    if (typeof media === 'object' && media !== null && 'url' in media && media.url) {
+      return media.url
+    }
+    if (typeof media === 'string') return media
+    return null
+  }
+
+  // 2. Resolve locale-specific fonts from typography settings
   const typography = settings?.typography
-  if (!typography) return null
+  let localeFonts: { headingFont?: any; bodyFont?: any } | undefined
 
-  // Extract uploaded font objects
-  const kurdishHeading = (typography.kurdish?.headingFont as MediaObj)?.url
-  const kurdishBody = (typography.kurdish?.bodyFont as MediaObj)?.url
-
-  const arabicHeading = (typography.arabic?.headingFont as MediaObj)?.url
-  const arabicBody = (typography.arabic?.bodyFont as MediaObj)?.url
-
-  const englishHeading = (typography.english?.headingFont as MediaObj)?.url
-  const englishBody = (typography.english?.bodyFont as MediaObj)?.url
-
-  // Generate dynamic @font-face rules if custom uploads exist
-  let fontFaceRules = ''
-
-  if (kurdishHeading) {
-    fontFaceRules += `
-      @font-face {
-        font-family: 'CustomKurdishHeading';
-        src: url('${kurdishHeading}');
-        font-display: swap;
-      }
-    `
+  if (locale === 'ckb') {
+    localeFonts = typography?.kurdish
+  } else if (locale === 'ar') {
+    localeFonts = typography?.arabic
+  } else {
+    localeFonts = typography?.english
   }
-  if (kurdishBody) {
-    fontFaceRules += `
+
+  const headingFontUrl = getMediaUrl(localeFonts?.headingFont)
+  const bodyFontUrl = getMediaUrl(localeFonts?.bodyFont)
+
+  // 3. Build dynamic @font-face and CSS variable definitions
+  let fontStyles = ''
+
+  if (headingFontUrl) {
+    fontStyles += `
       @font-face {
-        font-family: 'CustomKurdishBody';
-        src: url('${kurdishBody}');
+        font-family: 'DynamicHeadingFont';
+        src: url('${headingFontUrl}') format('truetype');
+        font-weight: normal;
+        font-style: normal;
         font-display: swap;
       }
     `
   }
 
-  if (arabicHeading) {
-    fontFaceRules += `
+  if (bodyFontUrl) {
+    fontStyles += `
       @font-face {
-        font-family: 'CustomArabicHeading';
-        src: url('${arabicHeading}');
-        font-display: swap;
-      }
-    `
-  }
-  if (arabicBody) {
-    fontFaceRules += `
-      @font-face {
-        font-family: 'CustomArabicBody';
-        src: url('${arabicBody}');
-        font-display: swap;
-      }
-    `
-  }
-
-  if (englishHeading) {
-    fontFaceRules += `
-      @font-face {
-        font-family: 'CustomEnglishHeading';
-        src: url('${englishHeading}');
-        font-display: swap;
-      }
-    `
-  }
-  if (englishBody) {
-    fontFaceRules += `
-      @font-face {
-        font-family: 'CustomEnglishBody';
-        src: url('${englishBody}');
+        font-family: 'DynamicBodyFont';
+        src: url('${bodyFontUrl}') format('truetype');
+        font-weight: normal;
+        font-style: normal;
         font-display: swap;
       }
     `
   }
 
   return (
-    <style
-      dangerouslySetInnerHTML={{
-        __html: `
-          ${fontFaceRules}
+    <style>{`
+      :root {
+        /* Injected dynamically from Payload settings */
+        --brand-background: ${siteBgColor};
+        ${headingFontUrl ? `--heading-font: 'DynamicHeadingFont', 'Rudaw', sans-serif;` : ''}
+        ${bodyFontUrl ? `--body-font: 'DynamicBodyFont', 'Sarchia', sans-serif;` : ''}
+      }
 
-          /* Default Fallback Variables */
-          :root {
-            --heading-font: 'Rudaw', 'Roboto Mono', sans-serif;
-            --body-font: 'Sarchia', system-ui, sans-serif;
-          }
-
-          /* Kurdish Override */
-          html[lang='ckb'] {
-            --heading-font: ${kurdishHeading ? "'CustomKurdishHeading', " : ''}'Rudaw', sans-serif;
-            --body-font: ${kurdishBody ? "'CustomKurdishBody', " : ''}'Sarchia', 'Rudaw', sans-serif;
-          }
-
-          /* Arabic Override */
-          html[lang='ar'] {
-            --heading-font: ${arabicHeading ? "'CustomArabicHeading', " : ''}'Rudaw', sans-serif;
-            --body-font: ${arabicBody ? "'CustomArabicBody', " : ''}'Sarchia', 'Rudaw', sans-serif;
-          }
-
-          /* English Override */
-          html[lang='en'] {
-            --heading-font: ${englishHeading ? "'CustomEnglishHeading', " : ''}'Roboto Mono', sans-serif;
-            --body-font: ${englishBody ? "'CustomEnglishBody', " : ''}system-ui, sans-serif;
-          }
-        `,
-      }}
-    />
+      ${fontStyles}
+    `}</style>
   )
 }
