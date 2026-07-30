@@ -124,7 +124,12 @@
 }
 
 /* ---------- info panel ---------- */
-
+.pc-image-placeholder {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+}
 .pc-info-panel {
   position: absolute;
   bottom: 0;
