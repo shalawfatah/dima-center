@@ -8,19 +8,20 @@ const headingLabel: Record<string, string> = {
 }
 
 interface RelatedProductsProps {
-  items?: any[] // Optional to prevent TS complaints if undefined is passed
+  items?: any[]
   currentLocale: string
   isRtl: boolean
   exchangeRate: number
+  cardBgColor?: string
 }
 
 export default function RelatedProducts({
-  items = [], // Default to an empty array
+  items = [],
   currentLocale,
   isRtl,
   exchangeRate,
+  cardBgColor,
 }: RelatedProductsProps) {
-  // Ensure we always work with a valid array
   const safeItems = Array.isArray(items) ? items : []
 
   return (
@@ -48,6 +49,7 @@ export default function RelatedProducts({
               currentLocale={currentLocale}
               isRtl={isRtl}
               exchangeRate={exchangeRate}
+              cardBgColor={cardBgColor}
             />
           ))}
         </div>

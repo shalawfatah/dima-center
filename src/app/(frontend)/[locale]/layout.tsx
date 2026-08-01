@@ -61,13 +61,17 @@ export default async function LocalizedLayout({ children, params }: LayoutProps)
   // Extract WhatsApp number dynamically (fallback to default if empty)
   const phoneNumber = generalSettings?.phone || '9647701414269'
 
+  // Safely resolve colors to strict strings (or undefined fallback)
+  const titleColor = generalSettings?.typography?.titleColor ?? undefined
+  const bodyColor = generalSettings?.typography?.bodyColor ?? undefined
+
   return (
     <div>
       <FullNavbar currentLocale={currentLocale} />
       <EventBanner bannerData={activeEvent} currentLocale={currentLocale} isRtl={isRtl} />
       {children}
       <WhatsappComponent phoneNumber={phoneNumber} />
-      <Footer currentLocale={currentLocale} />
+      <Footer currentLocale={currentLocale} titleColor={titleColor} bodyColor={bodyColor} />
     </div>
   )
 }

@@ -73,7 +73,7 @@ export const GeneralSettings: GlobalConfig = {
               label: 'Title / Heading Color',
               defaultValue: '#000000',
               admin: {
-                width: '50%',
+                width: '33.33%',
                 description: 'Default color for h1, h2, h3, etc. (e.g. #000000 or #f8fafc).',
               },
             },
@@ -83,9 +83,20 @@ export const GeneralSettings: GlobalConfig = {
               label: 'Body Text Color',
               defaultValue: '#333333',
               admin: {
-                width: '50%',
+                width: '33.33%',
                 description:
                   'Default color for paragraphs and general text (e.g. #333333 or #94a3b8).',
+              },
+            },
+            {
+              name: 'boxBackgroundColor',
+              type: 'text',
+              label: 'Box Background Color',
+              defaultValue: '#f8fafc',
+              admin: {
+                width: '33.33%',
+                description:
+                  'Background color for cards, boxes, or callout containers (e.g. #f8fafc or #1e293b).',
               },
             },
           ],

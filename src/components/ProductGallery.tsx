@@ -9,9 +9,8 @@ interface ProductGalleryProps {
   featuredImageUrl?: string | null
   imagesGallery?: any[] | null
   isRtl?: boolean
+  cardBgColor?: string
 }
-
-// --- Small inline icon set (kept dependency-free, no icon library required) ---
 
 function CloseIcon() {
   return (
@@ -87,17 +86,17 @@ export default function ProductGallery({
   featuredImageUrl,
   imagesGallery,
   isRtl = false,
+  cardBgColor,
 }: ProductGalleryProps) {
-  // 1. Robust normalization to safely parse Payload CMS image structures
+  const resolvedBg = cardBgColor || '#ffffff'
+
   const galleryArray = Array.isArray(imagesGallery) ? imagesGallery : []
   const allImages: string[] = []
 
-  // Add the primary featured image first
   if (featuredImageUrl) {
     allImages.push(featuredImageUrl)
   }
 
-  // Deep extract secondary strings from the gallery array safely
   galleryArray.forEach((img: any) => {
     if (!img) return
 
@@ -106,8 +105,6 @@ export default function ProductGallery({
     if (typeof img === 'string') {
       url = img
     } else if (typeof img === 'object') {
-      // Handles standard relationship fields { url: '...' }
-      // or block-wrapped relationships { image: { url: '...' } }
       url = img.url || img.image?.url || (typeof img.image === 'string' ? img.image : null)
     }
 
@@ -116,14 +113,10 @@ export default function ProductGallery({
     }
   })
 
-  // State management for current active slider index
   const [selectedIndex, setSelectedIndex] = useState(0)
-
-  // Full-screen lightbox state
   const [isLightboxOpen, setIsLightboxOpen] = useState(false)
   const [lightboxIndex, setLightboxIndex] = useState(0)
 
-  // Initialize Embla viewports
   const [emblaMainRef, emblaMainApi] = useEmblaCarousel({
     loop: true,
     direction: isRtl ? 'rtl' : 'ltr',
@@ -134,7 +127,6 @@ export default function ProductGallery({
     direction: isRtl ? 'rtl' : 'ltr',
   })
 
-  // Synchronized item slide indicator callbacks
   const onSelect = useCallback(() => {
     if (!emblaMainApi || !emblaThumbsApi) return
 
@@ -154,7 +146,6 @@ export default function ProductGallery({
     }
   }, [emblaMainApi, emblaThumbsApi])
 
-  // Attach lifestyle triggers
   useEffect(() => {
     if (!emblaMainApi) return
 
@@ -180,8 +171,6 @@ export default function ProductGallery({
     },
     [emblaMainApi],
   )
-
-  // --- Lightbox controls ---
 
   const openLightbox = useCallback((index: number) => {
     setLightboxIndex(index)
@@ -210,7 +199,6 @@ export default function ProductGallery({
     })
   }, [allImages.length, emblaMainApi])
 
-  // Keyboard navigation + body scroll lock while the lightbox is open
   useEffect(() => {
     if (!isLightboxOpen) return
 
@@ -365,7 +353,6 @@ export default function ProductGallery({
     </div>
   )
 
-  // === CASE A: NO IMAGES AT ALL ===
   if (allImages.length === 0) {
     return (
       <div
@@ -375,7 +362,7 @@ export default function ProductGallery({
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          background: '#f8fafc',
+          background: resolvedBg,
           borderRadius: '12px',
           color: '#94a3b8',
           border: '1px dashed #cbd5e1',
@@ -387,7 +374,6 @@ export default function ProductGallery({
     )
   }
 
-  // === CASE B: EXACTLY ONE IMAGE (FALLBACK FLAT VIEW) ===
   if (allImages.length === 1) {
     return (
       <>
@@ -396,7 +382,7 @@ export default function ProductGallery({
           style={{
             width: '100%',
             height: '450px',
-            background: '#fff',
+            background: resolvedBg,
             borderRadius: '12px',
             border: '1px solid #f1f5f9',
             overflow: 'hidden',
@@ -437,23 +423,22 @@ export default function ProductGallery({
     )
   }
 
-  // === CASE C: MULTIPLE IMAGES (RENDER DETAILED EMBEDDED SLIDER CAROUSEL) ===
   return (
     <>
       <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
         <style>{`
-          .embla { overflow: hidden; width: 100%; background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; }
+          .embla { overflow: hidden; width: 100%; border: 1px solid #e2e8f0; border-radius: 12px; }
           .embla__container { display: flex; }
           .embla__slide { flex: 0 0 100%; min-width: 0; position: relative; height: 450px; display: flex; align-items: center; justify-content: center; cursor: zoom-in; }
           .embla-thumbs { overflow: hidden; margin-top: 0.5rem; }
           .embla-thumbs__container { display: flex; flex-direction: row; gap: 0.5rem; }
-          .embla-thumbs__slide { flex: 0 0 80px; height: 80px; border-radius: 8px; border: 2px solid transparent; overflow: hidden; cursor: pointer; position: relative; background: #f8fafc; transition: border-color 0.2s ease; }
+          .embla-thumbs__slide { flex: 0 0 80px; height: 80px; border-radius: 8px; border: 2px solid transparent; overflow: hidden; cursor: pointer; position: relative; transition: border-color 0.2s ease; }
           .embla-thumbs__slide--selected { border-color: #3b82f6; }
           .embla-zoom-hint { position: absolute; bottom: 12px; right: 12px; background: rgba(0,0,0,0.5); color: #fff; border-radius: 6px; padding: 6px; display: flex; }
         `}</style>
 
-        {/* Main Large Viewport Carousel */}
-        <div className="embla" ref={emblaMainRef}>
+        {/* Main Viewport Carousel */}
+        <div className="embla" ref={emblaMainRef} style={{ background: resolvedBg }}>
           <div className="embla__container">
             {allImages.map((src, index) => (
               <div className="embla__slide" key={index} onClick={() => openLightbox(index)}>
@@ -476,7 +461,7 @@ export default function ProductGallery({
           </div>
         </div>
 
-        {/* Sub-thumbnail Navigation Strip */}
+        {/* Sub-thumbnail Strip */}
         <div className="embla-thumbs" ref={emblaThumbsRef}>
           <div className="embla-thumbs__container">
             {allImages.map((src, index) => (
@@ -487,6 +472,7 @@ export default function ProductGallery({
                 className={`embla-thumbs__slide ${
                   index === selectedIndex ? 'embla-thumbs__slide--selected' : ''
                 }`}
+                style={{ background: resolvedBg }}
                 aria-label={`Go to slide ${index + 1}`}
               >
                 <Image

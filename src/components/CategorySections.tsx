@@ -1,5 +1,3 @@
-// CategorySections.tsx
-
 import { getPayload } from 'payload'
 import config from '@/payload.config'
 import ProductCarousel from '@/components/ProductCarousel'
@@ -19,19 +17,32 @@ export default async function CategorySections({
 }) {
   const payload = await getPayload({ config })
 
-  // 1. Fetch dynamic UI Categories sorted by admin 'order'
-  const uiCategoriesResult = await payload
-    .find({
-      collection: 'ui-categories',
-      limit: 100,
-      sort: 'order',
-      locale: currentLocale as 'en' | 'ar' | 'ckb',
-      fallbackLocale: 'ckb', // 🎯 Fallback to Central Kurdish if translation is missing
-    })
-    .catch((err) => {
-      console.error('Failed to fetch ui-categories', err)
-      return { docs: [] }
-    })
+  // 1. Fetch ui-categories and general-settings concurrently
+  const [uiCategoriesResult, generalSettings] = await Promise.all([
+    payload
+      .find({
+        collection: 'ui-categories',
+        limit: 100,
+        sort: 'order',
+        locale: currentLocale as 'en' | 'ar' | 'ckb',
+        fallbackLocale: 'ckb',
+      })
+      .catch((err) => {
+        console.error('Failed to fetch ui-categories', err)
+        return { docs: [] }
+      }),
+    payload
+      .findGlobal({
+        slug: 'general-settings',
+      })
+      .catch((err) => {
+        console.error('Failed to fetch general-settings', err)
+        return null
+      }),
+  ])
+
+  // Extract box background color
+  const boxBgColor = generalSettings?.typography?.boxBackgroundColor || undefined
 
   if (!uiCategoriesResult.docs.length) return null
 
@@ -41,14 +52,14 @@ export default async function CategorySections({
 
   if (allLeafSlugs.length === 0) return null
 
-  // 3. Query BOTH 'products' AND 'ui-products' with fallbackLocale: 'ckb'
+  // 3. Query BOTH 'products' AND 'ui-products'
   const [productsBulk, uiProductsBulk] = await Promise.all([
     payload
       .find({
         collection: 'products',
         depth: 1,
         locale: currentLocale as 'en' | 'ar' | 'ckb',
-        fallbackLocale: 'ckb', // 🎯 Fallback to Central Kurdish if translation is missing
+        fallbackLocale: 'ckb',
         where: {
           and: [{ 'category.slug': { in: allLeafSlugs } }, { stock: { greater_than: 0 } }],
         },
@@ -62,7 +73,7 @@ export default async function CategorySections({
         collection: 'ui-products',
         depth: 1,
         locale: currentLocale as 'en' | 'ar' | 'ckb',
-        fallbackLocale: 'ckb', // 🎯 Fallback to Central Kurdish if translation is missing
+        fallbackLocale: 'ckb',
         where: {
           or: [
             { 'category.slug': { in: allLeafSlugs } },
@@ -75,7 +86,7 @@ export default async function CategorySections({
       .catch(() => ({ docs: [] as any[] })),
   ])
 
-  // 4. Group all retrieved products by category slug
+  // 4. Group retrieved products by category slug
   const bySlug: Record<string, any[]> = {}
   const allDocs = [...productsBulk.docs, ...uiProductsBulk.docs]
 
@@ -86,7 +97,7 @@ export default async function CategorySections({
     bySlug[slug].push(p)
   }
 
-  // 5. Combine products for each section matching ui-categories admin order
+  // 5. Combine products for each section
   const homepageSections = sectionMetaMapping
     .map((meta) => {
       const merged = meta.leafSlugs.flatMap((slug) => bySlug[slug] || [])
@@ -111,7 +122,12 @@ export default async function CategorySections({
             ckb={cat.title.ckb}
             style={{ fontSize: '1.4rem', marginBottom: '0.5rem' }}
           />
-          <ProductCarousel isRtl={isRtl} currentLocale={currentLocale} products={cat.products} />
+          <ProductCarousel
+            isRtl={isRtl}
+            currentLocale={currentLocale}
+            products={cat.products}
+            cardBgColor={boxBgColor}
+          />
         </section>
       ))}
     </>

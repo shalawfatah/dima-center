@@ -11,6 +11,7 @@ interface ProductMediaColumnProps {
   isDiscounted: boolean
   badgeText: string
   technicalSpecs?: any[]
+  cardBgColor?: string
 }
 
 export default function ProductMediaColumn({
@@ -22,6 +23,7 @@ export default function ProductMediaColumn({
   isDiscounted,
   badgeText,
   technicalSpecs,
+  cardBgColor,
 }: ProductMediaColumnProps) {
   return (
     <div style={{ position: 'relative' }}>
@@ -39,6 +41,7 @@ export default function ProductMediaColumn({
         featuredImageUrl={featuredImageUrl}
         imagesGallery={imagesGallery}
         isRtl={isRtl}
+        cardBgColor={cardBgColor}
       />
 
       <TechnicalSpecsTable specs={technicalSpecs} currentLocale={currentLocale} isRtl={isRtl} />

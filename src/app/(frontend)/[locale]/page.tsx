@@ -56,7 +56,6 @@ function resolveLocalizedText(val: any, preferredLocale: string): string {
     if (val.ar && typeof val.ar === 'string' && val.ar.trim()) {
       return val.ar.trim()
     }
-    // Fallback to the first non-empty string entry in the object
     const firstAvailable = Object.values(val).find(
       (v) => typeof v === 'string' && v.trim().length > 0,
     ) as string | undefined
@@ -86,30 +85,40 @@ export default async function StorefrontHome({ params, searchParams }: PageProps
   // 🎯 FILTERED VIEW (IF CATEGORY QUERY PRESENT)
   if (activeCategory) {
     const payload = await getPayload({ config })
+    const isDiscountsCategory = activeCategory === 'discounts'
 
-    // 1. Resolve matching UI Category document and its ID
-    const categoryDocRes = await payload.find({
-      collection: 'ui-categories',
-      where: {
-        or: [
-          { slug: { equals: activeCategory } },
-          { 'subCategories.slug': { equals: activeCategory } },
-        ],
-      },
-      limit: 1,
-    })
+    // 1. Resolve matching UI Category document and its ID (Skip if virtual category "discounts")
+    let validUiCategoryId: string | number | null = null
+    if (!isDiscountsCategory) {
+      const categoryDocRes = await payload.find({
+        collection: 'ui-categories',
+        where: {
+          or: [
+            { slug: { equals: activeCategory } },
+            { 'subCategories.slug': { equals: activeCategory } },
+          ],
+        },
+        limit: 1,
+      })
 
-    const uiCategoryDoc = categoryDocRes.docs[0]
-    const rawUiCategoryId = uiCategoryDoc?.id
-    const validUiCategoryId =
-      rawUiCategoryId !== undefined &&
-      rawUiCategoryId !== null &&
-      !Number.isNaN(Number(rawUiCategoryId))
-        ? rawUiCategoryId
-        : null
+      const uiCategoryDoc = categoryDocRes.docs[0]
+      const rawUiCategoryId = uiCategoryDoc?.id
+      validUiCategoryId =
+        rawUiCategoryId !== undefined &&
+        rawUiCategoryId !== null &&
+        !Number.isNaN(Number(rawUiCategoryId))
+          ? rawUiCategoryId
+          : null
+    }
 
     // 2. Fetch localized heading text
     const fetchLocalizedCategoryTitle = async (locale: 'en' | 'ar' | 'ckb') => {
+      if (isDiscountsCategory) {
+        if (locale === 'ar') return 'التخفيضات'
+        if (locale === 'ckb') return 'داشکاندنەکان'
+        return 'Discounts & Offers'
+      }
+
       const categoriesRes = await payload.find({
         collection: 'ui-categories',
         locale,
@@ -126,18 +135,39 @@ export default async function StorefrontHome({ params, searchParams }: PageProps
       return null
     }
 
-    // 3. Construct specific field conditions per schema
-    const productWhere: any[] = [{ 'category.slug': { equals: activeCategory } }]
-    if (validUiCategoryId !== null) {
-      productWhere.push({ category: { equals: validUiCategoryId } })
+    // 3. Construct dynamic query conditions per schema
+    let productWhereCondition: any
+    let uiProductWhereCondition: any
+
+    if (isDiscountsCategory) {
+      // 🏷️ Query products that have the "hasDiscount" checkbox ticked
+      productWhereCondition = {
+        and: [{ hasDiscount: { equals: true } }, { stock: { greater_than: 0 } }],
+      }
+      uiProductWhereCondition = {
+        hasDiscount: { equals: true },
+      }
+    } else {
+      // Standard category matching
+      const productWhere: any[] = [{ 'category.slug': { equals: activeCategory } }]
+      if (validUiCategoryId !== null) {
+        productWhere.push({ category: { equals: validUiCategoryId } })
+      }
+
+      const uiProductWhere: any[] = [{ 'uiCategory.slug': { equals: activeCategory } }]
+      if (validUiCategoryId !== null) {
+        uiProductWhere.push({ uiCategory: { equals: validUiCategoryId } })
+      }
+
+      productWhereCondition = {
+        and: [{ or: productWhere }, { stock: { greater_than: 0 } }],
+      }
+      uiProductWhereCondition = {
+        or: uiProductWhere,
+      }
     }
 
-    const uiProductWhere: any[] = [{ 'uiCategory.slug': { equals: activeCategory } }]
-    if (validUiCategoryId !== null) {
-      uiProductWhere.push({ uiCategory: { equals: validUiCategoryId } })
-    }
-
-    // 4. Fetch all locale fallbacks by querying with fallback enabled or raw object parsing
+    // 4. Query products and ui-products
     const [matchedTitleEn, matchedTitleAr, matchedTitleCkb, productsRes, uiProductsRes] =
       await Promise.all([
         fetchLocalizedCategoryTitle('en'),
@@ -149,12 +179,10 @@ export default async function StorefrontHome({ params, searchParams }: PageProps
           .find({
             collection: 'products',
             locale: currentLocale as 'en' | 'ar' | 'ckb',
-            fallbackLocale: 'en', // Payload native fallback to EN if CKB missing
+            fallbackLocale: 'en',
             depth: 1,
             select: MINIMAL_PRODUCT_FIELDS,
-            where: {
-              and: [{ or: productWhere }, { stock: { greater_than: 0 } }],
-            },
+            where: productWhereCondition,
             limit: 100,
           })
           .catch((err) => {
@@ -167,11 +195,9 @@ export default async function StorefrontHome({ params, searchParams }: PageProps
           .find({
             collection: 'ui-products',
             locale: currentLocale as 'en' | 'ar' | 'ckb',
-            fallbackLocale: 'en', // Payload native fallback to EN if CKB missing
+            fallbackLocale: 'en',
             depth: 1,
-            where: {
-              or: uiProductWhere,
-            },
+            where: uiProductWhereCondition,
             limit: 100,
           })
           .catch((err) => {
@@ -180,16 +206,14 @@ export default async function StorefrontHome({ params, searchParams }: PageProps
           }),
       ])
 
-    // Normalize ui-products with robust multi-layer fallback
+    // Normalize ui-products
     const normalizedUiProducts = (uiProductsRes.docs || []).map((item: any) => {
       let resolvedTitle = resolveLocalizedText(item.title, currentLocale)
 
-      // If empty on UI Product itself, try the linked CRM product title
       if (!resolvedTitle && item.linkedProduct) {
         resolvedTitle = resolveLocalizedText(item.linkedProduct.title, currentLocale)
       }
 
-      // Final fallback if name field exists
       if (!resolvedTitle && item.name) {
         resolvedTitle = resolveLocalizedText(item.name, currentLocale)
       }
@@ -322,7 +346,7 @@ export default async function StorefrontHome({ params, searchParams }: PageProps
     payload
       .findGlobal({
         slug: 'general-settings',
-        depth: 1, // Ensures image relations (backgroundImage, foregroundImage) return full objects
+        depth: 1,
       })
       .catch((err) => {
         console.error('Error querying general-settings:', err)
@@ -343,7 +367,6 @@ export default async function StorefrontHome({ params, searchParams }: PageProps
 
   return (
     <div className={`${styles.pageWrapper} ${styles.pageWrapperDefault} ${dirClass}`}>
-      {/* 🎯 UPDATED HERE: Passed generalSettings prop to CategoryDropdownNav */}
       <CategoryDropdownNav
         currentLocale={currentLocale}
         categories={categories}

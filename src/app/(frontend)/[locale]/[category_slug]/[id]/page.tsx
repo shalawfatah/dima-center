@@ -20,7 +20,6 @@ interface ProductPageProps {
   }>
 }
 
-// 🎯 Safe helper to extract localized, plain text, or rich text titles with multi-locale fallback
 function resolveTitle(product: any, locale: string): string {
   if (!product) return 'Untitled Product'
 
@@ -29,23 +28,17 @@ function resolveTitle(product: any, locale: string): string {
 
   if (!titleProp) return 'Untitled Product'
 
-  // 1. If it's a JSON-stringified object (e.g., '{"en":"...","ckb":"..."}'), parse it first
   if (typeof titleProp === 'string' && titleProp.trim().startsWith('{')) {
     try {
       titleProp = JSON.parse(titleProp)
-    } catch {
-      // Keep as string if parsing fails
-    }
+    } catch {}
   }
 
-  // 2. Direct string check (clean, un-stringified text)
   if (typeof titleProp === 'string' && titleProp.trim() !== '') {
     return titleProp.trim()
   }
 
-  // 3. Localized Dictionary Object or Rich Text AST
   if (typeof titleProp === 'object' && titleProp !== null) {
-    // Rich Text field AST check (Lexical / Slate)
     if (titleProp.root || Array.isArray(titleProp.children)) {
       try {
         const children = titleProp.root?.children || titleProp.children || []
@@ -54,12 +47,9 @@ function resolveTitle(product: any, locale: string): string {
           .join(' ')
           .trim()
         if (text) return text
-      } catch {
-        // Fallthrough to locale dictionary mapping below
-      }
+      } catch {}
     }
 
-    // Extract by requested locale -> English -> Arabic -> Kurdish -> any valid string value
     const match =
       titleProp[locale] ||
       titleProp.en ||
@@ -75,21 +65,17 @@ function resolveTitle(product: any, locale: string): string {
   return 'Untitled Product'
 }
 
-// 🎯 Safe helper to extract image URL across products and ui-products
 function resolveImageUrl(product: any): string | null {
   if (!product) return null
 
-  // 1. Check image field
   const img = product.image
   if (typeof img === 'string' && img.startsWith('http')) return img
   if (typeof img === 'object' && img?.url) return img.url
 
-  // 2. Check featuredImage
   const featured = product.featuredImage
   if (typeof featured === 'string' && featured.startsWith('http')) return featured
   if (typeof featured === 'object' && featured?.url) return featured.url
 
-  // 3. Fallback to images gallery array
   if (Array.isArray(product.imagesGallery) && product.imagesGallery.length > 0) {
     const first = product.imagesGallery[0]
     const firstImg = typeof first === 'object' ? first?.image || first : first
@@ -100,28 +86,21 @@ function resolveImageUrl(product: any): string | null {
   return null
 }
 
-// 🎯 Fast ID lookup helper with depth: 1 and fallbackLocale: 'ckb'
 async function fetchProductById(id: string, locale: string, payload: any) {
   const numericId = /^\d+$/.test(id) ? parseInt(id, 10) : id
 
-  // 1. Try 'products' collection
   try {
     const product = await payload.findByID({
       collection: 'products',
-      where: {
-        stock: { greater_than: 0 },
-      },
+      where: { stock: { greater_than: 0 } },
       id: numericId,
       locale,
       fallbackLocale: 'ckb',
       depth: 1,
     })
     if (product) return { product, collectionName: 'products' as const }
-  } catch (err) {
-    // ID didn't match in products
-  }
+  } catch (err) {}
 
-  // 2. Fallback to 'ui-products' collection
   try {
     const uiProduct = await payload.findByID({
       collection: 'ui-products',
@@ -131,14 +110,11 @@ async function fetchProductById(id: string, locale: string, payload: any) {
       depth: 1,
     })
     if (uiProduct) return { product: uiProduct, collectionName: 'ui-products' as const }
-  } catch (err) {
-    // ID didn't match in ui-products
-  }
+  } catch (err) {}
 
   return null
 }
 
-// 🎯 DYNAMIC PRODUCT METADATA
 export async function generateMetadata({ params }: ProductPageProps): Promise<Metadata> {
   const resolvedParams = await params
   const currentLocale = resolvedParams.locale || 'en'
@@ -206,8 +182,8 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
     console.error('Failed fetching general settings config', err)
   }
   const exchangeRate = settings?.exchangeRate || 1500
+  const boxBgColor = settings?.typography?.boxBackgroundColor || undefined
 
-  // 🎯 Fetch product
   const result = await fetchProductById(productId, currentLocale, payload)
 
   if (!result) {
@@ -216,18 +192,15 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
 
   const { product, collectionName } = result
 
-  // 🎯 Extract unified title & image URL
   const productTitle = resolveTitle(product, currentLocale)
   const featuredImageUrl = resolveImageUrl(product)
 
-  // 🎯 Completely safe category object resolution
   const categoryObject = product?.category || product?.uiCategory || null
   const categoryId =
     typeof categoryObject === 'object' && categoryObject !== null
       ? categoryObject.id
       : categoryObject
 
-  // 🎯 Safe related products lookup
   let relatedDocs: any[] = []
 
   if (categoryId) {
@@ -282,7 +255,6 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
     iqdPriceNum = usdPriceNum * exchangeRate
   }
 
-  // Ensure normalized product payload passed to InfoSidebar with string title
   const normalizedProduct = {
     ...product,
     title: productTitle,
@@ -295,12 +267,12 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
         flexDirection: 'column',
         minHeight: '100vh',
         direction: isRtl ? 'rtl' : 'ltr',
-        backgroundColor: 'var(--brand-background)', // 👈 Fixed outer container background
+        backgroundColor: 'var(--brand-background)',
       }}
     >
       <main
         style={{
-          backgroundColor: 'var(--brand-background)', // 👈 Quoted CSS variable name properly
+          backgroundColor: 'var(--brand-background)',
           flex: '1',
           padding: '2rem max(1.5rem, calc((100% - 1800px)/2))',
         }}
@@ -317,6 +289,7 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
             isDiscounted={mainPriceSpecs.isDiscounted}
             badgeText={mainPriceSpecs.badgeText || ''}
             technicalSpecs={product.technicalSpecs || undefined}
+            cardBgColor={boxBgColor}
           />
 
           <ProductInfoSidebar
@@ -327,6 +300,7 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
             originalPrice={usdOriginalNum}
             isDiscounted={mainPriceSpecs.isDiscounted}
             iqdPrice={iqdPriceNum}
+            cardBgColor={boxBgColor}
           />
         </div>
 
@@ -335,6 +309,7 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
           currentLocale={currentLocale}
           isRtl={isRtl}
           exchangeRate={exchangeRate}
+          cardBgColor={boxBgColor}
         />
       </main>
     </div>

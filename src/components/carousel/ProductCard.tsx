@@ -16,18 +16,15 @@ interface ProductCardProps {
   cardWidth: number
   cardHeight: number
   productPath: string
+  cardBgColor?: string
   t: Dictionary
   onQuickView: (product: ProductItem) => void
   onAddToCart: (e: React.MouseEvent, product: ProductItem) => void
 }
 
-/**
- * Helper to guarantee title is parsed cleanly if passed as object/JSON string
- */
 function resolveDisplayTitle(product: any, locale: string): string {
   if (!product) return ''
 
-  // 1. If product.title is already an object { en: "...", ckb: "..." }
   if (typeof product.title === 'object' && product.title !== null) {
     const tObj = product.title
     const match =
@@ -39,7 +36,6 @@ function resolveDisplayTitle(product: any, locale: string): string {
     if (match && typeof match === 'string') return match.trim()
   }
 
-  // 2. If product.title is a stringified JSON string: '{"en":"...","ckb":"..."}'
   if (typeof product.title === 'string' && product.title.trim().startsWith('{')) {
     try {
       const parsed = JSON.parse(product.title)
@@ -57,11 +53,9 @@ function resolveDisplayTitle(product: any, locale: string): string {
     }
   }
 
-  // 3. Fallback to standard getFallbackText extraction
   const fallback = getFallbackText(product, 'title', locale)
   if (fallback && !fallback.startsWith('{')) return fallback
 
-  // 4. Last resort safety fallback for plain strings
   if (typeof product.title === 'string' && !product.title.startsWith('{')) {
     return product.title.trim()
   }
@@ -75,11 +69,11 @@ export default function ProductCard({
   cardWidth,
   cardHeight,
   productPath,
+  cardBgColor,
   t,
   onQuickView,
   onAddToCart,
 }: ProductCardProps) {
-  // Resolve title cleanly handling raw objects, stringified objects, or standard fields
   const currentTitle = resolveDisplayTitle(product, currentLocale)
   const imageUrl = resolveImageUrl(product)
 
@@ -93,6 +87,8 @@ export default function ProductCard({
   const finalPrice = getDiscountedPrice(product)
   const priceIQDValue = product.priceIQD ? getNumericalPrice(product.priceIQD) : null
 
+  const resolvedBg = cardBgColor || '#f8fafc'
+
   return (
     <Link
       href={productPath}
@@ -102,10 +98,15 @@ export default function ProductCard({
         {
           '--pc-card-width': `${cardWidth}px`,
           '--pc-card-height': `${cardHeight}px`,
+          '--pc-card-bg': resolvedBg,
+          backgroundColor: resolvedBg, // 🎯 Applied at the top level slide link
         } as React.CSSProperties
       }
     >
-      <div className={styles['product-card-inner']}>
+      <div
+        className={styles['product-card-inner']}
+        style={{ backgroundColor: 'inherit' }} // 🎯 Inherit top level color completely
+      >
         {hasDiscount && (
           <div className={styles['pc-discount-badge']}>
             {product.discountType === 'percentage'
@@ -186,7 +187,8 @@ export default function ProductCard({
           </button>
         </div>
 
-        <div className={styles['pc-info-panel']}>
+        {/* 🎯 Applied style={{ backgroundColor: 'transparent' }} so it won't override with white */}
+        <div className={styles['pc-info-panel']} style={{ backgroundColor: 'transparent' }}>
           <h3 className={styles['pc-title']}>{currentTitle}</h3>
           <div className={styles['pc-price-container']}>
             <div className={styles['pc-price-row']}>

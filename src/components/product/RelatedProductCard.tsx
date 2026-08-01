@@ -1,3 +1,5 @@
+'use client'
+
 import Link from 'next/link'
 import Image from 'next/image'
 import { calculateProductPrice } from '@/utils/price'
@@ -5,6 +7,10 @@ import DiscountBadge from './DiscountBadge'
 import ProductPriceDisplay from './ProductPriceDisplay'
 import { RelatedProductCardProps } from '@/types/types'
 import styles from '@/styles/related_product_card.module.css'
+
+interface ExtendedRelatedProductCardProps extends RelatedProductCardProps {
+  cardBgColor?: string
+}
 
 /**
  * Safely extracts image URL from both Products (featuredImage) and UIProducts (image)
@@ -38,7 +44,8 @@ export default function RelatedProductCard({
   currentLocale,
   isRtl,
   exchangeRate,
-}: RelatedProductCardProps) {
+  cardBgColor,
+}: ExtendedRelatedProductCardProps) {
   // 🎯 Resolve image for both Products and UIProducts
   const itemImgUrl = resolveProductImage(item)
 
@@ -76,9 +83,11 @@ export default function RelatedProductCard({
   const usdPrice = Number(priceSpecs.finalPrice)
   const iqdPrice = usdPrice * exchangeRate
 
+  const resolvedBg = cardBgColor || '#f8fafc'
+
   return (
-    <Link href={productHref} className={styles.cardLink}>
-      <div className={styles.card}>
+    <Link href={productHref} className={styles.cardLink} style={{ backgroundColor: resolvedBg }}>
+      <div className={styles.card} style={{ backgroundColor: 'inherit' }}>
         {priceSpecs.isDiscounted && (
           <DiscountBadge
             badgeText={priceSpecs.badgeText ?? ''}

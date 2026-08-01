@@ -44,6 +44,7 @@ interface ProductInfoSidebarProps {
   originalPrice: number
   isDiscounted: boolean
   iqdPrice: number
+  cardBgColor?: string
 }
 
 export default function ProductInfoSidebar({
@@ -54,6 +55,7 @@ export default function ProductInfoSidebar({
   originalPrice,
   isDiscounted,
   iqdPrice,
+  cardBgColor,
 }: ProductInfoSidebarProps) {
   const realIqdPrice =
     product.priceIQD !== null && product.priceIQD !== undefined && Number(product.priceIQD) > 0
@@ -65,6 +67,8 @@ export default function ProductInfoSidebar({
     conditionLabels[product.condition]?.en ||
     product.condition
 
+  const resolvedBg = cardBgColor || '#ffffff'
+
   return (
     <div
       style={{
@@ -72,12 +76,12 @@ export default function ProductInfoSidebar({
         padding: '2rem',
         borderRadius: '16px',
         boxShadow: '0 4px 20px rgba(0,0,0,0.02)',
-        background: '#fff',
+        background: resolvedBg,
         position: 'sticky',
         top: '20px',
       }}
     >
-      {/* 🎯 Restored Upper Content Block */}
+      {/* Upper Content Block */}
       <div style={{ marginBottom: '1.5rem' }}>
         {product.condition && (
           <span

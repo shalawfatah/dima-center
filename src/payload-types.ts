@@ -660,6 +660,10 @@ export interface GeneralSetting {
      * Default color for paragraphs and general text (e.g. #333333 or #94a3b8).
      */
     bodyColor?: string | null;
+    /**
+     * Background color for cards, boxes, or callout containers (e.g. #f8fafc or #1e293b).
+     */
+    boxBackgroundColor?: string | null;
     kurdish?: {
       headingFont?: (number | null) | Media;
       bodyFont?: (number | null) | Media;
@@ -730,6 +734,7 @@ export interface GeneralSettingsSelect<T extends boolean = true> {
     | {
         titleColor?: T;
         bodyColor?: T;
+        boxBackgroundColor?: T;
         kurdish?:
           | T
           | {

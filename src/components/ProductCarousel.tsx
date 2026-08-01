@@ -16,6 +16,10 @@ import ProductCard from './carousel/ProductCard'
 import QuickViewModal from './carousel/QuickViewModal'
 import { useCarouselController } from './carousel/useCarouselController'
 
+interface CarouselPropsWithBg extends ExtendedProductCarouselProps {
+  cardBgColor?: string
+}
+
 export default function ProductCarousel({
   products,
   currentLocale,
@@ -24,7 +28,8 @@ export default function ProductCarousel({
   linkResolver,
   cardWidth = 220,
   cardHeight = 300,
-}: ExtendedProductCarouselProps) {
+  cardBgColor,
+}: CarouselPropsWithBg) {
   const { emblaRef, emblaDirection, canScrollPrev, canScrollNext, scrollPrev, scrollNext } =
     useCarouselController(isRtl)
 
@@ -43,10 +48,8 @@ export default function ProductCarousel({
     (
       product: ProductItem & { linkType?: string; staticUrl?: string; linkedProduct?: any },
     ): string => {
-      // 1. Respect top-level custom linkResolver if provided
       if (linkResolver) return linkResolver(product)
 
-      // 2. Handle UIProducts flexible link settings (Static / Direct CRM Product link)
       if (product.linkType === 'static' && product.staticUrl) {
         return product.staticUrl
       }
@@ -62,12 +65,10 @@ export default function ProductCarousel({
         }
       }
 
-      // 3. Special Case Offers routing using ID
       if (product.isCaseOffer) {
         return `/${currentLocale}/case-offers/${product.id}`
       }
 
-      // 4. Resolve Category Slug (handles both category & uiCategory relationships)
       let categorySlug = 'products'
 
       if (typeof product.category === 'object' && product.category?.slug) {
@@ -76,7 +77,6 @@ export default function ProductCarousel({
         categorySlug = product.uiCategory.slug
       }
 
-      // 5. Build dynamic /[locale]/[category_slug]/[id] route
       return `/${currentLocale}/${categorySlug}/${product.id}`
     },
     [currentLocale, linkResolver],
@@ -141,6 +141,7 @@ export default function ProductCarousel({
               cardWidth={cardWidth}
               cardHeight={cardHeight}
               productPath={getProductPath(product)}
+              cardBgColor={cardBgColor}
               t={t}
               onQuickView={setQuickViewProduct}
               onAddToCart={handleAddToCart}
