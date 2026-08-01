@@ -12,8 +12,17 @@ export const Media: CollectionConfig = {
     delete: ({ req: { user } }) => Boolean(user), // Only logged-in users can delete
   },
   upload: {
-    mimeTypes: ['image/*'], // Restricts uploads exclusively to valid image file types
-    // staticDir removed — files now go to Garage via s3Storage, not local disk
+    mimeTypes: [
+      'image/*',
+      'font/ttf',
+      'font/otf',
+      'font/woff',
+      'font/woff2',
+      'application/font-woff',
+      'application/font-woff2',
+      'application/x-font-ttf',
+      'application/x-font-opentype',
+    ],
   },
   fields: [
     {

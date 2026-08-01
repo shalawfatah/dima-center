@@ -6,13 +6,34 @@ import { useRouter } from 'next/navigation'
 import styles from '@/styles/category_carousel.module.css'
 import { CategoryDropdownNavProps } from '@/types/types'
 
-// Payload GeneralSettings interface based on your schema
+export interface FontMedia {
+  id?: number | string
+  url?: string
+  filename?: string
+  alt?: string
+  [key: string]: any
+}
+
+export interface LanguageTypography {
+  headingFont?: FontMedia | string | null
+  bodyFont?: FontMedia | string | null
+}
+
 export interface GeneralSettingsProps {
   navbar?: {
     width?: 'full' | 'fit-content'
     backgroundColor?: string
     textColor?: string
   }
+  typography?: {
+    kurdish?: LanguageTypography
+    arabic?: LanguageTypography
+    english?: LanguageTypography
+    bodyColor?: string
+    titleColor?: string
+    boxBackgroundColor?: string
+  }
+  [key: string]: any
 }
 
 interface ComponentProps extends CategoryDropdownNavProps {
@@ -33,7 +54,42 @@ export default function CategoryDropdownNav({
   const hamTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
   const isRtl = currentLocale === 'ar' || currentLocale === 'ckb'
-  const titleFont = isRtl ? '"Rudaw", sans-serif' : 'system-ui, sans-serif'
+
+  // Correct Payload CMS key path matching your console output: generalSettings.typography.[language]
+  const typographyConfig = generalSettings?.typography
+  let selectedHeadingFont: FontMedia | string | null | undefined
+
+  if (currentLocale === 'ckb') {
+    selectedHeadingFont = typographyConfig?.kurdish?.headingFont
+  } else if (currentLocale === 'ar') {
+    selectedHeadingFont = typographyConfig?.arabic?.headingFont
+  } else {
+    selectedHeadingFont = typographyConfig?.english?.headingFont
+  }
+
+  // Determine dynamic font family name & generate @font-face rule
+  let customFontFamily = isRtl ? '"Rudaw", sans-serif' : 'system-ui, sans-serif'
+  let dynamicFontFaceRule = ''
+
+  if (selectedHeadingFont) {
+    if (typeof selectedHeadingFont === 'object' && selectedHeadingFont?.url) {
+      // Unique font family name registered dynamically for this locale
+      const fontName = `PayloadFont_${currentLocale}_Heading`
+      customFontFamily = `"${fontName}", "Rudaw", sans-serif`
+
+      dynamicFontFaceRule = `
+        @font-face {
+          font-family: '${fontName}';
+          src: url('${selectedHeadingFont.url}') format('truetype');
+          font-display: swap;
+        }
+      `
+    } else if (typeof selectedHeadingFont === 'string' && selectedHeadingFont.trim() !== '') {
+      customFontFamily = `"${selectedHeadingFont}", "Rudaw", sans-serif`
+    }
+  }
+
+  const titleFont = customFontFamily
 
   // Extract Payload CMS values with fallbacks
   const navbarConfig = generalSettings?.navbar
@@ -98,132 +154,138 @@ export default function CategoryDropdownNav({
   }
 
   return (
-    <div
-      className={`${styles['nav-wrapper']} ${
-        isFitContent ? styles['fit-content'] : styles['full-width']
-      }`}
-      dir={isRtl ? 'rtl' : 'ltr'}
-      style={
-        {
-          direction: isRtl ? 'rtl' : 'ltr',
-          fontFamily: titleFont,
-          '--navbar-bg': navBg,
-          '--navbar-text': navText,
-        } as React.CSSProperties
-      }
-      ref={navRef}
-    >
-      <div className={styles['nav-container']}>
-        {/* Hamburger Menu Wrapper */}
-        <div
-          className={styles['ham-wrapper']}
-          onMouseEnter={handleHamMouseEnter}
-          onMouseLeave={handleHamMouseLeave}
-        >
-          <button
-            type="button"
-            className={styles['ham-menu-btn']}
-            onClick={() => setIsHamOpen((prev) => !prev)}
-            aria-label="Toggle navigation menu"
+    <>
+      {/* Dynamic @font-face injection so the browser can resolve /api/media/file/NizarNastaliqKurdish.ttf */}
+      {dynamicFontFaceRule && <style dangerouslySetInnerHTML={{ __html: dynamicFontFaceRule }} />}
+
+      <div
+        className={`${styles['nav-wrapper']} ${
+          isFitContent ? styles['fit-content'] : styles['full-width']
+        }`}
+        dir={isRtl ? 'rtl' : 'ltr'}
+        style={
+          {
+            direction: isRtl ? 'rtl' : 'ltr',
+            fontFamily: titleFont,
+            '--navbar-bg': navBg,
+            '--navbar-text': navText,
+            '--navbar-font': titleFont,
+          } as React.CSSProperties
+        }
+        ref={navRef}
+      >
+        <div className={styles['nav-container']}>
+          {/* Hamburger Menu Wrapper */}
+          <div
+            className={styles['ham-wrapper']}
+            onMouseEnter={handleHamMouseEnter}
+            onMouseLeave={handleHamMouseLeave}
           >
-            ☰
-          </button>
+            <button
+              type="button"
+              className={styles['ham-menu-btn']}
+              onClick={() => setIsHamOpen((prev) => !prev)}
+              aria-label="Toggle navigation menu"
+            >
+              ☰
+            </button>
 
-          {/* Floating Dropdown Panel */}
-          {isHamOpen && (
-            <div className={styles['mobile-dropdown-panel']}>
-              {categories.map((category, index) => {
-                if (!category.isContainer && category.slug) {
-                  return (
-                    <Link
-                      key={category.id || index}
-                      href={`/${currentLocale}?category=${category.slug}`}
-                      className={styles['mobile-item-link']}
-                      onClick={() => setIsHamOpen(false)}
-                    >
-                      {category.title}
-                    </Link>
-                  )
-                }
-
-                return (
-                  <div key={category.id || index} className={styles['mobile-group-section']}>
-                    <div className={styles['mobile-group-title']}>{category.title}</div>
-                    {category.subCategories?.map((sub, subIdx) => (
+            {/* Floating Dropdown Panel */}
+            {isHamOpen && (
+              <div className={styles['mobile-dropdown-panel']}>
+                {categories.map((category, index) => {
+                  if (!category.isContainer && category.slug) {
+                    return (
                       <Link
-                        key={subIdx}
-                        href={`/${currentLocale}?category=${sub.slug}`}
-                        className={styles['mobile-sub-link']}
+                        key={category.id || index}
+                        href={`/${currentLocale}?category=${category.slug}`}
+                        className={styles['mobile-item-link']}
                         onClick={() => setIsHamOpen(false)}
                       >
-                        {sub.title}
+                        {category.title}
                       </Link>
-                    ))}
+                    )
+                  }
+
+                  return (
+                    <div key={category.id || index} className={styles['mobile-group-section']}>
+                      <div className={styles['mobile-group-title']}>{category.title}</div>
+                      {category.subCategories?.map((sub, subIdx) => (
+                        <Link
+                          key={subIdx}
+                          href={`/${currentLocale}?category=${sub.slug}`}
+                          className={styles['mobile-sub-link']}
+                          onClick={() => setIsHamOpen(false)}
+                        >
+                          {sub.title}
+                        </Link>
+                      ))}
+                    </div>
+                  )
+                })}
+              </div>
+            )}
+          </div>
+
+          {/* Desktop Navigation Items Wrapper */}
+          <div className={styles['desktop-nav-items']}>
+            {categories.map((category, index) => {
+              const isIndependent = !category.isContainer && !!category.slug
+
+              if (isIndependent) {
+                return (
+                  <div key={category.id || index} className={styles['nav-item-wrapper']}>
+                    <button
+                      type="button"
+                      onClick={() => router.push(`/${currentLocale}?category=${category.slug}`)}
+                      className={styles['direct-link-btn']}
+                    >
+                      {category.title}
+                    </button>
                   </div>
                 )
-              })}
-            </div>
-          )}
-        </div>
+              }
 
-        {/* Desktop Navigation Items Wrapper */}
-        <div className={styles['desktop-nav-items']}>
-          {categories.map((category, index) => {
-            const isIndependent = !category.isContainer && !!category.slug
+              const isOpen = activeDropdown === index
 
-            if (isIndependent) {
               return (
-                <div key={category.id || index} className={styles['nav-item-wrapper']}>
+                <div
+                  key={category.id || index}
+                  className={styles['nav-item-wrapper']}
+                  onMouseEnter={() => handleMouseEnter(index)}
+                  onMouseLeave={handleMouseLeave}
+                >
                   <button
                     type="button"
-                    onClick={() => router.push(`/${currentLocale}?category=${category.slug}`)}
-                    className={styles['direct-link-btn']}
+                    onClick={() => handleToggleDropdown(index)}
+                    className={`${styles['dropdown-trigger-btn']} ${
+                      isOpen ? styles['active-trigger'] : ''
+                    }`}
                   >
                     {category.title}
+                    <span className={styles['dropdown-caret']}>▼</span>
                   </button>
+
+                  {isOpen && category.subCategories && (
+                    <div className={styles['dropdown-menu']}>
+                      {category.subCategories.map((sub, subIdx) => (
+                        <Link
+                          key={subIdx}
+                          href={`/${currentLocale}?category=${sub.slug}`}
+                          className={styles['dropdown-item-link']}
+                          onClick={() => setActiveDropdown(null)}
+                        >
+                          {sub.title}
+                        </Link>
+                      ))}
+                    </div>
+                  )}
                 </div>
               )
-            }
-
-            const isOpen = activeDropdown === index
-
-            return (
-              <div
-                key={category.id || index}
-                className={styles['nav-item-wrapper']}
-                onMouseEnter={() => handleMouseEnter(index)}
-                onMouseLeave={handleMouseLeave}
-              >
-                <button
-                  type="button"
-                  onClick={() => handleToggleDropdown(index)}
-                  className={`${styles['dropdown-trigger-btn']} ${
-                    isOpen ? styles['active-trigger'] : ''
-                  }`}
-                >
-                  {category.title}
-                  <span className={styles['dropdown-caret']}>▼</span>
-                </button>
-
-                {isOpen && category.subCategories && (
-                  <div className={styles['dropdown-menu']}>
-                    {category.subCategories.map((sub, subIdx) => (
-                      <Link
-                        key={subIdx}
-                        href={`/${currentLocale}?category=${sub.slug}`}
-                        className={styles['dropdown-item-link']}
-                        onClick={() => setActiveDropdown(null)}
-                      >
-                        {sub.title}
-                      </Link>
-                    ))}
-                  </div>
-                )}
-              </div>
-            )
-          })}
+            })}
+          </div>
         </div>
       </div>
-    </div>
+    </>
   )
 }

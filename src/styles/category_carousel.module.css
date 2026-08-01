@@ -2,7 +2,7 @@
 .nav-wrapper {
   position: relative;
   z-index: 999;
-  font-family: 'Rudaw', sans-serif;
+  font-family: var(--navbar-font, 'Rudaw', sans-serif);
   background-color: var(--navbar-bg, #ffb83c);
   padding: 0.4rem 1rem;
   box-sizing: border-box;
@@ -21,7 +21,7 @@
   width: fit-content;
   max-width: 100%;
   margin: 0.5rem auto;
-  border-radius: 999px; /* Floating pill layout for fit-content mode */
+  border-radius: 999px;
 }
 
 .nav-container {
@@ -61,10 +61,10 @@
   position: relative;
 }
 
-/* Direct Links & Dropdown Buttons using Dynamic Payload Color */
+/* Direct Links & Dropdown Buttons using Dynamic Payload Color & Font */
 .direct-link-btn,
 .dropdown-trigger-btn {
-  font-family: 'Rudaw', sans-serif;
+  font-family: var(--navbar-font, inherit);
   background: transparent;
   color: var(--navbar-text, #000000);
   border: none;
@@ -130,7 +130,7 @@
 }
 
 .dropdown-item-link {
-  font-family: 'Rudaw', sans-serif;
+  font-family: var(--navbar-font, inherit);
   padding: 10px 16px;
   color: #1e293b;
   text-decoration: none;
@@ -176,6 +176,7 @@
 }
 
 .mobile-item-link {
+  font-family: var(--navbar-font, inherit);
   padding: 10px 20px;
   color: #000000;
   text-decoration: none;
@@ -186,6 +187,7 @@
 }
 
 .mobile-group-title {
+  font-family: var(--navbar-font, inherit);
   padding: 10px 20px 4px;
   color: #000000;
   font-weight: 700;
@@ -194,6 +196,7 @@
 }
 
 .mobile-sub-link {
+  font-family: var(--navbar-font, inherit);
   padding: 8px 20px 8px 32px;
   color: #334155;
   text-decoration: none;
