@@ -257,7 +257,7 @@ export const GeneralSettings: GlobalConfig = {
               type: 'text',
               label: 'Navbar Background Color',
               admin: {
-                width: '50%',
+                width: '33.33%',
                 description: 'e.g. #ffb83c or transparent',
               },
             },
@@ -266,8 +266,17 @@ export const GeneralSettings: GlobalConfig = {
               type: 'text',
               label: 'Navbar Text / Item Color',
               admin: {
-                width: '50%',
+                width: '33.33%',
                 description: 'e.g. #000000 or #ffffff',
+              },
+            },
+            {
+              name: 'borderColor',
+              type: 'text',
+              label: 'Navbar Border Color',
+              admin: {
+                width: '33.33%',
+                description: 'e.g. #e0d6c6 or transparent',
               },
             },
           ],
