@@ -177,12 +177,12 @@ export default function Footer({
           <div className={styles.poweredByRow}>
             Powered By{' '}
             <a
-              href="https://ishtarstudio.netlify.app/"
+              href="https://pepu.studio"
               target="_blank"
               rel="noopener noreferrer"
               className={styles.agencyLink}
             >
-              Ishtar Studio
+              Pepu Studio
             </a>
           </div>
         </div>
