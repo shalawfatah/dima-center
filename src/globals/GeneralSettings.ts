@@ -6,6 +6,10 @@ export const GeneralSettings: GlobalConfig = {
   admin: {
     group: 'System', // Organizes it into a sidebar group
   },
+  access: {
+    read: () => true,
+    update: ({ req }) => req.user?.role === 'super-admin' || req.user?.role === 'admin',
+  },
   fields: [
     // === 🏢 COMPANY INFORMATION ===
     {
