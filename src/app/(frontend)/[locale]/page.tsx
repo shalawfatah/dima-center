@@ -265,6 +265,9 @@ export default async function StorefrontHome({ params, searchParams }: PageProps
         price: resolvedPrice,
         featuredImage: item.image || item.linkedProduct?.featuredImage || item.linkedProduct?.image,
         isCaseOffer: activeCategory === 'case-offers',
+        hasDiscount: item.hasDiscount ?? false,
+        discountType: item.discountType,
+        discountValue: item.discountValue,
       }
     })
 
@@ -278,6 +281,9 @@ export default async function StorefrontHome({ params, searchParams }: PageProps
         ...item,
         title: resolvedTitle || 'Untitled',
         isCaseOffer: activeCategory === 'case-offers',
+        hasDiscount: item.hasDiscount ?? false,
+        discountType: item.discountType,
+        discountValue: item.discountValue,
       }
     })
 
@@ -288,6 +294,13 @@ export default async function StorefrontHome({ params, searchParams }: PageProps
       }
     }
     const allProducts = Array.from(productMap.values())
+
+    // Get discount label translation
+    const discountLabel: Record<string, string> = {
+      en: 'OFF',
+      ar: 'خصم',
+      ckb: 'داشکاندن',
+    }
 
     return (
       <>
@@ -353,10 +366,21 @@ export default async function StorefrontHome({ params, searchParams }: PageProps
                   }
 
                   const productHref = resolveProductHref(product.id, !!product.isCaseOffer)
+                  const hasDiscount = product.hasDiscount || false
+                  const discountLabelText =
+                    discountLabel[currentLocale as keyof typeof discountLabel] || 'OFF'
 
                   return (
                     <Link key={product.id} href={productHref} className={styles.productCardLink}>
                       <div className={styles.productCard}>
+                        {/* 🏷️ DISCOUNT BADGE */}
+                        {hasDiscount && (
+                          <div className={styles.discountBadge}>
+                            {product.discountType === 'percentage'
+                              ? `-${product.discountValue}% ${discountLabelText}`
+                              : `-$${product.discountValue} ${discountLabelText}`}
+                          </div>
+                        )}
                         <div className={styles.productImageWrapper}>
                           {imageUrl ? (
                             <Image

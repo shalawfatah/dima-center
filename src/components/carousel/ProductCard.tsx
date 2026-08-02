@@ -7,6 +7,7 @@ import styles from '@/styles/product_carousel.module.css'
 import { resolveImageUrl } from '@/utils/resolve_image_url'
 import { getDiscountedPrice, getFallbackText, getNumericalPrice } from '@/utils/product_helpers'
 import { carouselDictionary } from '@/utils/carousel_dictionary'
+import DiscountBadge from '@/components/product/DiscountBadge'
 
 type Dictionary = (typeof carouselDictionary)['en']
 
@@ -101,6 +102,15 @@ export default function ProductCard({
   const headingColor = titleColor || '#000000'
   const textColor = bodyColor || '#333333'
 
+  // Build badge text
+  const badgeText = hasDiscount
+    ? product.discountType === 'percentage'
+      ? `${product.discountValue}%`
+      : `$${product.discountValue}`
+    : ''
+
+  const isRtl = currentLocale === 'ar' || currentLocale === 'ckb'
+
   return (
     <Link
       href={productPath}
@@ -121,10 +131,14 @@ export default function ProductCard({
     >
       <div className={styles['product-card-inner']} style={{ backgroundColor: 'inherit' }}>
         {hasDiscount && (
-          <div className={styles['pc-discount-badge']}>
-            {product.discountType === 'percentage'
-              ? `-${product.discountValue}% ${t.discountLabel}`
-              : `-$${product.discountValue} ${t.discountLabel}`}
+          <div style={{ fontFamily: 'var(--pc-heading-font)' }}>
+            <DiscountBadge
+              badgeText={badgeText}
+              currentLocale={currentLocale}
+              isRtl={isRtl}
+              size="small"
+              localizeOffLabel={true}
+            />
           </div>
         )}
 

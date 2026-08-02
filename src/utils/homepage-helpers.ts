@@ -29,6 +29,9 @@ export const MINIMAL_PRODUCT_FIELDS = {
   uiCategory: true,
   stock: true,
   createdAt: true,
+  hasDiscount: true,
+  discountType: true,
+  discountValue: true,
 } as const
 
 // Safe helper to extract image URL regardless of relationship population shape
