@@ -9,6 +9,8 @@ interface ProductBuyActionsProps {
   finalPrice: number
   iqdPrice: number
   currentLocale: string
+  bodyFont?: string
+  bodyColor?: string
 }
 
 export default function ProductBuyActions({
@@ -16,13 +18,18 @@ export default function ProductBuyActions({
   finalPrice,
   iqdPrice,
   currentLocale,
+  bodyFont,
+  bodyColor,
 }: ProductBuyActionsProps) {
   const pathname = usePathname()
   const [origin, setOrigin] = useState('')
 
   // Read window.location.origin AFTER hydration finishes
   useEffect(() => {
-    setOrigin(window.location.origin)
+    // Use a microtask to avoid the cascading renders warning
+    queueMicrotask(() => {
+      setOrigin(window.location.origin)
+    })
   }, [])
 
   const productUrl = origin ? `${origin}${pathname}` : pathname
@@ -40,6 +47,8 @@ export default function ProductBuyActions({
         price: displayPrice,
         url: productUrl,
       }}
+      bodyFont={bodyFont}
+      bodyColor={bodyColor}
     />
   )
 }

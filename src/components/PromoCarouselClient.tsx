@@ -11,6 +11,9 @@ interface PromoCarouselClientProps {
   promotions: any[]
   currentLocale: string
   isRtl: boolean
+  headingFont?: string
+  bodyFont?: string
+  dynamicFontFaceCSS?: string
 }
 
 /**
@@ -73,6 +76,9 @@ export default function PromoCarouselClient({
   promotions,
   currentLocale,
   isRtl,
+  headingFont,
+  bodyFont,
+  dynamicFontFaceCSS,
 }: PromoCarouselClientProps) {
   const [activeIndex, setActiveIndex] = useState(0)
 
@@ -117,94 +123,125 @@ export default function PromoCarouselClient({
     emblaApi.scrollTo(index)
   }
 
+  const isRegionalLocale = ['ar', 'ku', 'ckb'].includes(currentLocale)
+  const titleFont = headingFont || (isRegionalLocale ? '"Rudaw", sans-serif' : 'inherit')
+  const bodyFontFamily = bodyFont || (isRegionalLocale ? '"Rudaw", sans-serif' : 'inherit')
+
   return (
-    <section className={styles.carouselSection}>
-      <div ref={emblaRef} className={styles.viewport}>
-        <div className={styles.track} style={{ direction: isRtl ? 'rtl' : 'ltr' }}>
-          {promotions.map((promo: any) => {
-            const imageUrl = promo.image && typeof promo.image === 'object' ? promo.image.url : null
+    <>
+      {dynamicFontFaceCSS && <style dangerouslySetInnerHTML={{ __html: dynamicFontFaceCSS }} />}
 
-            // Fallback chain: promo.title -> linkedProduct.title -> promo.name
-            const rawTitle = promo.title || promo.linkedProduct?.title || promo.name
-            const title = getLocalizedField(rawTitle, currentLocale)
+      <section
+        className={styles.carouselSection}
+        style={
+          {
+            '--promo-heading-font': titleFont,
+            '--promo-body-font': bodyFontFamily,
+          } as React.CSSProperties
+        }
+      >
+        <div ref={emblaRef} className={styles.viewport}>
+          <div className={styles.track} style={{ direction: isRtl ? 'rtl' : 'ltr' }}>
+            {promotions.map((promo: any) => {
+              const imageUrl =
+                promo.image && typeof promo.image === 'object' ? promo.image.url : null
 
-            const rawDescription = promo.description || promo.linkedProduct?.description
-            const description = getLocalizedField(rawDescription, currentLocale)
+              // Fallback chain: promo.title -> linkedProduct.title -> promo.name
+              const rawTitle = promo.title || promo.linkedProduct?.title || promo.name
+              const title = getLocalizedField(rawTitle, currentLocale)
 
-            // Resolve dynamic links matching the rest of the application (category_slug/product_id)
-            let targetUrl: string | null = null
-            let shouldLink = false
+              const rawDescription = promo.description || promo.linkedProduct?.description
+              const description = getLocalizedField(rawDescription, currentLocale)
 
-            if (promo.linkType === 'product' && promo.linkedProduct) {
-              const linked = promo.linkedProduct
-              const prodId = typeof linked === 'object' ? linked.id : linked
-              const catSlug = getCategorySlug(linked)
+              // Resolve dynamic links matching the rest of the application (category_slug/product_id)
+              let targetUrl: string | null = null
+              let shouldLink = false
 
-              // Resolves to /[locale]/[category_slug]/[id]
-              targetUrl = `/${currentLocale}/${catSlug}/${prodId}`
-              shouldLink = true
-            } else if (promo.linkType === 'static' && promo.staticUrl) {
-              targetUrl = promo.staticUrl.startsWith('http')
-                ? promo.staticUrl
-                : `/${currentLocale}${promo.staticUrl.startsWith('/') ? '' : '/'}${promo.staticUrl}`
-              shouldLink = true
-            }
+              if (promo.linkType === 'product' && promo.linkedProduct) {
+                const linked = promo.linkedProduct
+                const prodId = typeof linked === 'object' ? linked.id : linked
+                const catSlug = getCategorySlug(linked)
 
-            const slideContent = (
-              <div className={styles.promoWrapper} style={{ textAlign: 'center' }}>
-                {/* 🖼️ BACKGROUND IMAGE & OVERLAY */}
-                {imageUrl && (
-                  <div className={styles.imageWrapper}>
-                    <Image
-                      src={imageUrl}
-                      alt={title || 'Promotion'}
-                      fill
-                      sizes="100vw"
-                      draggable={false}
-                      className={styles.bgImage}
-                      priority={activeIndex === 0}
-                    />
-                    <div className={styles.overlay} />
+                // Resolves to /[locale]/[category_slug]/[id]
+                targetUrl = `/${currentLocale}/${catSlug}/${prodId}`
+                shouldLink = true
+              } else if (promo.linkType === 'static' && promo.staticUrl) {
+                targetUrl = promo.staticUrl.startsWith('http')
+                  ? promo.staticUrl
+                  : `/${currentLocale}${promo.staticUrl.startsWith('/') ? '' : '/'}${promo.staticUrl}`
+                shouldLink = true
+              }
+
+              const slideContent = (
+                <div className={styles.promoWrapper} style={{ textAlign: 'center' }}>
+                  {/* 🖼️ BACKGROUND IMAGE & OVERLAY */}
+                  {imageUrl && (
+                    <div className={styles.imageWrapper}>
+                      <Image
+                        src={imageUrl}
+                        alt={title || 'Promotion'}
+                        fill
+                        sizes="100vw"
+                        draggable={false}
+                        className={styles.bgImage}
+                        priority={activeIndex === 0}
+                      />
+                      <div className={styles.overlay} />
+                    </div>
+                  )}
+
+                  {/* ✍️ TEXT CONTENT LAYER */}
+                  <div className={styles.textContent}>
+                    {title && (
+                      <h2
+                        className={styles.title}
+                        style={{ fontFamily: 'var(--promo-heading-font)' }}
+                      >
+                        {title}
+                      </h2>
+                    )}
+                    {description && (
+                      <p
+                        className={styles.description}
+                        style={{ fontFamily: 'var(--promo-body-font)' }}
+                      >
+                        {description}
+                      </p>
+                    )}
                   </div>
-                )}
-
-                {/* ✍️ TEXT CONTENT LAYER */}
-                <div className={styles.textContent}>
-                  {title && <h2 className={styles.title}>{title}</h2>}
-                  {description && <p className={styles.description}>{description}</p>}
                 </div>
-              </div>
-            )
+              )
 
-            return shouldLink && targetUrl ? (
-              <Link key={promo.id} href={targetUrl} className={styles.slide} draggable={false}>
-                {slideContent}
-              </Link>
-            ) : (
-              <div key={promo.id} className={styles.slide}>
-                {slideContent}
-              </div>
-            )
-          })}
+              return shouldLink && targetUrl ? (
+                <Link key={promo.id} href={targetUrl} className={styles.slide} draggable={false}>
+                  {slideContent}
+                </Link>
+              ) : (
+                <div key={promo.id} className={styles.slide}>
+                  {slideContent}
+                </div>
+              )
+            })}
+          </div>
         </div>
-      </div>
 
-      {promotions.length > 1 && (
-        <div className={styles.dotsContainer}>
-          {promotions.map((_, index) => (
-            <button
-              key={index}
-              className={styles.dotIndicator}
-              onClick={() => scrollToSlide(index)}
-              style={{
-                backgroundColor: activeIndex === index ? '#fff' : 'rgba(255, 255, 255, 0.4)',
-                transform: activeIndex === index ? 'scale(1.2)' : 'scale(1)',
-              }}
-              aria-label={`Go to slide ${index + 1}`}
-            />
-          ))}
-        </div>
-      )}
-    </section>
+        {promotions.length > 1 && (
+          <div className={styles.dotsContainer}>
+            {promotions.map((_, index) => (
+              <button
+                key={index}
+                className={styles.dotIndicator}
+                onClick={() => scrollToSlide(index)}
+                style={{
+                  backgroundColor: activeIndex === index ? '#fff' : 'rgba(255, 255, 255, 0.4)',
+                  transform: activeIndex === index ? 'scale(1.2)' : 'scale(1)',
+                }}
+                aria-label={`Go to slide ${index + 1}`}
+              />
+            ))}
+          </div>
+        )}
+      </section>
+    </>
   )
 }

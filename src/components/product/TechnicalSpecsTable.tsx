@@ -8,6 +8,10 @@ interface TechnicalSpecsTableProps {
   specs?: TechSpec[]
   currentLocale: string
   isRtl: boolean
+  headingFont?: string
+  bodyFont?: string
+  titleColor?: string
+  bodyColor?: string
 }
 
 const headingLabel: Record<string, string> = {
@@ -26,13 +30,25 @@ export default function TechnicalSpecsTable({
   specs,
   currentLocale,
   isRtl,
+  headingFont,
+  bodyFont,
+  titleColor,
+  bodyColor,
 }: TechnicalSpecsTableProps) {
+  const isRegionalLocale = ['ar', 'ku', 'ckb'].includes(currentLocale)
+  const titleFont = headingFont || (isRegionalLocale ? '"Rudaw", sans-serif' : 'inherit')
+  const bodyFontFamily = bodyFont || (isRegionalLocale ? '"Rudaw", sans-serif' : 'inherit')
+
+  // Use provided colors or fallbacks
+  const headingColor = titleColor || '#1e293b'
+  const textColor = bodyColor || '#333333'
+
   return (
     <div style={{ marginTop: '3rem' }}>
       <h3
         style={{
-          fontFamily: '"Rudaw", sans-serif',
-          color: '#1e293b',
+          fontFamily: titleFont,
+          color: headingColor,
           borderBottom: '2px solid #f0f0f0',
           paddingBottom: '0.5rem',
           marginBottom: '1rem',
@@ -50,6 +66,8 @@ export default function TechnicalSpecsTable({
             borderCollapse: 'collapse',
             fontSize: '14px',
             textAlign: isRtl ? 'right' : 'left',
+            fontFamily: bodyFontFamily,
+            color: textColor,
           }}
         >
           <tbody>
@@ -61,7 +79,8 @@ export default function TechnicalSpecsTable({
                     fontWeight: 'bold',
                     width: '35%',
                     borderBottom: '1px solid #eee',
-                    color: '#333',
+                    color: textColor,
+                    fontFamily: bodyFontFamily,
                   }}
                 >
                   {spec.key}
@@ -70,7 +89,8 @@ export default function TechnicalSpecsTable({
                   style={{
                     padding: '0.75rem 1rem',
                     borderBottom: '1px solid #eee',
-                    color: '#555',
+                    color: textColor,
+                    fontFamily: bodyFontFamily,
                   }}
                 >
                   {spec.value}
@@ -80,7 +100,14 @@ export default function TechnicalSpecsTable({
           </tbody>
         </table>
       ) : (
-        <p style={{ fontSize: '14px', padding: '1rem 0' }}>
+        <p
+          style={{
+            fontSize: '14px',
+            padding: '1rem 0',
+            fontFamily: bodyFontFamily,
+            color: textColor,
+          }}
+        >
           {emptyLabel[currentLocale] || emptyLabel.en}
         </p>
       )}

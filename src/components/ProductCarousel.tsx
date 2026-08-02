@@ -18,6 +18,10 @@ import { useCarouselController } from './carousel/useCarouselController'
 
 interface CarouselPropsWithBg extends ExtendedProductCarouselProps {
   cardBgColor?: string
+  headingFont?: string
+  bodyFont?: string
+  titleColor?: string
+  bodyColor?: string
 }
 
 export default function ProductCarousel({
@@ -29,6 +33,10 @@ export default function ProductCarousel({
   cardWidth = 220,
   cardHeight = 300,
   cardBgColor,
+  headingFont,
+  bodyFont,
+  titleColor,
+  bodyColor,
 }: CarouselPropsWithBg) {
   const { emblaRef, emblaDirection, canScrollPrev, canScrollNext, scrollPrev, scrollNext } =
     useCarouselController(isRtl)
@@ -125,7 +133,10 @@ export default function ProductCarousel({
       className={styles['pc-wrapper']}
       data-dir={emblaDirection}
       style={
-        { '--pc-title-font': isRtl ? '"Rudaw", sans-serif' : 'inherit' } as React.CSSProperties
+        {
+          '--pc-title-font': headingFont || (isRtl ? '"Rudaw", sans-serif' : 'inherit'),
+          '--pc-body-font': bodyFont || (isRtl ? '"Sarchia", sans-serif' : 'inherit'),
+        } as React.CSSProperties
       }
     >
       {canScrollPrev && <PrevBtn isRtl={isRtl} scrollPrev={scrollPrev} />}
@@ -145,6 +156,10 @@ export default function ProductCarousel({
               t={t}
               onQuickView={setQuickViewProduct}
               onAddToCart={handleAddToCart}
+              headingFont={headingFont}
+              bodyFont={bodyFont}
+              titleColor={titleColor}
+              bodyColor={bodyColor}
             />
           ))}
         </div>

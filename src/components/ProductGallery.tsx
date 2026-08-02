@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import useEmblaCarousel from 'embla-carousel-react'
 import Image from 'next/image'
 
@@ -10,6 +10,10 @@ interface ProductGalleryProps {
   imagesGallery?: any[] | null
   isRtl?: boolean
   cardBgColor?: string
+  headingFont?: string
+  bodyFont?: string
+  titleColor?: string
+  bodyColor?: string
 }
 
 function CloseIcon() {
@@ -87,6 +91,10 @@ export default function ProductGallery({
   imagesGallery,
   isRtl = false,
   cardBgColor,
+  headingFont,
+  bodyFont,
+  titleColor,
+  bodyColor,
 }: ProductGalleryProps) {
   const resolvedBg = cardBgColor || '#ffffff'
 
@@ -217,6 +225,10 @@ export default function ProductGallery({
       document.body.style.overflow = originalOverflow
     }
   }, [isLightboxOpen, closeLightbox, showNext, showPrev, isRtl])
+
+  // Use provided colors or fallbacks
+  const headingColor = titleColor || '#000000'
+  const textColor = bodyColor || '#333333'
 
   const lightbox = isLightboxOpen && (
     <div
@@ -364,9 +376,10 @@ export default function ProductGallery({
           justifyContent: 'center',
           background: resolvedBg,
           borderRadius: '12px',
-          color: '#94a3b8',
+          color: textColor,
           border: '1px dashed #cbd5e1',
           fontSize: '14px',
+          fontFamily: bodyFont || 'inherit',
         }}
       >
         📦 No Media Assets Available
@@ -433,7 +446,7 @@ export default function ProductGallery({
           .embla-thumbs { overflow: hidden; margin-top: 0.5rem; }
           .embla-thumbs__container { display: flex; flex-direction: row; gap: 0.5rem; }
           .embla-thumbs__slide { flex: 0 0 80px; height: 80px; border-radius: 8px; border: 2px solid transparent; overflow: hidden; cursor: pointer; position: relative; transition: border-color 0.2s ease; }
-          .embla-thumbs__slide--selected { border-color: #3b82f6; }
+          .embla-thumbs__slide--selected { border-color: ${headingColor}; }
           .embla-zoom-hint { position: absolute; bottom: 12px; right: 12px; background: rgba(0,0,0,0.5); color: #fff; border-radius: 6px; padding: 6px; display: flex; }
         `}</style>
 

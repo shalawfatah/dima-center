@@ -52,6 +52,7 @@ interface SearchResultsDropdownProps {
   results: any[]
   locale: string
   onSelectResult: (category: string, productIdentifier: string) => void
+  bodyFont?: string
 }
 
 function SearchResultsDropdown({
@@ -61,8 +62,12 @@ function SearchResultsDropdown({
   results,
   locale,
   onSelectResult,
+  bodyFont,
 }: SearchResultsDropdownProps) {
   if (!showDropdown || searchTerm.trim().length < 1) return null
+
+  const isRegionalLocale = ['ar', 'ku', 'ckb'].includes(locale)
+  const fontFamily = bodyFont || (isRegionalLocale ? '"Rudaw", sans-serif' : 'inherit')
 
   // 🎯 FIX: Parse stringified JSON dictionaries before evaluating
   const getLocalizedText = (val: any): string => {
@@ -112,7 +117,9 @@ function SearchResultsDropdown({
   return (
     <div className={styles.searchResultsDropdown}>
       {isLoading ? (
-        <div className={styles.searchStatusItem}>Loading...</div>
+        <div className={styles.searchStatusItem} style={{ fontFamily }}>
+          Loading...
+        </div>
       ) : results.length > 0 ? (
         <ul className={styles.resultsList}>
           {results.map((item, idx) => {
@@ -139,10 +146,16 @@ function SearchResultsDropdown({
                 onClick={() => onSelectResult(category, productIdentifier)}
               >
                 <div className={styles.resultsLeftCol}>
-                  <span className={styles.resultTitle}>{displayTitle}</span>
+                  <span className={styles.resultTitle} style={{ fontFamily }}>
+                    {displayTitle}
+                  </span>
                 </div>
                 <div className={styles.resultsRightCol}>
-                  {displayPrice && <span className={styles.resultPrice}>{displayPrice}</span>}
+                  {displayPrice && (
+                    <span className={styles.resultPrice} style={{ fontFamily }}>
+                      {displayPrice}
+                    </span>
+                  )}
                   {imageUrl && (
                     <div className={styles.thumbWrapper}>
                       <Image
@@ -160,7 +173,9 @@ function SearchResultsDropdown({
           })}
         </ul>
       ) : (
-        <div className={styles.searchStatusItem}>No results found</div>
+        <div className={styles.searchStatusItem} style={{ fontFamily }}>
+          No results found
+        </div>
       )}
     </div>
   )
@@ -183,6 +198,9 @@ export default function SearchBar({ locale: initialLocale }: { locale: string })
   const segments = pathname.split('/')
   const locale = ['en', 'ar', 'ckb'].includes(segments[1]) ? segments[1] : initialLocale || 'en'
   const isRtl = locale === 'ar' || locale === 'ckb'
+
+  const isRegionalLocale = ['ar', 'ku', 'ckb'].includes(locale)
+  const fontFamily = isRegionalLocale ? '"Rudaw", sans-serif' : 'inherit'
 
   // Handles state reset directly on user interaction
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -284,6 +302,7 @@ export default function SearchBar({ locale: initialLocale }: { locale: string })
           onChange={handleInputChange}
           placeholder={placeholders[locale] || placeholders.en}
           className={styles.desktopInput}
+          style={{ fontFamily }}
           onFocus={() => setShowDropdown(searchTerm.trim().length >= 1)}
         />
         <button
@@ -301,6 +320,7 @@ export default function SearchBar({ locale: initialLocale }: { locale: string })
           results={results}
           locale={locale}
           onSelectResult={handleSelectResult}
+          bodyFont={fontFamily}
         />
       </form>
 
@@ -318,6 +338,7 @@ export default function SearchBar({ locale: initialLocale }: { locale: string })
               onChange={handleInputChange}
               placeholder={placeholders[locale] || placeholders.en}
               className={styles.mobileInput}
+              style={{ fontFamily }}
             />
             <button
               type="submit"
@@ -343,6 +364,7 @@ export default function SearchBar({ locale: initialLocale }: { locale: string })
           results={results}
           locale={locale}
           onSelectResult={handleSelectResult}
+          bodyFont={fontFamily}
         />
       </div>
     </div>

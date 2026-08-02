@@ -104,6 +104,19 @@ export default async function LocalizedLayout({ children, params }: LayoutProps)
     `
   }
 
+  // Build heading and body font strings for components
+  const isRegionalLocale = ['ar', 'ku', 'ckb'].includes(currentLocale)
+  const headingFont = headingFontUrl
+    ? `'CustomHeadingFont', ${isRegionalLocale ? '"Rudaw", sans-serif' : 'inherit'}`
+    : isRegionalLocale
+      ? '"Rudaw", sans-serif'
+      : 'inherit'
+  const bodyFont = bodyFontUrl
+    ? `'CustomBodyFont', ${isRegionalLocale ? '"Rudaw", sans-serif' : 'inherit'}`
+    : isRegionalLocale
+      ? '"Rudaw", sans-serif'
+      : 'inherit'
+
   const phoneNumber = generalSettings?.phone || '9647701414269'
 
   return (
@@ -135,10 +148,22 @@ export default async function LocalizedLayout({ children, params }: LayoutProps)
       />
 
       <FullNavbar currentLocale={currentLocale} />
-      <EventBanner bannerData={activeEvent} currentLocale={currentLocale} isRtl={isRtl} />
+      <EventBanner
+        bannerData={activeEvent}
+        currentLocale={currentLocale}
+        isRtl={isRtl}
+        headingFont={headingFont}
+        bodyFont={bodyFont}
+        dynamicFontFaceCSS={fontFaceCSS}
+      />
       {children}
       <WhatsappComponent phoneNumber={phoneNumber} />
-      <Footer currentLocale={currentLocale} titleColor={titleColor} bodyColor={bodyColor} />
+      <Footer
+        currentLocale={currentLocale}
+        titleColor={titleColor}
+        bodyColor={bodyColor}
+        generalSettings={generalSettings}
+      />
     </div>
   )
 }

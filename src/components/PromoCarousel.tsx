@@ -4,9 +4,17 @@ import PromoCarouselClient from './PromoCarouselClient'
 
 interface PromoCarouselProps {
   currentLocale: string
+  headingFont?: string
+  bodyFont?: string
+  dynamicFontFaceCSS?: string
 }
 
-export default async function PromoCarousel({ currentLocale }: PromoCarouselProps) {
+export default async function PromoCarousel({
+  currentLocale,
+  headingFont,
+  bodyFont,
+  dynamicFontFaceCSS,
+}: PromoCarouselProps) {
   const payload = await getPayload({ config })
 
   const categoryResult = await payload.find({
@@ -65,5 +73,14 @@ export default async function PromoCarousel({ currentLocale }: PromoCarouselProp
 
   if (!promotions || promotions.length === 0) return null
 
-  return <PromoCarouselClient promotions={promotions} currentLocale={currentLocale} isRtl={isRtl} />
+  return (
+    <PromoCarouselClient
+      promotions={promotions}
+      currentLocale={currentLocale}
+      isRtl={isRtl}
+      headingFont={headingFont}
+      bodyFont={bodyFont}
+      dynamicFontFaceCSS={dynamicFontFaceCSS}
+    />
+  )
 }

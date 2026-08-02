@@ -10,6 +10,8 @@ interface WhatsappWindowProps {
   avatarUrl?: string
   locale?: string
   onClose: () => void
+  headingFont?: string
+  bodyFont?: string
 }
 
 export const WhatsappWindow: React.FC<WhatsappWindowProps> = ({
@@ -18,6 +20,8 @@ export const WhatsappWindow: React.FC<WhatsappWindowProps> = ({
   avatarUrl = '/dima.ico', // Updated to favicon/icon path
   locale: propLocale,
   onClose,
+  headingFont,
+  bodyFont,
 }) => {
   const [message, setMessage] = useState('')
   const pathname = usePathname()
@@ -26,6 +30,10 @@ export const WhatsappWindow: React.FC<WhatsappWindowProps> = ({
   const segments = pathname ? pathname.split('/') : []
   const locale = propLocale || (['en', 'ar', 'ckb'].includes(segments[1]) ? segments[1] : 'en')
   const isRtl = locale === 'ar' || locale === 'ckb'
+
+  const isRegionalLocale = ['ar', 'ku', 'ckb'].includes(locale)
+  const titleFont = headingFont || (isRegionalLocale ? '"Rudaw", sans-serif' : 'inherit')
+  const bodyFontFamily = bodyFont || (isRegionalLocale ? '"Rudaw", sans-serif' : 'inherit')
 
   // Localized Strings
   const translations: Record<
@@ -68,7 +76,16 @@ export const WhatsappWindow: React.FC<WhatsappWindowProps> = ({
   }
 
   return (
-    <div className={styles.windowContainer} style={{ direction: isRtl ? 'rtl' : 'ltr' }}>
+    <div
+      className={styles.windowContainer}
+      style={
+        {
+          direction: isRtl ? 'rtl' : 'ltr',
+          '--whatsapp-heading-font': titleFont,
+          '--whatsapp-body-font': bodyFontFamily,
+        } as React.CSSProperties
+      }
+    >
       {/* Header */}
       <div className={styles.header}>
         <div className={styles.headerInfo}>
@@ -77,7 +94,9 @@ export const WhatsappWindow: React.FC<WhatsappWindowProps> = ({
             <span className={styles.onlineDot} />
           </div>
           <div>
-            <h4 className={styles.title}>{resolvedBusinessName}</h4>
+            <h4 className={styles.title} style={{ fontFamily: 'var(--whatsapp-heading-font)' }}>
+              {resolvedBusinessName}
+            </h4>
           </div>
         </div>
         <button onClick={onClose} className={styles.closeBtn} aria-label="Close">
@@ -88,8 +107,10 @@ export const WhatsappWindow: React.FC<WhatsappWindowProps> = ({
       {/* Message Area */}
       <div className={styles.chatBody}>
         <div className={styles.bubble}>
-          <p className={styles.bubbleText}>{currentText.greeting}</p>
-          <span className={styles.bubbleTime}>
+          <p className={styles.bubbleText} style={{ fontFamily: 'var(--whatsapp-body-font)' }}>
+            {currentText.greeting}
+          </p>
+          <span className={styles.bubbleTime} style={{ fontFamily: 'var(--whatsapp-body-font)' }}>
             {new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
           </span>
         </div>
@@ -103,6 +124,7 @@ export const WhatsappWindow: React.FC<WhatsappWindowProps> = ({
           onChange={(e) => setMessage(e.target.value)}
           placeholder={currentText.placeholder}
           className={styles.input}
+          style={{ fontFamily: 'var(--whatsapp-body-font)' }}
         />
         <button type="submit" className={styles.sendBtn} aria-label="Send message">
           <svg

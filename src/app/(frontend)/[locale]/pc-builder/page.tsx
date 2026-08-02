@@ -13,48 +13,91 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   return getStorefrontMetadata({ locale: resolvedParams.locale })
 }
 
-// Statically optimize compilation rules
-export const revalidate = 3600 // Cache for 1 hour, revalidate in background
+export const revalidate = 3600
 
 export default async function PcBuilderPage({ params }: PageProps) {
   const { locale } = await params
   const payload = await getPayload({ config })
 
-  // Fetch only necessary data fields to speed up build generation
-  const productsData = await payload.find({
-    collection: 'products',
-    where: {
-      stock: { greater_than: 0 },
-    },
-    select: {
-      id: true,
-      title: true,
-      price: true,
-      priceIQD: true,
-      hasDiscount: true,
-      discountType: true,
-      discountValue: true,
-      category: true,
-      cat: true,
-      featuredImage: true,
-      meta: true,
-    },
-    limit: 0,
-    pagination: false,
-    locale: locale as 'en' | 'ar' | 'ckb',
-  })
-
-  // Fetch corporate currency constants safely
-  const generalsData = await payload
-    .findGlobal({
-      slug: 'general-settings',
+  const [productsData, generalsData] = await Promise.all([
+    payload.find({
+      collection: 'products',
+      where: {
+        stock: { greater_than: 0 },
+      },
+      select: {
+        id: true,
+        title: true,
+        price: true,
+        priceIQD: true,
+        hasDiscount: true,
+        discountType: true,
+        discountValue: true,
+        category: true,
+        cat: true,
+        featuredImage: true,
+        meta: true,
+      },
+      limit: 0,
+      pagination: false,
       locale: locale as 'en' | 'ar' | 'ckb',
-    })
-    .catch(() => null)
+    }),
+    payload
+      .findGlobal({
+        slug: 'general-settings',
+        locale: locale as 'en' | 'ar' | 'ckb',
+        depth: 1,
+      })
+      .catch(() => null),
+  ])
 
   const isRtl = locale === 'ar' || locale === 'ckb'
 
-  // ✅ FIX TYPE ERROR: Sanitize database 'null' properties to meet Client Component expectations
+  const typography = generalsData?.typography
+  const localeMap = {
+    ckb: 'kurdish',
+    ar: 'arabic',
+    en: 'english',
+  } as const
+
+  const fontGroupKey = localeMap[locale as keyof typeof localeMap]
+  const fontGroup = typography?.[fontGroupKey]
+
+  const headingFontObj = fontGroup?.headingFont
+  const bodyFontObj = fontGroup?.bodyFont
+
+  let headingFont = isRtl ? '"Rudaw", sans-serif' : 'system-ui, sans-serif'
+  let bodyFont = isRtl ? '"Sarchia", sans-serif' : 'system-ui, sans-serif'
+  let dynamicFontFaceCSS = ''
+
+  // Extract colors from general settings
+  const titleColor = generalsData?.typography?.titleColor || undefined
+  const bodyColor = generalsData?.typography?.bodyColor || undefined
+
+  if (headingFontObj && typeof headingFontObj === 'object' && headingFontObj.url) {
+    const fontName = `PcBuilderHeading_${locale}`
+    headingFont = `"${fontName}", "Rudaw", sans-serif`
+    dynamicFontFaceCSS += `
+      @font-face {
+        font-family: '${fontName}';
+        src: url('${headingFontObj.url}') format('truetype');
+        font-display: swap;
+      }
+    `
+  }
+
+  if (bodyFontObj && typeof bodyFontObj === 'object' && bodyFontObj.url) {
+    const fontName = `PcBuilderBody_${locale}`
+    bodyFont = `"${fontName}", "Sarchia", sans-serif`
+    dynamicFontFaceCSS += `
+      @font-face {
+        font-family: '${fontName}';
+        src: url('${bodyFontObj.url}') format('truetype');
+        font-display: swap;
+      }
+    `
+  }
+
   const sanitizedGenerals = generalsData
     ? JSON.parse(JSON.stringify(generalsData, (_, value) => (value === null ? undefined : value)))
     : undefined
@@ -65,6 +108,11 @@ export default async function PcBuilderPage({ params }: PageProps) {
       generals={sanitizedGenerals}
       currentLocale={locale}
       isRtl={isRtl}
+      headingFont={headingFont}
+      bodyFont={bodyFont}
+      dynamicFontFaceCSS={dynamicFontFaceCSS}
+      titleColor={titleColor}
+      bodyColor={bodyColor}
     />
   )
 }

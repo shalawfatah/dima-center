@@ -10,6 +10,10 @@ import styles from '@/styles/related_product_card.module.css'
 
 interface ExtendedRelatedProductCardProps extends RelatedProductCardProps {
   cardBgColor?: string
+  headingFont?: string
+  bodyFont?: string
+  titleColor?: string
+  bodyColor?: string
 }
 
 /**
@@ -45,6 +49,10 @@ export default function RelatedProductCard({
   isRtl,
   exchangeRate,
   cardBgColor,
+  headingFont,
+  bodyFont,
+  titleColor,
+  bodyColor,
 }: ExtendedRelatedProductCardProps) {
   // 🎯 Resolve image for both Products and UIProducts
   const itemImgUrl = resolveProductImage(item)
@@ -85,8 +93,28 @@ export default function RelatedProductCard({
 
   const resolvedBg = cardBgColor || '#f8fafc'
 
+  const isRegionalLocale = ['ar', 'ku', 'ckb'].includes(currentLocale)
+  const titleFont = headingFont || (isRegionalLocale ? '"Rudaw", sans-serif' : 'inherit')
+  const bodyFontFamily = bodyFont || (isRegionalLocale ? '"Rudaw", sans-serif' : 'inherit')
+
+  // Use provided colors or fallbacks
+  const headingColor = titleColor || '#000000'
+  const textColor = bodyColor || '#333333'
+
   return (
-    <Link href={productHref} className={styles.cardLink} style={{ backgroundColor: resolvedBg }}>
+    <Link
+      href={productHref}
+      className={styles.cardLink}
+      style={
+        {
+          backgroundColor: resolvedBg,
+          '--related-heading-color': headingColor,
+          '--related-body-color': textColor,
+          '--related-heading-font': titleFont,
+          '--related-body-font': bodyFontFamily,
+        } as React.CSSProperties
+      }
+    >
       <div className={styles.card} style={{ backgroundColor: 'inherit' }}>
         {priceSpecs.isDiscounted && (
           <DiscountBadge
@@ -112,7 +140,15 @@ export default function RelatedProductCard({
           )}
         </div>
 
-        <h4 className={styles.title}>{item?.title || item?.name}</h4>
+        <h4
+          className={styles.title}
+          style={{
+            fontFamily: 'var(--related-heading-font)',
+            color: 'var(--related-heading-color)',
+          }}
+        >
+          {item?.title || item?.name}
+        </h4>
 
         <ProductPriceDisplay
           variant="card"
@@ -121,6 +157,10 @@ export default function RelatedProductCard({
           isDiscounted={priceSpecs.isDiscounted}
           iqdPrice={iqdPrice}
           currentLocale={currentLocale}
+          headingFont={headingFont}
+          bodyFont={bodyFont}
+          titleColor={titleColor}
+          bodyColor={bodyColor}
         />
       </div>
     </Link>

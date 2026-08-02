@@ -12,6 +12,10 @@ interface ProductMediaColumnProps {
   badgeText: string
   technicalSpecs?: any[]
   cardBgColor?: string
+  headingFont?: string
+  bodyFont?: string
+  titleColor?: string
+  bodyColor?: string
 }
 
 export default function ProductMediaColumn({
@@ -24,6 +28,10 @@ export default function ProductMediaColumn({
   badgeText,
   technicalSpecs,
   cardBgColor,
+  headingFont,
+  bodyFont,
+  titleColor,
+  bodyColor,
 }: ProductMediaColumnProps) {
   return (
     <div style={{ position: 'relative' }}>
@@ -42,9 +50,21 @@ export default function ProductMediaColumn({
         imagesGallery={imagesGallery}
         isRtl={isRtl}
         cardBgColor={cardBgColor}
+        headingFont={headingFont}
+        bodyFont={bodyFont}
+        titleColor={titleColor}
+        bodyColor={bodyColor}
       />
 
-      <TechnicalSpecsTable specs={technicalSpecs} currentLocale={currentLocale} isRtl={isRtl} />
+      <TechnicalSpecsTable
+        specs={technicalSpecs}
+        currentLocale={currentLocale}
+        isRtl={isRtl}
+        headingFont={headingFont}
+        bodyFont={bodyFont}
+        titleColor={titleColor}
+        bodyColor={bodyColor}
+      />
     </div>
   )
 }

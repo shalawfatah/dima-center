@@ -34,10 +34,6 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   return getStorefrontMetadata({ locale: resolvedParams.locale })
 }
 
-/**
- * Safely resolves localized fields with strict fallback hierarchy:
- * Preferred Locale -> EN -> AR -> Any available string
- */
 function resolveLocalizedText(val: any, preferredLocale: string): string {
   if (!val) return ''
   if (typeof val === 'string') return val.trim()
@@ -77,17 +73,70 @@ export default async function StorefrontHome({ params, searchParams }: PageProps
   const isRtl = currentLocale === 'ar' || currentLocale === 'ckb'
   const dirClass = isRtl ? styles.rtl : styles.ltr
 
+  // Declare fonts early so they're available everywhere
+  let headingFont = isRtl ? '"Rudaw", sans-serif' : 'system-ui, sans-serif'
+  let bodyFont = isRtl ? '"Sarchia", sans-serif' : 'system-ui, sans-serif'
+  let dynamicFontFaceCSS = ''
+
+  // 🎯 FETCH generalSettings FIRST so fonts are available for both filtered and default views
+  const payload = await getPayload({ config })
+
+  const generalSettings = await payload
+    .findGlobal({
+      slug: 'general-settings',
+      depth: 1,
+    })
+    .catch((err) => {
+      console.error('Error querying general-settings:', err)
+      return null
+    })
+
+  // 🎯 Update fonts from generalSettings BEFORE checking activeCategory
+  const typography = generalSettings?.typography
+  const localeMap = {
+    ckb: 'kurdish',
+    ar: 'arabic',
+    en: 'english',
+  } as const
+
+  const fontGroupKey = localeMap[currentLocale as keyof typeof localeMap]
+  const fontGroup = typography?.[fontGroupKey]
+
+  const headingFontObj = fontGroup?.headingFont
+  const bodyFontObj = fontGroup?.bodyFont
+
+  if (headingFontObj && typeof headingFontObj === 'object' && headingFontObj.url) {
+    const fontName = `HomePageHeading_${currentLocale}`
+    headingFont = `"${fontName}", "Rudaw", sans-serif`
+    dynamicFontFaceCSS += `
+      @font-face {
+        font-family: '${fontName}';
+        src: url('${headingFontObj.url}') format('truetype');
+        font-display: swap;
+      }
+    `
+  }
+
+  if (bodyFontObj && typeof bodyFontObj === 'object' && bodyFontObj.url) {
+    const fontName = `HomePageBody_${currentLocale}`
+    bodyFont = `"${fontName}", "Sarchia", sans-serif`
+    dynamicFontFaceCSS += `
+      @font-face {
+        font-family: '${fontName}';
+        src: url('${bodyFontObj.url}') format('truetype');
+        font-display: swap;
+      }
+    `
+  }
+
   const resolveProductHref = (id: string | number, isCaseOffer: boolean) => {
     const routeSegment = isCaseOffer ? 'case-offers' : 'products'
     return `/${currentLocale}/${routeSegment}/${id}`
   }
 
-  // 🎯 FILTERED VIEW (IF CATEGORY QUERY PRESENT)
   if (activeCategory) {
-    const payload = await getPayload({ config })
     const isDiscountsCategory = activeCategory === 'discounts'
 
-    // 1. Resolve matching UI Category document and its ID (Skip if virtual category "discounts")
     let validUiCategoryId: string | number | null = null
     if (!isDiscountsCategory) {
       const categoryDocRes = await payload.find({
@@ -111,7 +160,6 @@ export default async function StorefrontHome({ params, searchParams }: PageProps
           : null
     }
 
-    // 2. Fetch localized heading text
     const fetchLocalizedCategoryTitle = async (locale: 'en' | 'ar' | 'ckb') => {
       if (isDiscountsCategory) {
         if (locale === 'ar') return 'التخفيضات'
@@ -135,12 +183,10 @@ export default async function StorefrontHome({ params, searchParams }: PageProps
       return null
     }
 
-    // 3. Construct dynamic query conditions per schema
     let productWhereCondition: any
     let uiProductWhereCondition: any
 
     if (isDiscountsCategory) {
-      // 🏷️ Query products that have the "hasDiscount" checkbox ticked
       productWhereCondition = {
         and: [{ hasDiscount: { equals: true } }, { stock: { greater_than: 0 } }],
       }
@@ -148,7 +194,6 @@ export default async function StorefrontHome({ params, searchParams }: PageProps
         hasDiscount: { equals: true },
       }
     } else {
-      // Standard category matching
       const productWhere: any[] = [{ 'category.slug': { equals: activeCategory } }]
       if (validUiCategoryId !== null) {
         productWhere.push({ category: { equals: validUiCategoryId } })
@@ -167,14 +212,11 @@ export default async function StorefrontHome({ params, searchParams }: PageProps
       }
     }
 
-    // 4. Query products and ui-products
     const [matchedTitleEn, matchedTitleAr, matchedTitleCkb, productsRes, uiProductsRes] =
       await Promise.all([
         fetchLocalizedCategoryTitle('en'),
         fetchLocalizedCategoryTitle('ar'),
         fetchLocalizedCategoryTitle('ckb'),
-
-        // Standard products
         payload
           .find({
             collection: 'products',
@@ -189,8 +231,6 @@ export default async function StorefrontHome({ params, searchParams }: PageProps
             console.error('Error querying products:', err)
             return { docs: [] }
           }),
-
-        // UI products
         payload
           .find({
             collection: 'ui-products',
@@ -206,7 +246,6 @@ export default async function StorefrontHome({ params, searchParams }: PageProps
           }),
       ])
 
-    // Normalize ui-products
     const normalizedUiProducts = (uiProductsRes.docs || []).map((item: any) => {
       let resolvedTitle = resolveLocalizedText(item.title, currentLocale)
 
@@ -229,7 +268,6 @@ export default async function StorefrontHome({ params, searchParams }: PageProps
       }
     })
 
-    // Normalize standard products
     const normalizedProducts = (productsRes.docs || []).map((item: any) => {
       let resolvedTitle = resolveLocalizedText(item.title, currentLocale)
       if (!resolvedTitle && item.name) {
@@ -243,7 +281,6 @@ export default async function StorefrontHome({ params, searchParams }: PageProps
       }
     })
 
-    // Deduplicate items by ID
     const productMap = new Map()
     for (const item of [...normalizedProducts, ...normalizedUiProducts]) {
       if (!productMap.has(item.id)) {
@@ -253,86 +290,122 @@ export default async function StorefrontHome({ params, searchParams }: PageProps
     const allProducts = Array.from(productMap.values())
 
     return (
-      <div className={`${styles.pageWrapper} ${styles.pageWrapperFiltered} ${dirClass}`}>
-        <main className={styles.filteredMain}>
-          <div className={styles.filteredHeader}>
-            <LocalizedHeading
-              currentLocale={currentLocale}
-              en={matchedTitleEn || 'Products'}
-              ar={matchedTitleAr || 'المنتجات'}
-              ckb={matchedTitleCkb || 'کاڵاکان'}
-              style={{ fontSize: '1.75rem', fontWeight: '700' }}
-            />
-            <Link href={`/${currentLocale}`} className={styles.showAllLink}>
-              {currentLocale === 'ar'
-                ? '← عرض الكل'
-                : currentLocale === 'ckb'
-                  ? '← گەڕانەوە'
-                  : '← Show All'}
-            </Link>
-          </div>
+      <>
+        {dynamicFontFaceCSS && <style dangerouslySetInnerHTML={{ __html: dynamicFontFaceCSS }} />}
 
-          {allProducts.length === 0 ? (
-            <div className={styles.emptyState}>
-              📦{' '}
-              {currentLocale === 'ar'
-                ? 'لا توجد منتجات في هذه الفئة حالياً.'
-                : currentLocale === 'ckb'
-                  ? 'هیچ کاڵایەک لەم بەشەدا نییە.'
-                  : 'No products found in this category.'}
+        <div
+          className={`${styles.pageWrapper} ${styles.pageWrapperFiltered} ${dirClass}`}
+          style={
+            {
+              '--filtered-heading-font': headingFont,
+              '--filtered-body-font': bodyFont,
+            } as React.CSSProperties
+          }
+        >
+          <main className={styles.filteredMain}>
+            <div className={styles.filteredHeader}>
+              <LocalizedHeading
+                currentLocale={currentLocale}
+                en={matchedTitleEn || 'Products'}
+                ar={matchedTitleAr || 'المنتجات'}
+                ckb={matchedTitleCkb || 'کاڵاکان'}
+                headingFont={headingFont}
+                style={{
+                  fontSize: '1.75rem',
+                  fontWeight: '700',
+                }}
+              />
+              <Link
+                href={`/${currentLocale}`}
+                className={styles.showAllLink}
+                style={{ fontFamily: 'var(--filtered-body-font)' }}
+              >
+                {currentLocale === 'ar'
+                  ? '← عرض الكل'
+                  : currentLocale === 'ckb'
+                    ? '← گەڕانەوە'
+                    : '← Show All'}
+              </Link>
             </div>
-          ) : (
-            <div className={styles.productGrid}>
-              {allProducts.map((product: any) => {
-                const imgData = product.featuredImage || product.image
-                let imageUrl: string | null = null
 
-                if (typeof imgData === 'string') {
-                  imageUrl = imgData
-                } else if (typeof imgData === 'object' && imgData?.url) {
-                  imageUrl = imgData.url
-                }
+            {allProducts.length === 0 ? (
+              <div
+                className={styles.emptyState}
+                style={{ fontFamily: 'var(--filtered-body-font)' }}
+              >
+                📦{' '}
+                {currentLocale === 'ar'
+                  ? 'لا توجد منتجات في هذه الفئة حالياً.'
+                  : currentLocale === 'ckb'
+                    ? 'هیچ کاڵایەک لەم بەشەدا نییە.'
+                    : 'No products found in this category.'}
+              </div>
+            ) : (
+              <div className={styles.productGrid}>
+                {allProducts.map((product: any) => {
+                  const imgData = product.featuredImage || product.image
+                  let imageUrl: string | null = null
 
-                const productHref = resolveProductHref(product.id, !!product.isCaseOffer)
+                  if (typeof imgData === 'string') {
+                    imageUrl = imgData
+                  } else if (typeof imgData === 'object' && imgData?.url) {
+                    imageUrl = imgData.url
+                  }
 
-                return (
-                  <Link key={product.id} href={productHref} className={styles.productCardLink}>
-                    <div className={styles.productCard}>
-                      <div className={styles.productImageWrapper}>
-                        {imageUrl ? (
-                          <Image
-                            src={imageUrl}
-                            width={200}
-                            height={200}
-                            alt={product.title || 'Product'}
-                            className={styles.productImage}
-                          />
-                        ) : (
-                          <span className={styles.productImagePlaceholder}>📦</span>
-                        )}
+                  const productHref = resolveProductHref(product.id, !!product.isCaseOffer)
+
+                  return (
+                    <Link key={product.id} href={productHref} className={styles.productCardLink}>
+                      <div className={styles.productCard}>
+                        <div className={styles.productImageWrapper}>
+                          {imageUrl ? (
+                            <Image
+                              src={imageUrl}
+                              width={200}
+                              height={200}
+                              alt={product.title || 'Product'}
+                              className={styles.productImage}
+                            />
+                          ) : (
+                            <span
+                              className={styles.productImagePlaceholder}
+                              style={{ fontFamily: 'var(--filtered-body-font)' }}
+                            >
+                              📦
+                            </span>
+                          )}
+                        </div>
+                        <h3
+                          className={styles.productTitle}
+                          style={{
+                            fontFamily: 'var(--filtered-heading-font)',
+                            fontWeight: '600',
+                          }}
+                        >
+                          {product.title}
+                        </h3>
+                        <div
+                          className={styles.productPrice}
+                          style={{ fontFamily: 'var(--filtered-body-font)' }}
+                        >
+                          {product.price !== null && product.price !== undefined
+                            ? `$${product.price}`
+                            : ''}
+                        </div>
                       </div>
-                      <h3 className={styles.productTitle}>{product.title}</h3>
-                      <div className={styles.productPrice}>
-                        {product.price !== null && product.price !== undefined
-                          ? `$${product.price}`
-                          : ''}
-                      </div>
-                    </div>
-                  </Link>
-                )
-              })}
-            </div>
-          )}
-        </main>
-      </div>
+                    </Link>
+                  )
+                })}
+              </div>
+            )}
+          </main>
+        </div>
+      </>
     )
   }
 
-  // 🏠 DEFAULT HOME VIEW
-  const payload = await getPayload({ config })
-
-  // Fetch UI Categories and General Settings in parallel
-  const [categoriesRes, generalSettings] = await Promise.all([
+  // Default Home View
+  const [categoriesRes] = await Promise.all([
     payload.find({
       collection: 'ui-categories',
       locale: currentLocale as 'en' | 'ar' | 'ckb',
@@ -343,15 +416,6 @@ export default async function StorefrontHome({ params, searchParams }: PageProps
       },
       limit: 100,
     }),
-    payload
-      .findGlobal({
-        slug: 'general-settings',
-        depth: 1,
-      })
-      .catch((err) => {
-        console.error('Error querying general-settings:', err)
-        return null
-      }),
   ])
 
   const categories = categoriesRes.docs.map((doc: any) => ({
@@ -366,34 +430,56 @@ export default async function StorefrontHome({ params, searchParams }: PageProps
   const pcBuilderFg = generalSettings?.pcBuilder?.foregroundImage
 
   return (
-    <div className={`${styles.pageWrapper} ${styles.pageWrapperDefault} ${dirClass}`}>
-      <CategoryDropdownNav
-        currentLocale={currentLocale}
-        categories={categories}
-        generalSettings={(generalSettings as any) ?? undefined}
-      />
+    <>
+      {dynamicFontFaceCSS && <style dangerouslySetInnerHTML={{ __html: dynamicFontFaceCSS }} />}
 
-      <div className={styles.promoWrapper}>
-        <div className={styles.promoLeft}>
-          <PCBuilderSection
-            currentLocale={currentLocale}
-            isRtl={isRtl}
-            backgroundImage={pcBuilderBg}
-            foregroundImage={pcBuilderFg}
-          />
-        </div>
-      </div>
+      <div className={`${styles.pageWrapper} ${styles.pageWrapperDefault} ${dirClass}`}>
+        <CategoryDropdownNav
+          currentLocale={currentLocale}
+          categories={categories}
+          generalSettings={generalSettings}
+        />
 
-      <div className={styles.promoWrapper}>
-        <div className={styles.promoLeft}>
-          <PromoCarousel currentLocale={currentLocale} />
+        <div className={styles.promoWrapper}>
+          <div className={styles.promoLeft}>
+            <PCBuilderSection
+              currentLocale={currentLocale}
+              isRtl={isRtl}
+              backgroundImage={pcBuilderBg}
+              foregroundImage={pcBuilderFg}
+              headingFont={headingFont}
+              bodyFont={bodyFont}
+              dynamicFontFaceCSS={dynamicFontFaceCSS}
+            />
+          </div>
         </div>
+
+        <div className={styles.promoWrapper}>
+          <div className={styles.promoLeft}>
+            <PromoCarousel
+              currentLocale={currentLocale}
+              headingFont={headingFont}
+              bodyFont={bodyFont}
+              dynamicFontFaceCSS={dynamicFontFaceCSS}
+            />
+          </div>
+        </div>
+
+        <main className={styles.defaultMain}>
+          <Suspense fallback={<SectionSkeleton cards={8} />}>
+            <CategorySections
+              currentLocale={currentLocale}
+              isRtl={isRtl}
+              generalSettings={generalSettings}
+              headingFont={headingFont}
+              bodyFont={bodyFont}
+              dynamicFontFaceCSS={dynamicFontFaceCSS}
+              titleColor={generalSettings?.typography?.titleColor ?? undefined}
+              bodyColor={generalSettings?.typography?.bodyColor ?? undefined}
+            />
+          </Suspense>
+        </main>
       </div>
-      <main className={styles.defaultMain}>
-        <Suspense fallback={<SectionSkeleton cards={8} />}>
-          <CategorySections currentLocale={currentLocale} isRtl={isRtl} />
-        </Suspense>
-      </main>
-    </div>
+    </>
   )
 }

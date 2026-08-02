@@ -20,6 +20,10 @@ interface ProductCardProps {
   t: Dictionary
   onQuickView: (product: ProductItem) => void
   onAddToCart: (e: React.MouseEvent, product: ProductItem) => void
+  headingFont?: string
+  bodyFont?: string
+  titleColor?: string
+  bodyColor?: string
 }
 
 function resolveDisplayTitle(product: any, locale: string): string {
@@ -73,6 +77,10 @@ export default function ProductCard({
   t,
   onQuickView,
   onAddToCart,
+  headingFont,
+  bodyFont,
+  titleColor,
+  bodyColor,
 }: ProductCardProps) {
   const currentTitle = resolveDisplayTitle(product, currentLocale)
   const imageUrl = resolveImageUrl(product)
@@ -89,6 +97,10 @@ export default function ProductCard({
 
   const resolvedBg = cardBgColor || '#f8fafc'
 
+  // Use provided colors or fallbacks
+  const headingColor = titleColor || '#000000'
+  const textColor = bodyColor || '#333333'
+
   return (
     <Link
       href={productPath}
@@ -99,14 +111,15 @@ export default function ProductCard({
           '--pc-card-width': `${cardWidth}px`,
           '--pc-card-height': `${cardHeight}px`,
           '--pc-card-bg': resolvedBg,
-          backgroundColor: resolvedBg, // 🎯 Applied at the top level slide link
+          '--pc-heading-font': headingFont || 'inherit',
+          '--pc-body-font': bodyFont || 'inherit',
+          '--pc-heading-color': headingColor,
+          '--pc-body-color': textColor,
+          backgroundColor: resolvedBg,
         } as React.CSSProperties
       }
     >
-      <div
-        className={styles['product-card-inner']}
-        style={{ backgroundColor: 'inherit' }} // 🎯 Inherit top level color completely
-      >
+      <div className={styles['product-card-inner']} style={{ backgroundColor: 'inherit' }}>
         {hasDiscount && (
           <div className={styles['pc-discount-badge']}>
             {product.discountType === 'percentage'
@@ -187,31 +200,62 @@ export default function ProductCard({
           </button>
         </div>
 
-        {/* 🎯 Applied style={{ backgroundColor: 'transparent' }} so it won't override with white */}
         <div className={styles['pc-info-panel']} style={{ backgroundColor: 'transparent' }}>
-          <h3 className={styles['pc-title']}>{currentTitle}</h3>
+          <h3
+            className={styles['pc-title']}
+            style={{
+              fontFamily: 'var(--pc-heading-font)',
+              color: 'var(--pc-heading-color)',
+            }}
+          >
+            {currentTitle}
+          </h3>
           <div className={styles['pc-price-container']}>
             <div className={styles['pc-price-row']}>
               {hasDiscount ? (
                 <div className={styles['pc-price-group']}>
-                  <span className={styles['pc-price-final']}>
+                  <span
+                    className={styles['pc-price-final']}
+                    style={{
+                      fontFamily: 'var(--pc-body-font)',
+                      color: 'var(--pc-body-color)',
+                    }}
+                  >
                     {t.currency}
                     {finalPrice.toLocaleString()}
                   </span>
-                  <span className={styles['pc-price-original']}>
+                  <span
+                    className={styles['pc-price-original']}
+                    style={{
+                      fontFamily: 'var(--pc-body-font)',
+                      color: 'var(--pc-body-color)',
+                    }}
+                  >
                     {t.currency}
                     {originalPrice.toLocaleString()}
                   </span>
                 </div>
               ) : (
-                <span className={styles['pc-price-final']}>
+                <span
+                  className={styles['pc-price-final']}
+                  style={{
+                    fontFamily: 'var(--pc-body-font)',
+                    color: 'var(--pc-body-color)',
+                  }}
+                >
                   {t.currency}
                   {originalPrice.toLocaleString()}
                 </span>
               )}
             </div>
             {priceIQDValue !== null && priceIQDValue > 0 && (
-              <span className={styles['pc-iqd-badge']}>
+              <span
+                className={styles['pc-iqd-badge']}
+                style={{
+                  fontFamily: 'var(--pc-body-font)',
+                  color: 'var(--pc-body-color)',
+                }}
+              >
                 {priceIQDValue.toLocaleString()} IQD د.ع
               </span>
             )}
@@ -219,7 +263,14 @@ export default function ProductCard({
         </div>
 
         <div className={styles['hover-cart-overlay']}>
-          <button className={styles['hover-cart-btn']} onClick={(e) => onAddToCart(e, product)}>
+          <button
+            className={styles['hover-cart-btn']}
+            onClick={(e) => onAddToCart(e, product)}
+            style={{
+              fontFamily: 'var(--pc-body-font)',
+              color: 'var(--pc-body-color)',
+            }}
+          >
             {t.addToCart}
           </button>
         </div>

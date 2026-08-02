@@ -15,6 +15,8 @@ interface BuildSummarySidebarProps {
   hasSelections: boolean
   onSubmit: (e: React.SubmitEvent<HTMLFormElement>) => void
   fontFam: string
+  titleColor?: string
+  bodyColor?: string
 }
 
 export default function BuildSummarySidebar({
@@ -29,32 +31,50 @@ export default function BuildSummarySidebar({
   hasSelections,
   onSubmit,
   fontFam,
+  titleColor,
+  bodyColor,
 }: BuildSummarySidebarProps) {
   const submitDisabled = !mounted || !hasSelections
+
+  // Use provided colors or fallbacks
+  const headingColor = titleColor || '#000000'
+  const textColor = bodyColor || '#333333'
 
   return (
     <div className={styles['pc-builder-sidebar']}>
       <div className={styles['pc-builder-summary-card']}>
-        <h3 className={styles['pc-builder-summary-heading']}>{t.summary}</h3>
+        <h3
+          className={styles['pc-builder-summary-heading']}
+          style={{
+            color: headingColor,
+            fontFamily: fontFam,
+          }}
+        >
+          {t.summary}
+        </h3>
 
         <div className={styles['pc-builder-exchange-container']}>
-          <span className={styles['pc-builder-exchange-label']}>
+          <span className={styles['pc-builder-exchange-label']} style={{ color: textColor }}>
             {pickLocale(exchangeLabel, currentLocale)}
           </span>
-          <span className={styles['pc-builder-exchange-value']}>
+          <span className={styles['pc-builder-exchange-value']} style={{ color: textColor }}>
             {(totalPrice * dynamicExchangeRate).toLocaleString()} د.ع
           </span>
         </div>
 
         <div className={styles['pc-builder-price-row']}>
-          <span className={styles['pc-builder-price-label']}>{t.totalPrice}</span>
+          <span className={styles['pc-builder-price-label']} style={{ color: textColor }}>
+            {t.totalPrice}
+          </span>
           <div className={styles['pc-builder-total-price-wrap']}>
             {totalOriginalPrice > totalPrice && (
-              <span className={styles['pc-builder-total-original']}>
+              <span className={styles['pc-builder-total-original']} style={{ color: textColor }}>
                 ${totalOriginalPrice.toLocaleString()}
               </span>
             )}
-            <span className={styles['pc-builder-price-value']}>${totalPrice.toLocaleString()}</span>
+            <span className={styles['pc-builder-price-value']} style={{ color: headingColor }}>
+              ${totalPrice.toLocaleString()}
+            </span>
           </div>
         </div>
 
@@ -70,12 +90,16 @@ export default function BuildSummarySidebar({
             required
             className={styles['pc-builder-phone-input']}
             aria-label={pickLocale(phoneAriaLabel, currentLocale)}
+            style={{ color: textColor }}
           />
           <button
             type="submit"
             disabled={submitDisabled}
             className={`${styles['pc-builder-submit-btn']} ${submitDisabled ? styles.disabled : ''}`}
-            style={{ fontFamily: fontFam }}
+            style={{
+              fontFamily: fontFam,
+              color: submitDisabled ? textColor : '#ffffff',
+            }}
           >
             {submitLabel[currentLocale] || submitLabel.en}
           </button>

@@ -13,6 +13,11 @@ interface RelatedProductsProps {
   isRtl: boolean
   exchangeRate: number
   cardBgColor?: string
+  headingFont?: string
+  bodyFont?: string
+  dynamicFontFaceCSS?: string
+  titleColor?: string
+  bodyColor?: string
 }
 
 export default function RelatedProducts({
@@ -21,39 +26,76 @@ export default function RelatedProducts({
   isRtl,
   exchangeRate,
   cardBgColor,
+  headingFont,
+  bodyFont,
+  dynamicFontFaceCSS,
+  titleColor,
+  bodyColor,
 }: RelatedProductsProps) {
   const safeItems = Array.isArray(items) ? items : []
 
-  return (
-    <div style={{ marginTop: '6rem', borderTop: '1px solid #eee', paddingTop: '3rem' }}>
-      <h3
-        style={{
-          fontFamily: '"Rudaw", sans-serif',
-          fontSize: '1.5rem',
-          fontWeight: '600',
-        }}
-      >
-        {headingLabel[currentLocale] || headingLabel.en}
-      </h3>
+  const isRegionalLocale = ['ar', 'ku', 'ckb'].includes(currentLocale)
+  const titleFont = headingFont || (isRegionalLocale ? '"Rudaw", sans-serif' : 'inherit')
 
-      {safeItems.length === 0 ? (
-        <p style={{ color: '#888', marginTop: '1rem', fontSize: '14px' }}>
-          No related components inside this section yet.
-        </p>
-      ) : (
-        <div className={styles['related-grid']}>
-          {safeItems.map((item, index) => (
-            <RelatedProductCard
-              key={item?.id ?? `related-${index}`}
-              item={item}
-              currentLocale={currentLocale}
-              isRtl={isRtl}
-              exchangeRate={exchangeRate}
-              cardBgColor={cardBgColor}
-            />
-          ))}
-        </div>
-      )}
-    </div>
+  // Use provided colors or fallbacks
+  const headingColor = titleColor || '#000000'
+  const textColor = bodyColor || '#333333'
+
+  return (
+    <>
+      {dynamicFontFaceCSS && <style dangerouslySetInnerHTML={{ __html: dynamicFontFaceCSS }} />}
+
+      <div
+        style={
+          {
+            marginTop: '6rem',
+            borderTop: '1px solid #eee',
+            paddingTop: '3rem',
+            '--related-section-heading-color': headingColor,
+            '--related-section-body-color': textColor,
+          } as React.CSSProperties
+        }
+      >
+        <h3
+          style={{
+            fontFamily: titleFont,
+            fontSize: '1.5rem',
+            fontWeight: '600',
+            color: 'var(--related-section-heading-color)',
+          }}
+        >
+          {headingLabel[currentLocale] || headingLabel.en}
+        </h3>
+
+        {safeItems.length === 0 ? (
+          <p
+            style={{
+              color: 'var(--related-section-body-color)',
+              marginTop: '1rem',
+              fontSize: '14px',
+            }}
+          >
+            No related components inside this section yet.
+          </p>
+        ) : (
+          <div className={styles['related-grid']}>
+            {safeItems.map((item, index) => (
+              <RelatedProductCard
+                key={item?.id ?? `related-${index}`}
+                item={item}
+                currentLocale={currentLocale}
+                isRtl={isRtl}
+                exchangeRate={exchangeRate}
+                cardBgColor={cardBgColor}
+                headingFont={headingFont}
+                bodyFont={bodyFont}
+                titleColor={titleColor}
+                bodyColor={bodyColor}
+              />
+            ))}
+          </div>
+        )}
+      </div>
+    </>
   )
 }

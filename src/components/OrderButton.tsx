@@ -6,7 +6,17 @@ import { inputErrorLabel, phonePlaceholder, submitLabel } from '@/utils/order_bt
 import { OrderButtonProps } from '@/types/types'
 import styles from '@/styles/order_button.module.css'
 
-export default function OrderButton({ product, currentLocale }: OrderButtonProps) {
+interface ExtendedOrderButtonProps extends OrderButtonProps {
+  bodyFont?: string
+  bodyColor?: string
+}
+
+export default function OrderButton({
+  product,
+  currentLocale,
+  bodyFont,
+  bodyColor,
+}: ExtendedOrderButtonProps) {
   const [buyerNumber, setBuyerNumber] = useState('')
 
   const handleOrder = (e: SubmitEvent) => {
@@ -33,6 +43,10 @@ export default function OrderButton({ product, currentLocale }: OrderButtonProps
     window.open(waLink, '_blank')
   }
 
+  const isRegionalLocale = ['ar', 'ku', 'ckb'].includes(currentLocale)
+  const fontFamily = bodyFont || (isRegionalLocale ? '"Rudaw", sans-serif' : 'inherit')
+  const textColor = bodyColor || '#333333'
+
   return (
     <form onSubmit={handleOrder} className={styles.orderForm}>
       <input
@@ -42,8 +56,19 @@ export default function OrderButton({ product, currentLocale }: OrderButtonProps
         onChange={(e) => setBuyerNumber(e.target.value)}
         required
         className={styles.phoneInput}
+        style={{
+          fontFamily,
+          color: textColor,
+        }}
       />
-      <button type="submit" className={styles.submitButton}>
+      <button
+        type="submit"
+        className={styles.submitButton}
+        style={{
+          fontFamily,
+          color: '#ffffff',
+        }}
+      >
         {submitLabel[currentLocale] || submitLabel.en}
       </button>
     </form>

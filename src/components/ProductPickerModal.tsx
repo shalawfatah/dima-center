@@ -9,6 +9,10 @@ import OpenLinkBtn from './pc-builder/OpenLinkBtn'
 
 interface ExtendedProductPickerModalProps extends ProductPickerModalProps {
   selections?: Record<string, any>
+  titleColor?: string
+  bodyColor?: string
+  headingFont?: string
+  bodyFont?: string
 }
 
 export default function ProductPickerModal({
@@ -20,9 +24,19 @@ export default function ProductPickerModal({
   onSelect,
   onClose,
   selections = {},
+  titleColor,
+  bodyColor,
+  headingFont,
+  bodyFont,
 }: ExtendedProductPickerModalProps) {
   const currentSlotConfig = COMPONENT_SLOTS.find((s) => s.key === activeModalSlot)
   if (!currentSlotConfig) return null
+
+  // Use provided colors or fallbacks
+  const headingColor = titleColor || '#000000'
+  const textColor = bodyColor || '#333333'
+  const titleFont = headingFont || 'inherit'
+  const bodyFontFamily = bodyFont || 'inherit'
 
   const filteredProducts = products.filter((prod) => {
     const prodCategory = prod.cat !== undefined ? prod.cat : prod.category
@@ -61,17 +75,33 @@ export default function ProductPickerModal({
     <div className={styles['pc-builder-modal-overlay']} onClick={onClose}>
       <div className={styles['pc-builder-modal-window']} onClick={(e) => e.stopPropagation()}>
         <div className={styles['pc-builder-modal-header']}>
-          <h3 className={styles['pc-builder-modal-title']}>
+          <h3
+            className={styles['pc-builder-modal-title']}
+            style={{
+              color: headingColor,
+              fontFamily: titleFont,
+            }}
+          >
             {labels.modalSelectPrefix} {currentSlotConfig.label}
           </h3>
-          <button onClick={onClose} className={styles['pc-builder-modal-close']}>
+          <button
+            onClick={onClose}
+            className={styles['pc-builder-modal-close']}
+            style={{ color: textColor }}
+          >
             &times;
           </button>
         </div>
 
         <div className={styles['pc-builder-modal-body']}>
           {filteredProducts.length === 0 ? (
-            <p className={styles['pc-builder-modal-empty']}>
+            <p
+              className={styles['pc-builder-modal-empty']}
+              style={{
+                color: textColor,
+                fontFamily: bodyFontFamily,
+              }}
+            >
               {labels.noItems} "{currentSlotConfig.categorySlug}".
             </p>
           ) : (
@@ -121,7 +151,15 @@ export default function ProductPickerModal({
                       )}
                     </div>
                     <div style={{ display: 'flex', flexDirection: 'column' }}>
-                      <span className={styles['pc-builder-product-title']}>{displayTitle}</span>
+                      <span
+                        className={styles['pc-builder-product-title']}
+                        style={{
+                          color: headingColor,
+                          fontFamily: titleFont,
+                        }}
+                      >
+                        {displayTitle}
+                      </span>
                       {!isCompatible && (
                         <span style={{ fontSize: '0.75rem', color: '#ef4444', marginTop: '2px' }}>
                           ⚠️ {reason}
@@ -131,7 +169,15 @@ export default function ProductPickerModal({
                   </div>
 
                   <div className={styles['pc-builder-actions-wrapper']}>
-                    <span className={styles['pc-builder-product-price']}>${prod.price}</span>
+                    <span
+                      className={styles['pc-builder-product-price']}
+                      style={{
+                        color: textColor,
+                        fontFamily: bodyFontFamily,
+                      }}
+                    >
+                      ${prod.price}
+                    </span>
                     <OpenLinkBtn link={`/${currentLocale}/products/${prod.id}`} />
                   </div>
                 </div>

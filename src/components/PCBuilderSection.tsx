@@ -13,6 +13,9 @@ type MediaItem = Media | string | number | null
 interface ExtendedPCBuilderSectionProps extends PCBuilderSectionProps {
   backgroundImage?: MediaItem
   foregroundImage?: MediaItem
+  headingFont?: string
+  bodyFont?: string
+  dynamicFontFaceCSS?: string
 }
 
 export default function PCBuilderSection({
@@ -20,10 +23,15 @@ export default function PCBuilderSection({
   isRtl,
   backgroundImage,
   foregroundImage,
+  headingFont,
+  bodyFont,
+  dynamicFontFaceCSS,
 }: ExtendedPCBuilderSectionProps) {
   const isRegionalLocale = currentLocale === 'ar' || currentLocale === 'ckb'
-  const titleFont = isRegionalLocale ? '"Rudaw", sans-serif' : 'inherit'
-  const textFont = isRegionalLocale ? '"Rudaw", sans-serif' : 'inherit'
+
+  const titleFont = headingFont || (isRegionalLocale ? '"Rudaw", sans-serif' : 'inherit')
+  const textFont = bodyFont || (isRegionalLocale ? '"Rudaw", sans-serif' : 'inherit')
+
   const copy = COPY[currentLocale] || COPY.en
 
   const getImageUrl = (media?: MediaItem): string | null => {
@@ -37,54 +45,56 @@ export default function PCBuilderSection({
   const fgUrl = getImageUrl(foregroundImage)
 
   return (
-    <section className={styles.section} dir="ltr">
-      {/* Background Image */}
-      {bgUrl && (
-        <Image
-          src={bgUrl}
-          alt="PC Builder Background"
-          fill
-          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 66vw, 1200px"
-          quality={90}
-          style={{ objectFit: 'cover', objectPosition: 'center' }}
-          priority
-        />
-      )}
+    <>
+      {dynamicFontFaceCSS && <style dangerouslySetInnerHTML={{ __html: dynamicFontFaceCSS }} />}
 
-      {/* 🎯 Explicitly force position/alignment to the LEFT */}
-      {fgUrl && (
-        <div
-          className={styles.visual}
-          style={{ left: 0, right: 'auto', marginLeft: 0, marginRight: 'auto' }}
-        >
+      <section className={styles.section} dir="ltr">
+        {bgUrl && (
           <Image
-            src={fgUrl}
-            alt="PC Builder Foreground"
-            width={240}
-            height={240}
-            className={styles.fgImage}
+            src={bgUrl}
+            alt="PC Builder Background"
+            fill
+            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 66vw, 1200px"
+            quality={90}
+            style={{ objectFit: 'cover', objectPosition: 'center' }}
+            priority
           />
-        </div>
-      )}
+        )}
 
-      <div className={styles.wrapper}>
-        <div className={styles.content}>
-          <div className={styles.headerRow}>
-            <h2 className={styles.heading} style={{ fontFamily: titleFont }}>
-              {copy.heading}
-            </h2>
+        {fgUrl && (
+          <div
+            className={styles.visual}
+            style={{ left: 0, right: 'auto', marginLeft: 0, marginRight: 'auto' }}
+          >
+            <Image
+              src={fgUrl}
+              alt="PC Builder Foreground"
+              width={240}
+              height={240}
+              className={styles.fgImage}
+            />
+          </div>
+        )}
 
-            <Link
-              href={`/${currentLocale}/pc-builder`}
-              className={styles.cta}
-              style={{ fontFamily: textFont }}
-            >
-              {copy.cta}
-              <PCBuilderBottomSVG isRtl={isRtl} />
-            </Link>
+        <div className={styles.wrapper}>
+          <div className={styles.content}>
+            <div className={styles.headerRow}>
+              <h2 className={styles.heading} style={{ fontFamily: titleFont }}>
+                {copy.heading}
+              </h2>
+
+              <Link
+                href={`/${currentLocale}/pc-builder`}
+                className={styles.cta}
+                style={{ fontFamily: textFont }}
+              >
+                {copy.cta}
+                <PCBuilderBottomSVG isRtl={isRtl} />
+              </Link>
+            </div>
           </div>
         </div>
-      </div>
-    </section>
+      </section>
+    </>
   )
 }

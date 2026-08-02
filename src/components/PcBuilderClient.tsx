@@ -21,12 +21,26 @@ import { buildWhatsAppOrderMessage, sendWhatsAppOrder } from '@/utils/pc_builder
 import styles from '@/styles/pc_builder.module.css'
 import { usePcBuilderUrlSync } from '@/utils/use_pc_builder_url_sync'
 
+interface ExtendedPcBuilderClientProps extends PcBuilderClientProps {
+  generals?: GeneralSettingsData
+  headingFont?: string
+  bodyFont?: string
+  dynamicFontFaceCSS?: string
+  titleColor?: string
+  bodyColor?: string
+}
+
 export default function PcBuilderClient({
   products,
   currentLocale,
   isRtl,
   generals,
-}: PcBuilderClientProps & { generals?: GeneralSettingsData }) {
+  headingFont,
+  bodyFont,
+  dynamicFontFaceCSS,
+  titleColor,
+  bodyColor,
+}: ExtendedPcBuilderClientProps) {
   const [mounted, setMounted] = useState(false)
 
   const [selections, setSelections] = useLocalStorageState<Record<string, any>>(
@@ -134,103 +148,155 @@ export default function PcBuilderClient({
 
   const t = dict[currentLocale] || dict['en']
   const isRegionalLocale = ['ar', 'ku', 'ckb'].includes(currentLocale)
-  const fontFam = isRegionalLocale
-    ? '"Rudaw", "Inter", "Noto Sans Arabic", -apple-system, sans-serif'
-    : '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+
+  // Use provided fonts or fallback
+  const titleFont =
+    headingFont ||
+    (isRegionalLocale
+      ? '"Rudaw", "Inter", "Noto Sans Arabic", -apple-system, sans-serif'
+      : '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif')
+  const bodyFontFamily =
+    bodyFont ||
+    (isRegionalLocale
+      ? '"Rudaw", "Inter", "Noto Sans Arabic", -apple-system, sans-serif'
+      : '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif')
+
+  // Use provided colors or fallbacks
+  const headingColor = titleColor || '#000000'
+  const textColor = bodyColor || '#333333'
 
   const hasSelections = Object.keys(selections).length > 0
 
   return (
-    <div
-      className={styles['pc-builder-container']}
-      style={
-        {
-          '--font-family': fontFam,
-          direction: isRtl ? 'rtl' : 'ltr',
-          textAlign: isRtl ? 'right' : 'left',
-        } as React.CSSProperties
-      }
-    >
-      <header className={styles['pc-builder-header']}>
-        <h1 className={styles['pc-builder-title']}>{t.title}</h1>
-        <p className={styles['pc-builder-subtitle']}>{t.subtitle}</p>
-      </header>
+    <>
+      {dynamicFontFaceCSS && <style dangerouslySetInnerHTML={{ __html: dynamicFontFaceCSS }} />}
 
-      {message.text && (
-        <div
-          className={`${styles['pc-builder-alert']} ${message.type ? styles[message.type] : ''}`}
-        >
-          {message.text}
-        </div>
-      )}
-
-      {mounted && hasSelections && (
-        <div className={`${styles['pc-builder-clear-all-row']} ${isRtl ? styles.rtl : ''}`}>
-          <button
-            type="button"
-            onClick={triggerClearAllRequest}
-            className={`${styles['pc-builder-btn']} ${styles.clear} ${styles['pc-builder-clear-all-btn']}`}
-            style={{ fontFamily: fontFam }}
+      <div
+        className={styles['pc-builder-container']}
+        style={
+          {
+            '--font-family': bodyFontFamily,
+            '--heading-font': titleFont,
+            '--pc-heading-color': headingColor,
+            '--pc-body-color': textColor,
+            direction: isRtl ? 'rtl' : 'ltr',
+            textAlign: isRtl ? 'right' : 'left',
+          } as React.CSSProperties
+        }
+      >
+        <header className={styles['pc-builder-header']}>
+          <h1
+            className={styles['pc-builder-title']}
+            style={{
+              fontFamily: 'var(--heading-font)',
+              color: 'var(--pc-heading-color)',
+            }}
           >
-            {pickLocale(clearAllLabel, currentLocale)}
-          </button>
-        </div>
-      )}
+            {t.title}
+          </h1>
+          <p
+            className={styles['pc-builder-subtitle']}
+            style={{
+              fontFamily: 'var(--font-family)',
+              color: 'var(--pc-body-color)',
+            }}
+          >
+            {t.subtitle}
+          </p>
+        </header>
 
-      <div className={styles['pc-builder-layout-grid']}>
-        <div className={styles['pc-builder-slots-list']}>
-          {COMPONENT_SLOTS.map((slot) => (
-            <ComponentSlotCard
-              key={slot.key}
-              slot={slot}
-              chosenItem={mounted ? selections[slot.key] : null}
-              t={t}
-              getLocalizedTitle={getLocalizedTitle}
-              onOpen={openModal}
-              onRemove={removeComponent}
-              onQuantityChange={updateSlotQuantity}
-            />
-          ))}
+        {message.text && (
+          <div
+            className={`${styles['pc-builder-alert']} ${message.type ? styles[message.type] : ''}`}
+            style={{ color: 'var(--pc-body-color)' }}
+          >
+            {message.text}
+          </div>
+        )}
+
+        {mounted && hasSelections && (
+          <div className={`${styles['pc-builder-clear-all-row']} ${isRtl ? styles.rtl : ''}`}>
+            <button
+              type="button"
+              onClick={triggerClearAllRequest}
+              className={`${styles['pc-builder-btn']} ${styles.clear} ${styles['pc-builder-clear-all-btn']}`}
+              style={{
+                fontFamily: 'var(--font-family)',
+                color: 'var(--pc-body-color)',
+              }}
+            >
+              {pickLocale(clearAllLabel, currentLocale)}
+            </button>
+          </div>
+        )}
+
+        <div className={styles['pc-builder-layout-grid']}>
+          <div className={styles['pc-builder-slots-list']}>
+            {COMPONENT_SLOTS.map((slot) => (
+              <ComponentSlotCard
+                key={slot.key}
+                slot={slot}
+                chosenItem={mounted ? selections[slot.key] : null}
+                t={t}
+                getLocalizedTitle={getLocalizedTitle}
+                onOpen={openModal}
+                onRemove={removeComponent}
+                onQuantityChange={updateSlotQuantity}
+                titleColor={titleColor}
+                bodyColor={bodyColor}
+                headingFont={headingFont}
+                bodyFont={bodyFont}
+              />
+            ))}
+          </div>
+
+          <BuildSummarySidebar
+            t={t}
+            currentLocale={currentLocale}
+            mounted={mounted}
+            totalPrice={totalPrice}
+            totalOriginalPrice={totalOriginalPrice}
+            dynamicExchangeRate={dynamicExchangeRate}
+            buyerNumber={buyerNumber}
+            setBuyerNumber={setBuyerNumber}
+            hasSelections={hasSelections}
+            onSubmit={handleWhatsAppBuildOrder}
+            fontFam={bodyFontFamily}
+            titleColor={titleColor}
+            bodyColor={bodyColor}
+          />
         </div>
 
-        <BuildSummarySidebar
-          t={t}
-          currentLocale={currentLocale}
-          mounted={mounted}
-          totalPrice={totalPrice}
-          totalOriginalPrice={totalOriginalPrice}
-          dynamicExchangeRate={dynamicExchangeRate}
-          buyerNumber={buyerNumber}
-          setBuyerNumber={setBuyerNumber}
-          hasSelections={hasSelections}
-          onSubmit={handleWhatsAppBuildOrder}
-          fontFam={fontFam}
-        />
+        {activeModalSlot && (
+          <ProductPickerModal
+            activeModalSlot={activeModalSlot}
+            products={products}
+            currentLocale={currentLocale}
+            labels={{ modalSelectPrefix: t.modalSelectPrefix, noItems: t.noItems }}
+            selections={selections}
+            getLocalizedTitle={getLocalizedTitle}
+            onSelect={selectComponent}
+            onAddToCart={handleAddToCartDefault}
+            onClose={closeModal}
+            titleColor={titleColor}
+            bodyColor={bodyColor}
+            headingFont={headingFont}
+            bodyFont={bodyFont}
+          />
+        )}
+
+        {showClearConfirmModal && (
+          <ClearConfirmModal
+            currentLocale={currentLocale}
+            isRtl={isRtl}
+            fontFam={bodyFontFamily}
+            titleColor={titleColor}
+            bodyColor={bodyColor}
+            onConfirm={confirmClearAllComponents}
+            onCancel={() => setShowClearConfirmModal(false)}
+          />
+        )}
       </div>
-
-      {activeModalSlot && (
-        <ProductPickerModal
-          activeModalSlot={activeModalSlot}
-          products={products}
-          currentLocale={currentLocale}
-          labels={{ modalSelectPrefix: t.modalSelectPrefix, noItems: t.noItems }}
-          selections={selections}
-          getLocalizedTitle={getLocalizedTitle}
-          onSelect={selectComponent}
-          onAddToCart={handleAddToCartDefault}
-          onClose={closeModal}
-        />
-      )}
-
-      {showClearConfirmModal && (
-        <ClearConfirmModal
-          currentLocale={currentLocale}
-          isRtl={isRtl}
-          fontFam={fontFam}
-          onConfirm={confirmClearAllComponents}
-          onCancel={() => setShowClearConfirmModal(false)}
-        />
-      )}
-    </div>
+    </>
   )
 }

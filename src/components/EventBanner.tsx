@@ -30,6 +30,9 @@ export interface EventBannerProps {
   }
   currentLocale?: string
   isRtl?: boolean
+  headingFont?: string
+  bodyFont?: string
+  dynamicFontFaceCSS?: string
 }
 
 /**
@@ -62,6 +65,9 @@ export const EventBanner: React.FC<EventBannerProps> = ({
   bannerData,
   currentLocale = 'en',
   isRtl: isRtlProp,
+  headingFont,
+  bodyFont,
+  dynamicFontFaceCSS,
 }) => {
   if (!bannerData || !bannerData.isActive) return null
 
@@ -122,69 +128,101 @@ export const EventBanner: React.FC<EventBannerProps> = ({
     'Banner background'
   const videoUrl = typeof backgroundVideo === 'object' ? backgroundVideo?.url : undefined
 
-  const ContentBody = (
-    <div className={`${styles.contentLayer} ${textClass} ${directionClass} ${heightClass}`}>
-      <div className={styles.textGroup}>
-        {displayTitle && <h2 className={`${styles.title} ${titleSizeClass}`}>{displayTitle}</h2>}
+  const isRegionalLocale = ['ar', 'ku', 'ckb'].includes(normalizedLocale)
+  const titleFont = headingFont || (isRegionalLocale ? '"Rudaw", sans-serif' : 'inherit')
+  const bodyFontFamily = bodyFont || (isRegionalLocale ? '"Rudaw", sans-serif' : 'inherit')
 
-        {displayDescription && <p className={styles.description}>{displayDescription}</p>}
+  const ContentBody = (
+    <div
+      className={`${styles.contentLayer} ${textClass} ${directionClass} ${heightClass}`}
+      style={
+        {
+          '--event-heading-font': titleFont,
+          '--event-body-font': bodyFontFamily,
+        } as React.CSSProperties
+      }
+    >
+      <div className={styles.textGroup}>
+        {displayTitle && (
+          <h2
+            className={`${styles.title} ${titleSizeClass}`}
+            style={{ fontFamily: 'var(--event-heading-font)' }}
+          >
+            {displayTitle}
+          </h2>
+        )}
+
+        {displayDescription && (
+          <p className={styles.description} style={{ fontFamily: 'var(--event-body-font)' }}>
+            {displayDescription}
+          </p>
+        )}
       </div>
 
       {enableLink && linkUrl && displayLinkLabel && (
-        <span className={`${styles.ctaButton} ${buttonClass}`}>{displayLinkLabel}</span>
+        <span
+          className={`${styles.ctaButton} ${buttonClass}`}
+          style={{ fontFamily: 'var(--event-body-font)' }}
+        >
+          {displayLinkLabel}
+        </span>
       )}
     </div>
   )
 
   return (
-    <section
-      dir={isRtl ? 'rtl' : 'ltr'}
-      className={`${styles.bannerContainer} ${heightClass} ${directionClass}`}
-    >
-      {/* BACKGROUND MEDIA LAYER */}
-      <div className={styles.mediaLayer}>
-        {mediaType === 'image' && imageUrl && (
-          <Image src={imageUrl} alt={imageAlt} fill priority className={styles.mediaCover} />
+    <>
+      {dynamicFontFaceCSS && <style dangerouslySetInnerHTML={{ __html: dynamicFontFaceCSS }} />}
+
+      <section
+        dir={isRtl ? 'rtl' : 'ltr'}
+        className={`${styles.bannerContainer} ${heightClass} ${directionClass}`}
+      >
+        {/* BACKGROUND MEDIA LAYER */}
+        <div className={styles.mediaLayer}>
+          {mediaType === 'image' && imageUrl && (
+            <Image src={imageUrl} alt={imageAlt} fill priority className={styles.mediaCover} />
+          )}
+
+          {mediaType === 'svg' &&
+            backgroundSvg &&
+            (backgroundSvg.trim().startsWith('<svg') ? (
+              <div
+                className={styles.svgWrapper}
+                dangerouslySetInnerHTML={{ __html: backgroundSvg }}
+              />
+            ) : (
+              <Image
+                height={800}
+                width={800}
+                src={backgroundSvg}
+                alt=""
+                className={styles.mediaCover}
+              />
+            ))}
+
+          {mediaType === 'video' && videoUrl && (
+            <video autoPlay loop muted playsInline className={styles.mediaCover}>
+              <source src={videoUrl} />
+            </video>
+          )}
+
+          <div className={overlayClass} />
+        </div>
+
+        {/* FOREGROUND CONTENT LAYER */}
+        {enableLink && linkUrl ? (
+          <Link
+            href={linkUrl}
+            target={openInNewTab ? '_blank' : '_self'}
+            className={styles.linkWrapper}
+          >
+            {ContentBody}
+          </Link>
+        ) : (
+          ContentBody
         )}
-
-        {mediaType === 'svg' &&
-          backgroundSvg &&
-          (backgroundSvg.trim().startsWith('<svg') ? (
-            <div
-              className={styles.svgWrapper}
-              dangerouslySetInnerHTML={{ __html: backgroundSvg }}
-            />
-          ) : (
-            <Image
-              height={800}
-              width={800}
-              src={backgroundSvg}
-              alt=""
-              className={styles.mediaCover}
-            />
-          ))}
-
-        {mediaType === 'video' && videoUrl && (
-          <video autoPlay loop muted playsInline className={styles.mediaCover}>
-            <source src={videoUrl} />
-          </video>
-        )}
-
-        <div className={overlayClass} />
-      </div>
-
-      {/* FOREGROUND CONTENT LAYER */}
-      {enableLink && linkUrl ? (
-        <Link
-          href={linkUrl}
-          target={openInNewTab ? '_blank' : '_self'}
-          className={styles.linkWrapper}
-        >
-          {ContentBody}
-        </Link>
-      ) : (
-        ContentBody
-      )}
-    </section>
+      </section>
+    </>
   )
 }

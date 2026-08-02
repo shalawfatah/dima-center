@@ -45,6 +45,11 @@ interface ProductInfoSidebarProps {
   isDiscounted: boolean
   iqdPrice: number
   cardBgColor?: string
+  headingFont?: string
+  bodyFont?: string
+  dynamicFontFaceCSS?: string
+  titleColor?: string
+  bodyColor?: string
 }
 
 export default function ProductInfoSidebar({
@@ -56,6 +61,11 @@ export default function ProductInfoSidebar({
   isDiscounted,
   iqdPrice,
   cardBgColor,
+  headingFont,
+  bodyFont,
+  dynamicFontFaceCSS,
+  titleColor,
+  bodyColor,
 }: ProductInfoSidebarProps) {
   const realIqdPrice =
     product.priceIQD !== null && product.priceIQD !== undefined && Number(product.priceIQD) > 0
@@ -69,149 +79,190 @@ export default function ProductInfoSidebar({
 
   const resolvedBg = cardBgColor || '#ffffff'
 
+  const isRegionalLocale = ['ar', 'ku', 'ckb'].includes(currentLocale)
+  const titleFont = headingFont || (isRegionalLocale ? '"Rudaw", sans-serif' : 'inherit')
+  const bodyFontFamily = bodyFont || (isRegionalLocale ? '"Rudaw", sans-serif' : 'inherit')
+
+  // Use provided colors or fallbacks
+  const headingColor = titleColor || '#000000'
+  const textColor = bodyColor || '#333333'
+
   return (
-    <div
-      style={{
-        border: '1px solid #eef0f2',
-        padding: '2rem',
-        borderRadius: '16px',
-        boxShadow: '0 4px 20px rgba(0,0,0,0.02)',
-        background: resolvedBg,
-        position: 'sticky',
-        top: '20px',
-      }}
-    >
-      {/* Upper Content Block */}
-      <div style={{ marginBottom: '1.5rem' }}>
-        {product.condition && (
-          <span
+    <>
+      {dynamicFontFaceCSS && <style dangerouslySetInnerHTML={{ __html: dynamicFontFaceCSS }} />}
+
+      <div
+        style={
+          {
+            border: '1px solid #eef0f2',
+            padding: '2rem',
+            borderRadius: '16px',
+            boxShadow: '0 4px 20px rgba(0,0,0,0.02)',
+            background: resolvedBg,
+            position: 'sticky',
+            top: '20px',
+            '--sidebar-heading-font': titleFont,
+            '--sidebar-body-font': bodyFontFamily,
+            '--sidebar-heading-color': headingColor,
+            '--sidebar-body-color': textColor,
+          } as React.CSSProperties
+        }
+      >
+        {/* Upper Content Block */}
+        <div style={{ marginBottom: '1.5rem' }}>
+          {product.condition && (
+            <span
+              style={{
+                display: 'inline-block',
+                padding: '0.25rem 0.75rem',
+                borderRadius: '20px',
+                fontSize: '12px',
+                fontWeight: '600',
+                textTransform: 'uppercase',
+                background: product.condition === 'new' ? '#e8f5e9' : '#fff3e0',
+                color: product.condition === 'new' ? '#2e7d32' : '#ef6c00',
+                marginBottom: '0.75rem',
+              }}
+            >
+              {conditionText}
+            </span>
+          )}
+
+          <h1
             style={{
-              display: 'inline-block',
-              padding: '0.25rem 0.75rem',
-              borderRadius: '20px',
-              fontSize: '12px',
-              fontWeight: '600',
-              textTransform: 'uppercase',
-              background: product.condition === 'new' ? '#e8f5e9' : '#fff3e0',
-              color: product.condition === 'new' ? '#2e7d32' : '#ef6c00',
-              marginBottom: '0.75rem',
+              fontSize: '24px',
+              fontWeight: 'bold',
+              fontFamily: 'var(--sidebar-heading-font)',
+              color: 'var(--sidebar-heading-color)',
+              margin: '0 0 0.5rem 0',
+              lineHeight: '1.3',
             }}
           >
-            {conditionText}
-          </span>
-        )}
+            {product.title}
+          </h1>
 
-        <h1
-          style={{
-            fontSize: '24px',
-            fontWeight: 'bold',
-            fontFamily: 'Rudaw',
-            margin: '0 0 0.5rem 0',
-            lineHeight: '1.3',
-          }}
-        >
-          {product.title}
-        </h1>
-
-        {product.description && (
-          <p
-            style={{
-              fontSize: '14px',
-              color: '#666',
-              lineHeight: '1.6',
-              margin: '0',
-            }}
-          >
-            {product.description}
-          </p>
-        )}
-      </div>
-
-      <div style={{ borderTop: '1px solid #f0f0f0', paddingTop: '1.5rem' }}>
-        <div
-          style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            marginBottom: '1rem',
-          }}
-        >
-          <span style={{ color: '#666' }}>
-            {stockStatusLabel[currentLocale] || stockStatusLabel.en}
-          </span>
-          <span style={{ fontWeight: 'bold', color: product.stock > 0 ? '#16a34a' : '#dc2626' }}>
-            {getStockText(product.stock, currentLocale)}
-          </span>
+          {product.description && (
+            <p
+              style={{
+                fontSize: '14px',
+                color: 'var(--sidebar-body-color)',
+                lineHeight: '1.6',
+                margin: '0',
+                fontFamily: 'var(--sidebar-body-font)',
+              }}
+            >
+              {product.description}
+            </p>
+          )}
         </div>
 
-        <div
-          style={{
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '1.5rem',
-            marginTop: '1.5rem',
-          }}
-        >
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <label style={{ color: '#666' }}>
-              {quantityLabel[currentLocale] || quantityLabel.en}
-            </label>
-            <input
-              type="number"
-              id="qty-counter"
-              defaultValue="1"
-              min="1"
-              max={product.stock}
-              style={{
-                width: '70px',
-                padding: '0.5rem',
-                borderRadius: '6px',
-                border: '1px solid #ccc',
-                fontSize: '16px',
-                textAlign: 'center',
-              }}
-            />
-          </div>
-
+        <div style={{ borderTop: '1px solid #f0f0f0', paddingTop: '1.5rem' }}>
           <div
             style={{
               display: 'flex',
               justifyContent: 'space-between',
               alignItems: 'center',
-              borderTop: '1px solid #f0f0f0',
-              paddingTop: '1.5rem',
+              marginBottom: '1rem',
             }}
           >
             <span
+              style={{ color: 'var(--sidebar-body-color)', fontFamily: 'var(--sidebar-body-font)' }}
+            >
+              {stockStatusLabel[currentLocale] || stockStatusLabel.en}
+            </span>
+            <span
               style={{
-                fontSize: '16px',
-                color: '#444',
                 fontWeight: 'bold',
-                fontFamily: 'Rudaw',
+                color: product.stock > 0 ? '#16a34a' : '#dc2626',
+                fontFamily: 'var(--sidebar-body-font)',
               }}
             >
-              {totalLabel[currentLocale] || totalLabel.en}
+              {getStockText(product.stock, currentLocale)}
             </span>
-
-            <ProductPriceDisplay
-              variant="detail"
-              finalPrice={finalPrice}
-              originalPrice={originalPrice}
-              isDiscounted={isDiscounted}
-              iqdPrice={realIqdPrice}
-              currentLocale={currentLocale}
-              isRtl={isRtl}
-            />
           </div>
 
-          <ProductBuyActions
-            product={product}
-            finalPrice={finalPrice}
-            iqdPrice={realIqdPrice}
-            currentLocale={currentLocale}
-          />
+          <div
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '1.5rem',
+              marginTop: '1.5rem',
+            }}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <label
+                style={{
+                  color: 'var(--sidebar-body-color)',
+                  fontFamily: 'var(--sidebar-body-font)',
+                }}
+              >
+                {quantityLabel[currentLocale] || quantityLabel.en}
+              </label>
+              <input
+                type="number"
+                id="qty-counter"
+                defaultValue="1"
+                min="1"
+                max={product.stock}
+                style={{
+                  width: '70px',
+                  padding: '0.5rem',
+                  borderRadius: '6px',
+                  border: '1px solid #ccc',
+                  fontSize: '16px',
+                  textAlign: 'center',
+                  fontFamily: 'var(--sidebar-body-font)',
+                  color: 'var(--sidebar-body-color)',
+                }}
+              />
+            </div>
+
+            <div
+              style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                borderTop: '1px solid #f0f0f0',
+                paddingTop: '1.5rem',
+              }}
+            >
+              <span
+                style={{
+                  fontSize: '16px',
+                  color: 'var(--sidebar-heading-color)',
+                  fontWeight: 'bold',
+                  fontFamily: 'var(--sidebar-heading-font)',
+                }}
+              >
+                {totalLabel[currentLocale] || totalLabel.en}
+              </span>
+
+              <ProductPriceDisplay
+                variant="detail"
+                finalPrice={finalPrice}
+                originalPrice={originalPrice}
+                isDiscounted={isDiscounted}
+                iqdPrice={realIqdPrice}
+                currentLocale={currentLocale}
+                isRtl={isRtl}
+                headingFont={headingFont}
+                bodyFont={bodyFont}
+                titleColor={titleColor}
+                bodyColor={bodyColor}
+              />
+            </div>
+
+            <ProductBuyActions
+              product={product}
+              finalPrice={finalPrice}
+              iqdPrice={realIqdPrice}
+              currentLocale={currentLocale}
+              bodyFont={bodyFont}
+              bodyColor={bodyColor}
+            />
+          </div>
         </div>
       </div>
-    </div>
+    </>
   )
 }

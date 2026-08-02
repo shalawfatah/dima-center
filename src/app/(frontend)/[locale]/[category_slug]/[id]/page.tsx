@@ -177,12 +177,62 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
   try {
     settings = await payload.findGlobal({
       slug: 'general-settings',
+      depth: 1,
     })
   } catch (err) {
     console.error('Failed fetching general settings config', err)
   }
   const exchangeRate = settings?.exchangeRate || 1500
   const boxBgColor = settings?.typography?.boxBackgroundColor || undefined
+
+  // 🎯 Extract titleColor and bodyColor from settings
+  const titleColor = settings?.typography?.titleColor || undefined
+  const bodyColor = settings?.typography?.bodyColor || undefined
+
+  // Extract fonts
+  const typography = settings?.typography
+  const localeMap = {
+    ckb: 'kurdish',
+    ar: 'arabic',
+    en: 'english',
+  } as const
+
+  const fontGroupKey = localeMap[currentLocale as keyof typeof localeMap]
+  const fontGroup = typography?.[fontGroupKey]
+
+  const headingFontObj = fontGroup?.headingFont
+  const bodyFontObj = fontGroup?.bodyFont
+
+  const isRtl = currentLocale === 'ar' || currentLocale === 'ckb'
+  const isRegionalLocale = ['ar', 'ku', 'ckb'].includes(currentLocale)
+
+  let headingFont = isRegionalLocale ? '"Rudaw", sans-serif' : 'inherit'
+  let bodyFont = isRegionalLocale ? '"Rudaw", sans-serif' : 'inherit'
+  let dynamicFontFaceCSS = ''
+
+  if (headingFontObj && typeof headingFontObj === 'object' && headingFontObj.url) {
+    const fontName = `ProductHeading_${currentLocale}`
+    headingFont = `"${fontName}", "Rudaw", sans-serif`
+    dynamicFontFaceCSS += `
+      @font-face {
+        font-family: '${fontName}';
+        src: url('${headingFontObj.url}') format('truetype');
+        font-display: swap;
+      }
+    `
+  }
+
+  if (bodyFontObj && typeof bodyFontObj === 'object' && bodyFontObj.url) {
+    const fontName = `ProductBody_${currentLocale}`
+    bodyFont = `"${fontName}", "Rudaw", sans-serif`
+    dynamicFontFaceCSS += `
+      @font-face {
+        font-family: '${fontName}';
+        src: url('${bodyFontObj.url}') format('truetype');
+        font-display: swap;
+      }
+    `
+  }
 
   const result = await fetchProductById(productId, currentLocale, payload)
 
@@ -224,8 +274,6 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
     }
   }
 
-  const isRtl = currentLocale === 'ar' || currentLocale === 'ckb'
-
   const mainPriceSpecs = calculateProductPrice({
     ...product,
     title: productTitle,
@@ -261,57 +309,81 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
   }
 
   return (
-    <div
-      style={{
-        display: 'flex',
-        flexDirection: 'column',
-        minHeight: '100vh',
-        direction: isRtl ? 'rtl' : 'ltr',
-        backgroundColor: 'var(--brand-background)',
-      }}
-    >
-      <main
-        style={{
-          backgroundColor: 'var(--brand-background)',
-          flex: '1',
-          padding: '2rem max(1.5rem, calc((100% - 1800px)/2))',
-        }}
+    <>
+      {dynamicFontFaceCSS && <style dangerouslySetInnerHTML={{ __html: dynamicFontFaceCSS }} />}
+
+      <div
+        style={
+          {
+            display: 'flex',
+            flexDirection: 'column',
+            minHeight: '100vh',
+            direction: isRtl ? 'rtl' : 'ltr',
+            backgroundColor: 'var(--brand-background)',
+            '--product-heading-font': headingFont,
+            '--product-body-font': bodyFont,
+            '--product-title-color': titleColor || '#000000',
+            '--product-body-color': bodyColor || '#333333',
+          } as React.CSSProperties
+        }
       >
-        <ProductBreadcrumb currentLocale={currentLocale} categoryName={productCategoryName} />
+        <main
+          style={{
+            backgroundColor: 'var(--brand-background)',
+            flex: '1',
+            padding: '2rem max(1.5rem, calc((100% - 1800px)/2))',
+          }}
+        >
+          <ProductBreadcrumb currentLocale={currentLocale} categoryName={productCategoryName} />
 
-        <div className={styles['product-layout-grid']}>
-          <ProductMediaColumn
-            title={productTitle}
-            featuredImageUrl={featuredImageUrl}
-            imagesGallery={product.imagesGallery}
-            isRtl={isRtl}
+          <div className={styles['product-layout-grid']}>
+            <ProductMediaColumn
+              title={productTitle}
+              featuredImageUrl={featuredImageUrl}
+              imagesGallery={product.imagesGallery}
+              isRtl={isRtl}
+              currentLocale={currentLocale}
+              isDiscounted={mainPriceSpecs.isDiscounted}
+              badgeText={mainPriceSpecs.badgeText || ''}
+              technicalSpecs={product.technicalSpecs || undefined}
+              cardBgColor={boxBgColor}
+              headingFont={headingFont}
+              bodyFont={bodyFont}
+              titleColor={titleColor}
+              bodyColor={bodyColor}
+            />
+
+            <ProductInfoSidebar
+              product={normalizedProduct}
+              currentLocale={currentLocale}
+              isRtl={isRtl}
+              finalPrice={usdPriceNum}
+              originalPrice={usdOriginalNum}
+              isDiscounted={mainPriceSpecs.isDiscounted}
+              iqdPrice={iqdPriceNum}
+              cardBgColor={boxBgColor}
+              headingFont={headingFont}
+              bodyFont={bodyFont}
+              dynamicFontFaceCSS={dynamicFontFaceCSS}
+              titleColor={titleColor}
+              bodyColor={bodyColor}
+            />
+          </div>
+
+          <RelatedProducts
+            items={relatedDocs}
             currentLocale={currentLocale}
-            isDiscounted={mainPriceSpecs.isDiscounted}
-            badgeText={mainPriceSpecs.badgeText || ''}
-            technicalSpecs={product.technicalSpecs || undefined}
-            cardBgColor={boxBgColor}
-          />
-
-          <ProductInfoSidebar
-            product={normalizedProduct}
-            currentLocale={currentLocale}
             isRtl={isRtl}
-            finalPrice={usdPriceNum}
-            originalPrice={usdOriginalNum}
-            isDiscounted={mainPriceSpecs.isDiscounted}
-            iqdPrice={iqdPriceNum}
+            exchangeRate={exchangeRate}
             cardBgColor={boxBgColor}
+            headingFont={headingFont}
+            bodyFont={bodyFont}
+            dynamicFontFaceCSS={dynamicFontFaceCSS}
+            titleColor={titleColor}
+            bodyColor={bodyColor}
           />
-        </div>
-
-        <RelatedProducts
-          items={relatedDocs}
-          currentLocale={currentLocale}
-          isRtl={isRtl}
-          exchangeRate={exchangeRate}
-          cardBgColor={boxBgColor}
-        />
-      </main>
-    </div>
+        </main>
+      </div>
+    </>
   )
 }

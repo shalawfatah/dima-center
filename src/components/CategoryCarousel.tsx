@@ -19,25 +19,9 @@ export interface LanguageTypography {
   bodyFont?: FontMedia | string | null
 }
 
-export interface GeneralSettingsProps {
-  navbar?: {
-    width?: 'full' | 'fit-content'
-    backgroundColor?: string
-    textColor?: string
-  }
-  typography?: {
-    kurdish?: LanguageTypography
-    arabic?: LanguageTypography
-    english?: LanguageTypography
-    bodyColor?: string
-    titleColor?: string
-    boxBackgroundColor?: string
-  }
-  [key: string]: any
-}
-
+// Use any for generalSettings to match Payload's actual type
 interface ComponentProps extends CategoryDropdownNavProps {
-  generalSettings?: GeneralSettingsProps
+  generalSettings?: any // Use any to avoid type mismatches
 }
 
 export default function CategoryDropdownNav({
@@ -71,22 +55,26 @@ export default function CategoryDropdownNav({
   let customFontFamily = isRtl ? '"Rudaw", sans-serif' : 'system-ui, sans-serif'
   let dynamicFontFaceRule = ''
 
-  if (selectedHeadingFont) {
-    if (typeof selectedHeadingFont === 'object' && selectedHeadingFont?.url) {
-      // Unique font family name registered dynamically for this locale
-      const fontName = `PayloadFont_${currentLocale}_Heading`
-      customFontFamily = `"${fontName}", "Rudaw", sans-serif`
+  // Safely check if selectedHeadingFont is a Media object with a url
+  if (
+    selectedHeadingFont &&
+    typeof selectedHeadingFont === 'object' &&
+    'url' in selectedHeadingFont &&
+    selectedHeadingFont.url
+  ) {
+    // Unique font family name registered dynamically for this locale
+    const fontName = `PayloadFont_${currentLocale}_Heading`
+    customFontFamily = `"${fontName}", "Rudaw", sans-serif`
 
-      dynamicFontFaceRule = `
-        @font-face {
-          font-family: '${fontName}';
-          src: url('${selectedHeadingFont.url}') format('truetype');
-          font-display: swap;
-        }
-      `
-    } else if (typeof selectedHeadingFont === 'string' && selectedHeadingFont.trim() !== '') {
-      customFontFamily = `"${selectedHeadingFont}", "Rudaw", sans-serif`
-    }
+    dynamicFontFaceRule = `
+      @font-face {
+        font-family: '${fontName}';
+        src: url('${selectedHeadingFont.url}') format('truetype');
+        font-display: swap;
+      }
+    `
+  } else if (typeof selectedHeadingFont === 'string' && selectedHeadingFont.trim() !== '') {
+    customFontFamily = `"${selectedHeadingFont}", "Rudaw", sans-serif`
   }
 
   const titleFont = customFontFamily

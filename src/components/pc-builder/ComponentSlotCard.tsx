@@ -14,6 +14,13 @@ function isTrustedDomain(url: string | null | undefined): boolean {
   return false
 }
 
+interface ExtendedComponentSlotCardProps extends ComponentSlotCardProps {
+  titleColor?: string
+  bodyColor?: string
+  headingFont?: string
+  bodyFont?: string
+}
+
 export default function ComponentSlotCard({
   slot,
   chosenItem,
@@ -23,7 +30,11 @@ export default function ComponentSlotCard({
   onOpen,
   onRemove,
   onQuantityChange,
-}: ComponentSlotCardProps) {
+  titleColor,
+  bodyColor,
+  headingFont,
+  bodyFont,
+}: ExtendedComponentSlotCardProps) {
   const itemImageUrl = chosenItem?.featuredImage?.url || chosenItem?.meta?.image?.url
   const qty = chosenItem?.quantity || 1
 
@@ -43,8 +54,25 @@ export default function ComponentSlotCard({
 
   const isTrustedImage = isTrustedDomain(itemImageUrl)
 
+  // Use provided colors or fallbacks
+  const headingColor = titleColor || '#000000'
+  const textColor = bodyColor || '#333333'
+  const titleFont = headingFont || 'inherit'
+  const bodyFontFamily = bodyFont || 'inherit'
+
   return (
-    <div onClick={() => onOpen(slot.key)} className={styles['pc-builder-component-card']}>
+    <div
+      onClick={() => onOpen(slot.key)}
+      className={styles['pc-builder-component-card']}
+      style={
+        {
+          '--slot-heading-color': headingColor,
+          '--slot-body-color': textColor,
+          '--slot-heading-font': titleFont,
+          '--slot-body-font': bodyFontFamily,
+        } as React.CSSProperties
+      }
+    >
       <div className={styles['pc-builder-card-meta']}>
         <div className={styles['pc-builder-thumb-box']}>
           {itemImageUrl ? (
@@ -74,24 +102,54 @@ export default function ComponentSlotCard({
         </div>
 
         <div>
-          <span className={styles['pc-builder-slot-label']}>{slot.label}</span>
+          <span
+            className={styles['pc-builder-slot-label']}
+            style={{
+              color: 'var(--slot-heading-color)',
+              fontFamily: 'var(--slot-heading-font)',
+            }}
+          >
+            {slot.label}
+          </span>
           {chosenItem ? (
-            <div className={styles['pc-builder-chosen-title']}>
+            <div
+              className={styles['pc-builder-chosen-title']}
+              style={{
+                color: 'var(--slot-body-color)',
+                fontFamily: 'var(--slot-body-font)',
+              }}
+            >
               {qty > 1 && <strong className={styles['pc-builder-qty-highlight']}>{qty}x </strong>}
               {getLocalizedTitle(chosenItem)}{' '}
               <span className={styles['pc-builder-chosen-price']}>
                 {hasItemDiscount ? (
                   <>
-                    <span className={styles['pc-builder-price-original']}>(${originalPrice})</span>
-                    <span className={styles['pc-builder-price-final']}>(${finalItemPrice})</span>
+                    <span
+                      className={styles['pc-builder-price-original']}
+                      style={{ color: 'var(--slot-body-color)' }}
+                    >
+                      (${originalPrice})
+                    </span>
+                    <span
+                      className={styles['pc-builder-price-final']}
+                      style={{ color: 'var(--slot-heading-color)' }}
+                    >
+                      (${finalItemPrice})
+                    </span>
                   </>
                 ) : (
-                  <span>(${originalPrice})</span>
+                  <span style={{ color: 'var(--slot-body-color)' }}>(${originalPrice})</span>
                 )}
               </span>
             </div>
           ) : (
-            <div className={styles['pc-builder-empty-slot']}>
+            <div
+              className={styles['pc-builder-empty-slot']}
+              style={{
+                color: 'var(--slot-body-color)',
+                fontFamily: 'var(--slot-body-font)',
+              }}
+            >
               {text?.noPart || 'No Part Selected'}
             </div>
           )}
@@ -106,14 +164,24 @@ export default function ComponentSlotCard({
               onClick={() => onQuantityChange(slot.key, -1)}
               className={styles['pc-builder-slot-qty-btn']}
               disabled={qty <= 1}
+              style={{ color: 'var(--slot-body-color)' }}
             >
               -
             </button>
-            <span className={styles['pc-builder-slot-qty-num']}>{qty}</span>
+            <span
+              className={styles['pc-builder-slot-qty-num']}
+              style={{
+                color: 'var(--slot-body-color)',
+                fontFamily: 'var(--slot-body-font)',
+              }}
+            >
+              {qty}
+            </span>
             <button
               type="button"
               onClick={() => onQuantityChange(slot.key, 1)}
               className={styles['pc-builder-slot-qty-btn']}
+              style={{ color: 'var(--slot-body-color)' }}
             >
               +
             </button>
@@ -128,6 +196,10 @@ export default function ComponentSlotCard({
               onRemove(slot.key)
             }}
             className={`${styles['pc-builder-btn']} ${styles.clear}`}
+            style={{
+              color: 'var(--slot-body-color)',
+              fontFamily: 'var(--slot-body-font)',
+            }}
           >
             {text?.clear || 'Clear'}
           </button>
@@ -139,6 +211,10 @@ export default function ComponentSlotCard({
             onOpen(slot.key)
           }}
           className={`${styles['pc-builder-btn']} ${styles.action}`}
+          style={{
+            color: 'var(--slot-body-color)',
+            fontFamily: 'var(--slot-body-font)',
+          }}
         >
           {chosenItem ? text?.change || 'Change' : text?.choose || 'Choose'}
         </button>

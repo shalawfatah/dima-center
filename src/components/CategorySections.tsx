@@ -11,48 +11,47 @@ const PER_SECTION_LIMIT = 20
 export default async function CategorySections({
   currentLocale,
   isRtl,
+  generalSettings,
+  headingFont,
+  bodyFont,
+  dynamicFontFaceCSS,
+  titleColor,
+  bodyColor,
 }: {
   currentLocale: string
   isRtl: boolean
+  generalSettings?: any
+  headingFont?: string
+  bodyFont?: string
+  dynamicFontFaceCSS?: string
+  titleColor?: string
+  bodyColor?: string
 }) {
   const payload = await getPayload({ config })
 
-  // 1. Fetch ui-categories and general-settings concurrently
-  const [uiCategoriesResult, generalSettings] = await Promise.all([
-    payload
-      .find({
-        collection: 'ui-categories',
-        limit: 100,
-        sort: 'order',
-        locale: currentLocale as 'en' | 'ar' | 'ckb',
-        fallbackLocale: 'ckb',
-      })
-      .catch((err) => {
-        console.error('Failed to fetch ui-categories', err)
-        return { docs: [] }
-      }),
-    payload
-      .findGlobal({
-        slug: 'general-settings',
-      })
-      .catch((err) => {
-        console.error('Failed to fetch general-settings', err)
-        return null
-      }),
-  ])
+  const uiCategoriesResult = await payload
+    .find({
+      collection: 'ui-categories',
+      limit: 100,
+      sort: 'order',
+      locale: currentLocale as 'en' | 'ar' | 'ckb',
+      fallbackLocale: 'ckb',
+    })
+    .catch((err) => {
+      console.error('Failed to fetch ui-categories', err)
+      return { docs: [] }
+    })
 
-  // Extract box background color
-  const boxBgColor = generalSettings?.typography?.boxBackgroundColor || undefined
+  const typography = generalSettings?.typography
+  const boxBgColor = typography?.boxBackgroundColor || undefined
 
   if (!uiCategoriesResult.docs.length) return null
 
-  // 2. Build map of section metadata
   const sectionMetaMapping = buildDynamicSectionMetaMapping(uiCategoriesResult.docs)
   const allLeafSlugs = Array.from(new Set(sectionMetaMapping.flatMap((s) => s.leafSlugs)))
 
   if (allLeafSlugs.length === 0) return null
 
-  // 3. Query BOTH 'products' AND 'ui-products'
   const [productsBulk, uiProductsBulk] = await Promise.all([
     payload
       .find({
@@ -86,7 +85,6 @@ export default async function CategorySections({
       .catch(() => ({ docs: [] as any[] })),
   ])
 
-  // 4. Group retrieved products by category slug
   const bySlug: Record<string, any[]> = {}
   const allDocs = [...productsBulk.docs, ...uiProductsBulk.docs]
 
@@ -97,7 +95,6 @@ export default async function CategorySections({
     bySlug[slug].push(p)
   }
 
-  // 5. Combine products for each section
   const homepageSections = sectionMetaMapping
     .map((meta) => {
       const merged = meta.leafSlugs.flatMap((slug) => bySlug[slug] || [])
@@ -113,6 +110,8 @@ export default async function CategorySections({
 
   return (
     <>
+      {dynamicFontFaceCSS && <style dangerouslySetInnerHTML={{ __html: dynamicFontFaceCSS }} />}
+
       {homepageSections.map((cat) => (
         <section key={cat.slug} className={styles.section}>
           <LocalizedHeading
@@ -120,13 +119,21 @@ export default async function CategorySections({
             en={cat.title.en}
             ar={cat.title.ar}
             ckb={cat.title.ckb}
-            style={{ fontSize: '1.4rem', marginBottom: '0.5rem' }}
+            headingFont={headingFont}
+            style={{
+              fontSize: '1.4rem',
+              marginBottom: '0.5rem',
+            }}
           />
           <ProductCarousel
             isRtl={isRtl}
             currentLocale={currentLocale}
             products={cat.products}
             cardBgColor={boxBgColor}
+            headingFont={headingFont}
+            bodyFont={bodyFont}
+            titleColor={titleColor}
+            bodyColor={bodyColor}
           />
         </section>
       ))}
