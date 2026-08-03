@@ -1,6 +1,13 @@
 import { CollectionConfig } from 'payload'
 import path from 'path'
 
+const fontExtToMime: Record<string, string> = {
+  '.ttf': 'font/ttf',
+  '.otf': 'font/otf',
+  '.woff': 'font/woff',
+  '.woff2': 'font/woff2',
+}
+
 export const Media: CollectionConfig = {
   slug: 'media',
   admin: {
@@ -23,32 +30,25 @@ export const Media: CollectionConfig = {
       'application/font-woff2',
       'application/x-font-ttf',
       'application/x-font-opentype',
-      'application/octet-stream', // Allow generic stream so Windows can pass it through
+      // Windows sends this for unrecognized types — allow it here,
+      // then narrow it down by extension below.
+      'application/octet-stream',
     ],
   },
   hooks: {
-    beforeChange: [
-      ({ req, data }) => {
-        // Check if a file was uploaded and has a filename
-        if (req.file && req.file.name) {
-          const ext = path.extname(req.file.name).toLowerCase()
+    beforeOperation: [
+      ({ req, operation }) => {
+        if ((operation === 'create' || operation === 'update') && req.file) {
+          const ext = path.extname(req.file.name || '').toLowerCase()
+          const correctMime = fontExtToMime[ext]
 
-          // Fix Windows generic/missing mimetypes for fonts
           if (
-            ext === '.ttf' &&
+            correctMime &&
             (req.file.mimetype === 'application/octet-stream' || !req.file.mimetype)
           ) {
-            req.file.mimetype = 'font/ttf'
-            data.mimeType = 'font/ttf'
-          } else if (
-            ext === '.otf' &&
-            (req.file.mimetype === 'application/octet-stream' || !req.file.mimetype)
-          ) {
-            req.file.mimetype = 'font/otf'
-            data.mimeType = 'font/otf'
+            req.file.mimetype = correctMime
           }
         }
-        return data
       },
     ],
   },
