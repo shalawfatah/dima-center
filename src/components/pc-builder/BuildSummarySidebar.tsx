@@ -17,6 +17,8 @@ interface BuildSummarySidebarProps {
   fontFam: string
   titleColor?: string
   bodyColor?: string
+  boxBgColor?: string
+  borderColor?: string
 }
 
 export default function BuildSummarySidebar({
@@ -33,16 +35,24 @@ export default function BuildSummarySidebar({
   fontFam,
   titleColor,
   bodyColor,
+  boxBgColor,
+  borderColor,
 }: BuildSummarySidebarProps) {
   const submitDisabled = !mounted || !hasSelections
-
-  // Use provided colors or fallbacks
   const headingColor = titleColor || '#000000'
   const textColor = bodyColor || '#333333'
+  const resolvedBoxBg = boxBgColor || '#ffffff'
+  const resolvedBorderColor = borderColor || '#e2e8f0'
 
   return (
     <div className={styles['pc-builder-sidebar']}>
-      <div className={styles['pc-builder-summary-card']}>
+      <div
+        className={styles['pc-builder-summary-card']}
+        style={{
+          backgroundColor: resolvedBoxBg,
+          borderColor: resolvedBorderColor,
+        }}
+      >
         <h3
           className={styles['pc-builder-summary-heading']}
           style={{
@@ -52,17 +62,23 @@ export default function BuildSummarySidebar({
         >
           {t.summary}
         </h3>
-
-        <div className={styles['pc-builder-exchange-container']}>
+        <div
+          className={styles['pc-builder-exchange-container']}
+          style={{
+            borderColor: resolvedBorderColor,
+          }}
+        >
           <span className={styles['pc-builder-exchange-label']} style={{ color: textColor }}>
             {pickLocale(exchangeLabel, currentLocale)}
           </span>
-          <span className={styles['pc-builder-exchange-value']} style={{ color: textColor }}>
+          <span className={styles['pc-builder-exchange-value']} style={{ color: headingColor }}>
             {(totalPrice * dynamicExchangeRate).toLocaleString()} د.ع
           </span>
         </div>
-
-        <div className={styles['pc-builder-price-row']}>
+        <div
+          className={styles['pc-builder-price-row']}
+          style={{ borderTopColor: resolvedBorderColor }}
+        >
           <span className={styles['pc-builder-price-label']} style={{ color: textColor }}>
             {t.totalPrice}
           </span>
@@ -72,16 +88,14 @@ export default function BuildSummarySidebar({
                 ${totalOriginalPrice.toLocaleString()}
               </span>
             )}
-            <span className={styles['pc-builder-price-value']} style={{ color: headingColor }}>
+            <span className={styles['pc-builder-price-value']} style={{ color: '#10b981' }}>
               ${totalPrice.toLocaleString()}
             </span>
           </div>
         </div>
-
-        <div className={styles['pc-builder-whatsapp-notice']}>
+        <div className={styles['pc-builder-whatsapp-notice']} style={{ color: textColor }}>
           ℹ️ {whatsappPriceNotice[currentLocale] || whatsappPriceNotice.en}
         </div>
-
         <form onSubmit={onSubmit} className={styles['pc-builder-order-form']}>
           <input
             type="tel"
@@ -90,7 +104,12 @@ export default function BuildSummarySidebar({
             required
             className={styles['pc-builder-phone-input']}
             aria-label={pickLocale(phoneAriaLabel, currentLocale)}
-            style={{ color: textColor }}
+            style={{
+              color: textColor,
+              borderColor: resolvedBorderColor,
+              backgroundColor: resolvedBoxBg,
+            }}
+            placeholder={t.phonePlaceholder || 'Phone Number'}
           />
           <button
             type="submit"
@@ -99,6 +118,7 @@ export default function BuildSummarySidebar({
             style={{
               fontFamily: fontFam,
               color: submitDisabled ? textColor : '#ffffff',
+              backgroundColor: submitDisabled ? resolvedBorderColor : '#ffcb6b',
             }}
           >
             {submitLabel[currentLocale] || submitLabel.en}

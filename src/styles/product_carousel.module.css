@@ -10,7 +10,7 @@
 .product-carousel-track {
   display: flex;
   touch-action: pan-y;
-  gap: 16px; /* 🟢 Slightly tighter gap for smaller cards */
+  gap: 16px;
   direction: ltr;
 }
 .pc-wrapper[data-dir='rtl'] .product-carousel-track {
@@ -39,10 +39,9 @@
   width: 100%;
   height: var(--pc-card-height, 300px);
   max-height: var(--pc-card-height, 300px);
-  border-radius: 8px;
+  border-radius: 12px;
   overflow: hidden;
-  background: #fff;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--pc-border-color, #e2e8f0);
   transition:
     transform 0.3s cubic-bezier(0.16, 1, 0.3, 1),
     box-shadow 0.3s cubic-bezier(0.16, 1, 0.3, 1);
@@ -61,7 +60,7 @@
   top: 0;
   left: 0;
   right: 0;
-  bottom: 85px; /* 🟢 Adjusted to leave exact room for the info panel */
+  bottom: 85px;
   overflow: hidden;
   z-index: 1;
 }
@@ -79,7 +78,7 @@
 
 .side-actions-wrapper {
   position: absolute;
-  top: 8px; /* 🟢 Nudged slightly down */
+  top: 8px;
   left: 8px;
   right: auto;
   z-index: 3;
@@ -105,8 +104,8 @@
   background: #ffb83c;
   border: none;
   border-radius: 50%;
-  width: 28px; /* 🟢 Reduced from 32px to match the 220px scale */
-  height: 28px; /* 🟢 Reduced from 32px */
+  width: 28px;
+  height: 28px;
   display: inline-flex !important;
   align-items: center !important;
   justify-content: center !important;
@@ -120,7 +119,7 @@
 }
 
 .side-action-btn svg {
-  display: block; /* 🟢 Fixes alignment layout drops */
+  display: block;
 }
 
 /* ---------- info panel ---------- */
@@ -135,9 +134,9 @@
   bottom: 0;
   left: 0;
   right: 0;
-  height: 85px; /* 🟢 Perfect baseline allowance for text fields */
+  height: 85px;
   z-index: 2;
-  padding: 0.5rem 0.75rem; /* 🟢 Compact layout padding values */
+  padding: 0.5rem 0.75rem;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
@@ -150,7 +149,7 @@
 
 .pc-title {
   font-family: var(--pc-title-font, inherit);
-  font-size: 13px; /* 🟢 Clean tracking scaling */
+  font-size: 13px;
   font-weight: 600;
   margin: 0;
   display: -webkit-box;
@@ -186,7 +185,7 @@
 }
 
 .pc-price-final {
-  font-size: 15px; /* 🟢 Compact yet bold pricing presentation */
+  font-size: 15px;
   font-weight: 800;
   color: #000000;
 }
@@ -217,7 +216,7 @@
   border-bottom-right-radius: 8px;
 }
 .product-carousel-slide:hover .hover-cart-overlay {
-  height: 42px; /* 🟢 Reduced from 54px so it doesn't mask the text block entirely */
+  height: 42px;
 }
 
 .hover-cart-btn {
@@ -226,7 +225,7 @@
   background: #ffb83c;
   color: #000;
   border: none;
-  font-size: 13px; /* 🟢 Balanced typography scale */
+  font-size: 13px;
   font-weight: 700;
   cursor: pointer;
   transition: background-color 0.2s;
@@ -240,11 +239,11 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: rgba(0, 0, 0, 0.5); /* Semi-transparent background mask */
+  background-color: rgba(0, 0, 0, 0.5);
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 9999; /* Ensures it sits above headers/navbars */
+  z-index: 9999;
   padding: 16px;
   animation: pcFadeIn 0.2s ease-out;
 }
@@ -267,7 +266,6 @@
   animation: pcScaleUp 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-/* RTL handling for content alignment */
 .pc-wrapper[data-dir='rtl'] .pc-modal-content {
   text-align: right;
 }
@@ -303,7 +301,7 @@
   font-weight: 700;
   color: #000000;
   margin: 0;
-  padding-right: 24px; /* Avoid overlapping the close button */
+  padding-right: 24px;
 }
 
 .pc-wrapper[data-dir='rtl'] .pc-modal-title {
@@ -366,8 +364,8 @@
 .pc-toast {
   position: fixed;
   bottom: 24px;
-  right: 24px; /* Default right-side alignment */
-  background-color: #1e293b; /* Sleek dark slate background */
+  right: 24px;
+  background-color: #1e293b;
   color: #ffffff;
   padding: 16px;
   border-radius: 12px;
@@ -377,14 +375,13 @@
   display: flex;
   align-items: center;
   gap: 14px;
-  z-index: 10000; /* Stays above modals and navigation bars */
+  z-index: 10000;
   max-width: 420px;
   width: calc(100% - 48px);
   border: 1px solid #334155;
   animation: pcToastSlideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-/* RTL handling for RTL localizations */
 .pc-wrapper[data-dir='rtl'] .pc-toast {
   right: auto;
   left: 24px;
@@ -397,7 +394,7 @@
   justify-content: center;
   width: 28px;
   height: 28px;
-  background-color: #22c55e; /* Vibrant success green */
+  background-color: #22c55e;
   color: #ffffff;
   border-radius: 50%;
   font-size: 14px;
@@ -426,7 +423,7 @@
 
 .pc-toast-subtitle {
   font-size: 12px;
-  color: #94a3b8; /* Soft blue-gray details */
+  color: #94a3b8;
 }
 
 /* ---------- View Cart Button Action ---------- */
@@ -517,7 +514,6 @@
   right: -20px;
 }
 
-/* Adjust button placement when in RTL mode if necessary */
 [data-dir='rtl'] .pc-arrow-prev {
   left: auto;
   right: -20px;
@@ -526,4 +522,4 @@
 [data-dir='rtl'] .pc-arrow-next {
   right: auto;
   left: -20px;
-}
+

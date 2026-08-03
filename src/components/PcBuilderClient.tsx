@@ -28,6 +28,8 @@ interface ExtendedPcBuilderClientProps extends PcBuilderClientProps {
   dynamicFontFaceCSS?: string
   titleColor?: string
   bodyColor?: string
+  boxBgColor?: string
+  boxBorderColor?: string
 }
 
 export default function PcBuilderClient({
@@ -40,6 +42,8 @@ export default function PcBuilderClient({
   dynamicFontFaceCSS,
   titleColor,
   bodyColor,
+  boxBgColor,
+  boxBorderColor,
 }: ExtendedPcBuilderClientProps) {
   const [mounted, setMounted] = useState(false)
 
@@ -164,6 +168,11 @@ export default function PcBuilderClient({
   // Use provided colors or fallbacks
   const headingColor = titleColor || '#000000'
   const textColor = bodyColor || '#333333'
+  const resolvedBoxBg = boxBgColor || '#ffffff'
+  const resolvedBorderColor = boxBorderColor || '#e2e8f0'
+
+  // Get site background color with safe fallback
+  const siteBackgroundColor = generals?.siteBackground?.backgroundColor || 'transparent'
 
   const hasSelections = Object.keys(selections).length > 0
 
@@ -179,6 +188,9 @@ export default function PcBuilderClient({
             '--heading-font': titleFont,
             '--pc-heading-color': headingColor,
             '--pc-body-color': textColor,
+            '--pc-box-bg': resolvedBoxBg,
+            '--pc-border-color': resolvedBorderColor,
+            '--pc-background-color': siteBackgroundColor,
             direction: isRtl ? 'rtl' : 'ltr',
             textAlign: isRtl ? 'right' : 'left',
           } as React.CSSProperties
@@ -246,6 +258,8 @@ export default function PcBuilderClient({
                 bodyColor={bodyColor}
                 headingFont={headingFont}
                 bodyFont={bodyFont}
+                boxBgColor={boxBgColor}
+                borderColor={boxBorderColor}
               />
             ))}
           </div>
@@ -264,6 +278,8 @@ export default function PcBuilderClient({
             fontFam={bodyFontFamily}
             titleColor={titleColor}
             bodyColor={bodyColor}
+            boxBgColor={boxBgColor}
+            borderColor={boxBorderColor}
           />
         </div>
 
@@ -282,6 +298,8 @@ export default function PcBuilderClient({
             bodyColor={bodyColor}
             headingFont={headingFont}
             bodyFont={bodyFont}
+            boxBgColor={boxBgColor}
+            borderColor={boxBorderColor}
           />
         )}
 

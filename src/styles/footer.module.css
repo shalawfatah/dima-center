@@ -1,13 +1,12 @@
 .footer {
   background-color: var(--brand-background);
-  border-top: 1px solid #eaeaea;
+  border-top: 1px solid var(--footer-border-color, #eaeaea);
   padding: 3rem 1.5rem;
   margin-top: auto;
   font-size: 14px;
   /* Forces body color on the entire footer container */
   color: var(--footer-body-color, #333333) !important;
 }
-
 .footerGrid {
   display: grid;
   grid-template-columns: 1fr;
@@ -15,20 +14,17 @@
   max-width: 1800px;
   margin: 0 auto;
 }
-
 @media (min-width: 768px) {
   .footerGrid {
     grid-template-columns: repeat(3, 1fr);
   }
 }
-
 /* ONLY h4 gets the title color */
 .heading {
   color: var(--footer-title-color, #000000) !important;
   margin-bottom: 0.75rem;
   font-weight: 600;
 }
-
 /* Everything else gets body color explicitly */
 .aboutDesc,
 .addressLine1,
@@ -41,17 +37,14 @@
   color: var(--footer-body-color, #333333) !important;
   line-height: 1.6;
 }
-
 .aboutDesc {
   margin: 0 0 1.25rem 0;
 }
-
 .socialLinks {
   display: flex;
   gap: 1.25rem;
   align-items: center;
 }
-
 .socialIconLink {
   color: var(--footer-body-color, #333333) !important;
   transition:
@@ -61,67 +54,54 @@
   align-items: center;
   justify-content: center;
 }
-
 /* Forces SVG icons to inherit body color */
 .socialIconLink svg {
   fill: var(--footer-body-color, #333333) !important;
   color: var(--footer-body-color, #333333) !important;
 }
-
 .socialIconLink:hover {
   opacity: 0.75;
   transform: translateY(-2px);
 }
-
 .addressLine1 {
   margin: 0 0 0.35rem 0;
 }
-
 .addressLine2 {
   margin: 0 0 0.5rem 0;
 }
-
 .addressLine2Rtl {
   padding-right: 1.5rem;
   padding-left: 0;
 }
-
 .addressLine2Ltr {
   padding-left: 1.5rem;
   padding-right: 0;
 }
-
 .phone {
   margin: 0;
   font-weight: 600;
 }
-
 .phoneValue {
   unicode-bidi: plaintext;
 }
-
 .policyDesc {
   margin: 0;
 }
-
 .bottomBar {
   text-align: center;
   margin-top: 3rem;
-  border-top: 1px solid #e2e8f0;
+  border-top: 1px solid var(--footer-border-color, #e2e8f0);
   padding-top: 1.5rem;
   font-size: 12px;
 }
-
 .poweredByRow {
   margin-top: 0.25rem;
 }
-
 .agencyLink {
   color: var(--footer-body-color, #333333) !important;
   font-weight: 600;
   text-decoration: underline;
 }
-
 .agencyLink:hover {
   opacity: 0.8;
 }

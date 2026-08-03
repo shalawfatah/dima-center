@@ -1,31 +1,27 @@
+import React from 'react'
 import Image from 'next/image'
-import { getDiscountedPrice } from '@/utils/pc_builder_pricing'
 import styles from '@/styles/pc_builder.module.css'
-import { ComponentSlotCardProps, SlotLabels } from '@/types/types'
 
-const MULTI_QUANTITY_SLOTS = ['ram', 'storage', 'ssd', 'hdd', 'memory', 'm-2', 'm2']
-
-// Helper to check if a URL comes from our trusted domain or local public directory
-function isTrustedDomain(url: string | null | undefined): boolean {
-  if (!url) return false
-  if (url.startsWith('/')) return true // Local images (/categories/ram.png, etc.)
-  // Allow your VPS / S3 domain
-  if (url.includes('s3.dima.center')) return true
-  return false
-}
-
-interface ExtendedComponentSlotCardProps extends ComponentSlotCardProps {
+interface ComponentSlotCardProps {
+  slot: any
+  chosenItem: any
+  t: Record<string, string>
+  getLocalizedTitle: (product: any) => string
+  onOpen: (key: string) => void
+  onRemove: (key: string) => void
+  onQuantityChange: (key: string, delta: number) => void
   titleColor?: string
   bodyColor?: string
   headingFont?: string
   bodyFont?: string
+  boxBgColor?: string
+  borderColor?: string
 }
 
 export default function ComponentSlotCard({
   slot,
   chosenItem,
   t,
-  labels,
   getLocalizedTitle,
   onOpen,
   onRemove,
@@ -34,191 +30,107 @@ export default function ComponentSlotCard({
   bodyColor,
   headingFont,
   bodyFont,
-}: ExtendedComponentSlotCardProps) {
-  const itemImageUrl = chosenItem?.featuredImage?.url || chosenItem?.meta?.image?.url
-  const qty = chosenItem?.quantity || 1
-
-  const originalPrice = chosenItem ? (Number(chosenItem.price) || 0) * qty : 0
-  const finalItemPrice = chosenItem ? getDiscountedPrice(chosenItem) * qty : 0
-  const hasItemDiscount = chosenItem ? !!chosenItem.hasDiscount : false
-
-  // Safe key extraction
-  const slotKey = (slot?.key || slot?.categorySlug || '').toLowerCase()
-  const isMultiSlot = MULTI_QUANTITY_SLOTS.includes(slotKey)
-
-  const text = labels || (t as SlotLabels) || {}
-
-  // Local static icon path from /public/categories/
-  const fallbackCategoryIcon =
-    (slot as any)?.defaultImage || `/categories/${slotKey || 'default'}.png`
-
-  const isTrustedImage = isTrustedDomain(itemImageUrl)
-
-  // Use provided colors or fallbacks
+  boxBgColor,
+  borderColor,
+}: ComponentSlotCardProps) {
   const headingColor = titleColor || '#000000'
   const textColor = bodyColor || '#333333'
-  const titleFont = headingFont || 'inherit'
-  const bodyFontFamily = bodyFont || 'inherit'
+  const resolvedBoxBg = boxBgColor || '#ffffff'
+  const resolvedBorderColor = borderColor || '#e2e8f0'
 
   return (
     <div
-      onClick={() => onOpen(slot.key)}
       className={styles['pc-builder-component-card']}
-      style={
-        {
-          '--slot-heading-color': headingColor,
-          '--slot-body-color': textColor,
-          '--slot-heading-font': titleFont,
-          '--slot-body-font': bodyFontFamily,
-        } as React.CSSProperties
-      }
+      onClick={() => onOpen(slot.key)}
+      style={{
+        backgroundColor: resolvedBoxBg,
+        borderColor: resolvedBorderColor,
+      }}
     >
       <div className={styles['pc-builder-card-meta']}>
-        <div className={styles['pc-builder-thumb-box']}>
-          {itemImageUrl ? (
-            /* Safe rendering: Use unoptimized mode if it's an old legacy URL (like Supabase) */
+        {chosenItem?.featuredImage?.url && (
+          <div className={styles['pc-builder-thumb-box']}>
             <Image
-              sizes="100px"
-              width={100}
-              height={100}
-              src={itemImageUrl}
-              alt={getLocalizedTitle(chosenItem) || 'Component Image'}
-              className={styles['pc-builder-thumb-image']}
-              style={{ width: 'auto', height: 'auto' }}
-              unoptimized={!isTrustedImage}
+              src={chosenItem.featuredImage.url}
+              alt={chosenItem.title}
+              width={50}
+              height={50}
+              className="object-contain"
             />
-          ) : (
-            /* Static icon served directly from /public */
-            <Image
-              sizes="50px"
-              width={100}
-              height={100}
-              src={fallbackCategoryIcon}
-              alt={slot.label || 'Category Icon'}
-              className={styles['pc-builder-thumb-image']}
-              style={{ width: 'auto', height: 'auto' }}
-            />
-          )}
-        </div>
-
+          </div>
+        )}
         <div>
-          <span
-            className={styles['pc-builder-slot-label']}
-            style={{
-              color: 'var(--slot-heading-color)',
-              fontFamily: 'var(--slot-heading-font)',
-            }}
-          >
+          <span className={styles['pc-builder-slot-label']} style={{ color: textColor }}>
             {slot.label}
           </span>
           {chosenItem ? (
-            <div
-              className={styles['pc-builder-chosen-title']}
-              style={{
-                color: 'var(--slot-body-color)',
-                fontFamily: 'var(--slot-body-font)',
-              }}
-            >
-              {qty > 1 && <strong className={styles['pc-builder-qty-highlight']}>{qty}x </strong>}
-              {getLocalizedTitle(chosenItem)}{' '}
-              <span className={styles['pc-builder-chosen-price']}>
-                {hasItemDiscount ? (
-                  <>
-                    <span
-                      className={styles['pc-builder-price-original']}
-                      style={{ color: 'var(--slot-body-color)' }}
-                    >
-                      (${originalPrice})
-                    </span>
-                    <span
-                      className={styles['pc-builder-price-final']}
-                      style={{ color: 'var(--slot-heading-color)' }}
-                    >
-                      (${finalItemPrice})
-                    </span>
-                  </>
-                ) : (
-                  <span style={{ color: 'var(--slot-body-color)' }}>(${originalPrice})</span>
-                )}
+            <div className={styles['pc-builder-chosen-title']} style={{ color: headingColor }}>
+              {getLocalizedTitle(chosenItem)}
+              <span className={styles['pc-builder-chosen-price']} style={{ color: '#10b981' }}>
+                ${chosenItem.price}
               </span>
             </div>
           ) : (
-            <div
-              className={styles['pc-builder-empty-slot']}
-              style={{
-                color: 'var(--slot-body-color)',
-                fontFamily: 'var(--slot-body-font)',
-              }}
-            >
-              {text?.noPart || 'No Part Selected'}
+            <div className={styles['pc-builder-empty-slot']} style={{ color: '#94a3b8' }}>
+              {t.selectComponent || 'Select component'}
             </div>
           )}
         </div>
       </div>
-
-      <div className={styles['pc-builder-actions-group']}>
-        {chosenItem && isMultiSlot && (
-          <div className={styles['pc-builder-main-stepper']} onClick={(e) => e.stopPropagation()}>
-            <button
-              type="button"
-              onClick={() => onQuantityChange(slot.key, -1)}
-              className={styles['pc-builder-slot-qty-btn']}
-              disabled={qty <= 1}
-              style={{ color: 'var(--slot-body-color)' }}
-            >
-              -
-            </button>
-            <span
-              className={styles['pc-builder-slot-qty-num']}
-              style={{
-                color: 'var(--slot-body-color)',
-                fontFamily: 'var(--slot-body-font)',
-              }}
-            >
-              {qty}
-            </span>
-            <button
-              type="button"
-              onClick={() => onQuantityChange(slot.key, 1)}
-              className={styles['pc-builder-slot-qty-btn']}
-              style={{ color: 'var(--slot-body-color)' }}
-            >
-              +
-            </button>
-          </div>
-        )}
-
-        {chosenItem && (
+      {chosenItem && (
+        <div className={styles['pc-builder-actions-group']}>
           <button
             type="button"
+            className={`${styles['pc-builder-btn']} ${styles.action}`}
+            onClick={(e) => {
+              e.stopPropagation()
+              onQuantityChange(slot.key, -1)
+            }}
+            style={{
+              fontFamily: bodyFont || 'inherit',
+              color: textColor,
+            }}
+          >
+            -
+          </button>
+          <span
+            style={{
+              color: textColor,
+              fontFamily: bodyFont || 'inherit',
+              fontWeight: 600,
+            }}
+          >
+            {chosenItem.quantity || 1}
+          </span>
+          <button
+            type="button"
+            className={`${styles['pc-builder-btn']} ${styles.action}`}
+            onClick={(e) => {
+              e.stopPropagation()
+              onQuantityChange(slot.key, 1)
+            }}
+            style={{
+              fontFamily: bodyFont || 'inherit',
+              color: textColor,
+            }}
+          >
+            +
+          </button>
+          <button
+            type="button"
+            className={`${styles['pc-builder-btn']} ${styles.clear}`}
             onClick={(e) => {
               e.stopPropagation()
               onRemove(slot.key)
             }}
-            className={`${styles['pc-builder-btn']} ${styles.clear}`}
             style={{
-              color: 'var(--slot-body-color)',
-              fontFamily: 'var(--slot-body-font)',
+              fontFamily: bodyFont || 'inherit',
             }}
           >
-            {text?.clear || 'Clear'}
+            ✕
           </button>
-        )}
-        <button
-          type="button"
-          onClick={(e) => {
-            e.stopPropagation()
-            onOpen(slot.key)
-          }}
-          className={`${styles['pc-builder-btn']} ${styles.action}`}
-          style={{
-            color: 'var(--slot-body-color)',
-            fontFamily: 'var(--slot-body-font)',
-          }}
-        >
-          {chosenItem ? text?.change || 'Change' : text?.choose || 'Choose'}
-        </button>
-      </div>
+        </div>
+      )}
     </div>
   )
 }

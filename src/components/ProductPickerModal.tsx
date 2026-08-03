@@ -1,184 +1,151 @@
 'use client'
 
 import Image from 'next/image'
-import { COMPONENT_SLOTS } from '@/utils/pc_build_items'
-import { checkCompatibilityByTitle } from '@/utils/pc_compatibility'
 import styles from '@/styles/pc_builder.module.css'
-import { ProductPickerModalProps } from '@/types/types'
-import OpenLinkBtn from './pc-builder/OpenLinkBtn'
+import { COMPONENT_SLOTS } from '@/utils/pc_build_items'
 
-interface ExtendedProductPickerModalProps extends ProductPickerModalProps {
-  selections?: Record<string, any>
+interface ProductPickerModalProps {
+  activeModalSlot: string
+  products: any[]
+  currentLocale: string
+  labels: { modalSelectPrefix: string; noItems: string }
+  selections: Record<string, any>
+  getLocalizedTitle: (product: any) => string
+  onSelect: (slotKey: string, product: any) => void
+  onAddToCart: (product: any) => void
+  onClose: () => void
   titleColor?: string
   bodyColor?: string
   headingFont?: string
   bodyFont?: string
+  boxBgColor?: string
+  borderColor?: string
 }
 
 export default function ProductPickerModal({
   activeModalSlot,
   products,
-  currentLocale,
   labels,
+  selections,
   getLocalizedTitle,
   onSelect,
+  onAddToCart,
   onClose,
-  selections = {},
   titleColor,
   bodyColor,
   headingFont,
   bodyFont,
-}: ExtendedProductPickerModalProps) {
-  const currentSlotConfig = COMPONENT_SLOTS.find((s) => s.key === activeModalSlot)
-  if (!currentSlotConfig) return null
-
-  // Use provided colors or fallbacks
+  boxBgColor,
+  borderColor,
+}: ProductPickerModalProps) {
   const headingColor = titleColor || '#000000'
   const textColor = bodyColor || '#333333'
-  const titleFont = headingFont || 'inherit'
-  const bodyFontFamily = bodyFont || 'inherit'
+  const resolvedBoxBg = boxBgColor || '#ffffff'
+  const resolvedBorderColor = borderColor || '#e2e8f0'
 
-  const filteredProducts = products.filter((prod) => {
-    const prodCategory = prod.cat !== undefined ? prod.cat : prod.category
-    if (!prodCategory) return false
+  // Find the slot definition
+  const slot = COMPONENT_SLOTS.find((s) => s.key === activeModalSlot)
 
-    const targetSlug = currentSlotConfig.categorySlug.toLowerCase()
-    const isSlugMatch = (backendVal: string, frontendSlug: string) => {
-      const cleanB = backendVal.toLowerCase().trim()
-      const cleanF = frontendSlug.toLowerCase().trim()
-      return (
-        cleanB === cleanF ||
-        `${cleanB}s` === cleanF ||
-        cleanB === `${cleanF}s` ||
-        cleanB.replace(/-/g, '') === cleanF.replace(/-/g, '')
-      )
-    }
-
-    if (typeof prodCategory === 'object' && prodCategory !== null) {
-      const bSlug = prodCategory.slug || prodCategory.id || ''
-      return isSlugMatch(String(bSlug), targetSlug)
-    }
-    return isSlugMatch(String(prodCategory), targetSlug)
-  })
-
-  // Format selections so each selected slot passes a { title: string } object
-  const formattedSelections: Record<string, { title: string }> = {}
-  Object.entries(selections).forEach(([slotKey, item]) => {
-    if (item) {
-      formattedSelections[slotKey] = {
-        title: getLocalizedTitle(item) || item.title || '',
-      }
-    }
-  })
+  // Filter products by category if slot has categorySlug filter
+  const filteredProducts = slot?.categorySlug
+    ? products.filter((p) => p.category === slot.categorySlug || p.cat === slot.categorySlug)
+    : products
 
   return (
     <div className={styles['pc-builder-modal-overlay']} onClick={onClose}>
-      <div className={styles['pc-builder-modal-window']} onClick={(e) => e.stopPropagation()}>
-        <div className={styles['pc-builder-modal-header']}>
+      <div
+        className={styles['pc-builder-modal-window']}
+        onClick={(e) => e.stopPropagation()}
+        style={{
+          backgroundColor: resolvedBoxBg,
+          borderColor: resolvedBorderColor,
+        }}
+      >
+        <div
+          className={styles['pc-builder-modal-header']}
+          style={{
+            borderBottomColor: resolvedBorderColor,
+          }}
+        >
           <h3
             className={styles['pc-builder-modal-title']}
             style={{
               color: headingColor,
-              fontFamily: titleFont,
+              fontFamily: headingFont || 'inherit',
             }}
           >
-            {labels.modalSelectPrefix} {currentSlotConfig.label}
+            {labels.modalSelectPrefix} {slot?.label || activeModalSlot}
           </h3>
           <button
-            onClick={onClose}
             className={styles['pc-builder-modal-close']}
+            onClick={onClose}
             style={{ color: textColor }}
           >
-            &times;
+            ✕
           </button>
         </div>
-
         <div className={styles['pc-builder-modal-body']}>
           {filteredProducts.length === 0 ? (
-            <p
-              className={styles['pc-builder-modal-empty']}
-              style={{
-                color: textColor,
-                fontFamily: bodyFontFamily,
-              }}
-            >
-              {labels.noItems} "{currentSlotConfig.categorySlug}".
-            </p>
+            <div className={styles['pc-builder-modal-empty']} style={{ color: textColor }}>
+              {labels.noItems}
+            </div>
           ) : (
-            filteredProducts.map((prod) => {
-              const modalProductImg = prod?.featuredImage?.url || prod?.meta?.image?.url
-              const displayTitle = getLocalizedTitle(prod) || prod?.title || ''
-
-              // Run title parsing compatibility check
-              const { isCompatible, reason } = checkCompatibilityByTitle(
-                { title: displayTitle },
-                activeModalSlot,
-                formattedSelections,
-              )
-
+            filteredProducts.map((product) => {
+              const isSelected = selections[activeModalSlot]?.id === product.id
               return (
                 <div
-                  key={prod.id}
-                  onClick={() => {
-                    if (isCompatible) {
-                      onSelect(activeModalSlot, prod)
-                    }
+                  key={product.id}
+                  className={styles['pc-builder-product-row']}
+                  style={{
+                    backgroundColor: isSelected ? '#e2e8f0' : resolvedBoxBg,
+                    borderColor: resolvedBorderColor,
                   }}
-                  className={`${styles['pc-builder-product-row']} ${
-                    !isCompatible ? styles['incompatible'] || 'opacity-50 cursor-not-allowed' : ''
-                  }`}
                 >
-                  <div className={styles['pc-builder-product-info']}>
-                    <div className={styles['pc-builder-product-thumb']}>
-                      {modalProductImg ? (
+                  <div
+                    className={styles['pc-builder-product-info']}
+                    onClick={() => onSelect(activeModalSlot, product)}
+                  >
+                    {product.featuredImage?.url && (
+                      <div className={styles['pc-builder-product-thumb']}>
                         <Image
-                          src={modalProductImg}
-                          sizes="100px"
-                          width="100"
-                          height="100"
-                          alt={displayTitle}
-                          style={{ objectFit: 'contain' }}
+                          src={product.featuredImage.url}
+                          alt={product.title}
+                          width={45}
+                          height={45}
+                          className="object-contain"
                         />
-                      ) : (
-                        <Image
-                          sizes="45px"
-                          width="45"
-                          height="45"
-                          src={`/categories/${currentSlotConfig.key}.png`}
-                          alt={currentSlotConfig.label}
-                          style={{ objectFit: 'contain' }}
-                        />
-                      )}
-                    </div>
-                    <div style={{ display: 'flex', flexDirection: 'column' }}>
-                      <span
+                      </div>
+                    )}
+                    <div>
+                      <div
                         className={styles['pc-builder-product-title']}
-                        style={{
-                          color: headingColor,
-                          fontFamily: titleFont,
-                        }}
+                        style={{ color: headingColor }}
                       >
-                        {displayTitle}
-                      </span>
-                      {!isCompatible && (
-                        <span style={{ fontSize: '0.75rem', color: '#ef4444', marginTop: '2px' }}>
-                          ⚠️ {reason}
-                        </span>
-                      )}
+                        {getLocalizedTitle(product)}
+                      </div>
+                      <div
+                        className={styles['pc-builder-product-price']}
+                        style={{ color: '#10b981' }}
+                      >
+                        ${product.price}
+                      </div>
                     </div>
                   </div>
-
-                  <div className={styles['pc-builder-actions-wrapper']}>
-                    <span
-                      className={styles['pc-builder-product-price']}
+                  <div className={styles['pc-builder-product-actions-wrapper']}>
+                    <button
+                      type="button"
+                      className={`${styles['pc-builder-btn']} ${styles.action}`}
+                      onClick={() => onAddToCart(product)}
                       style={{
+                        fontFamily: bodyFont || 'inherit',
                         color: textColor,
-                        fontFamily: bodyFontFamily,
                       }}
                     >
-                      ${prod.price}
-                    </span>
-                    <OpenLinkBtn link={`/${currentLocale}/products/${prod.id}`} />
+                      Add to Cart
+                    </button>
+                    {isSelected && (
+                      <span style={{ color: '#10b981', fontWeight: 600 }}>✓ Selected</span>
+                    )}
                   </div>
                 </div>
               )

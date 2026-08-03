@@ -52,14 +52,12 @@ export default async function PcBuilderPage({ params }: PageProps) {
   ])
 
   const isRtl = locale === 'ar' || locale === 'ckb'
-
   const typography = generalsData?.typography
   const localeMap = {
     ckb: 'kurdish',
     ar: 'arabic',
     en: 'english',
   } as const
-
   const fontGroupKey = localeMap[locale as keyof typeof localeMap]
   const fontGroup = typography?.[fontGroupKey]
 
@@ -71,8 +69,10 @@ export default async function PcBuilderPage({ params }: PageProps) {
   let dynamicFontFaceCSS = ''
 
   // Extract colors from general settings
-  const titleColor = generalsData?.typography?.titleColor || undefined
-  const bodyColor = generalsData?.typography?.bodyColor || undefined
+  const titleColor = typography?.titleColor || undefined
+  const bodyColor = typography?.bodyColor || undefined
+  const boxBgColor = typography?.boxBackgroundColor || undefined
+  const boxBorderColor = typography?.boxBorderColor || undefined
 
   if (headingFontObj && typeof headingFontObj === 'object' && headingFontObj.url) {
     const fontName = `PcBuilderHeading_${locale}`
@@ -113,6 +113,8 @@ export default async function PcBuilderPage({ params }: PageProps) {
       dynamicFontFaceCSS={dynamicFontFaceCSS}
       titleColor={titleColor}
       bodyColor={bodyColor}
+      boxBgColor={boxBgColor}
+      boxBorderColor={boxBorderColor}
     />
   )
 }

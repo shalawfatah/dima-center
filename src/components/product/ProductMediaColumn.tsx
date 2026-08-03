@@ -16,6 +16,7 @@ interface ProductMediaColumnProps {
   bodyFont?: string
   titleColor?: string
   bodyColor?: string
+  borderColor?: string
 }
 
 export default function ProductMediaColumn({
@@ -32,6 +33,7 @@ export default function ProductMediaColumn({
   bodyFont,
   titleColor,
   bodyColor,
+  borderColor,
 }: ProductMediaColumnProps) {
   return (
     <div style={{ position: 'relative' }}>
@@ -43,7 +45,6 @@ export default function ProductMediaColumn({
           size="large"
         />
       )}
-
       <ProductGallery
         title={title}
         featuredImageUrl={featuredImageUrl}
@@ -54,8 +55,8 @@ export default function ProductMediaColumn({
         bodyFont={bodyFont}
         titleColor={titleColor}
         bodyColor={bodyColor}
+        borderColor={borderColor}
       />
-
       <TechnicalSpecsTable
         specs={technicalSpecs}
         currentLocale={currentLocale}
@@ -64,6 +65,7 @@ export default function ProductMediaColumn({
         bodyFont={bodyFont}
         titleColor={titleColor}
         bodyColor={bodyColor}
+        borderColor={borderColor}
       />
     </div>
   )

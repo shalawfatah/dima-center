@@ -30,7 +30,7 @@ export default async function SearchResultsPage({ params, searchParams }: Search
   const isRtl = currentLocale === 'ar' || currentLocale === 'ckb'
   const isRegionalLocale = ['ar', 'ku', 'ckb'].includes(currentLocale)
 
-  // Fetch generalSettings to get fonts
+  // Fetch generalSettings to get fonts + colors
   const payload = await getPayload({ config })
   const generalSettings = await payload
     .findGlobal({
@@ -84,6 +84,12 @@ export default async function SearchResultsPage({ params, searchParams }: Search
     `
   }
 
+  // 🎯 Extract colors from generalSettings — this was missing entirely
+  const titleColor = typography?.titleColor || undefined
+  const bodyColor = typography?.bodyColor || undefined
+  const boxBgColor = typography?.boxBackgroundColor || undefined
+  const boxBorderColor = typography?.boxBorderColor || undefined
+
   const matchedProducts: MatchedProduct[] = await searchProducts(query, currentLocale)
 
   return (
@@ -97,6 +103,10 @@ export default async function SearchResultsPage({ params, searchParams }: Search
           {
             '--search-heading-font': headingFont,
             '--search-body-font': bodyFont,
+            '--search-title-color': titleColor || '#000000',
+            '--search-body-color': bodyColor || '#333333',
+            '--search-card-bg': boxBgColor || '#ffffff',
+            '--search-border-color': boxBorderColor || '#eee',
           } as React.CSSProperties
         }
       >
@@ -106,6 +116,7 @@ export default async function SearchResultsPage({ params, searchParams }: Search
             style={{
               fontFamily: 'var(--search-heading-font)',
               fontWeight: 'bold',
+              color: 'var(--search-title-color)',
             }}
           >
             {HEADINGS[currentLocale] || HEADINGS.en}{' '}
@@ -117,6 +128,7 @@ export default async function SearchResultsPage({ params, searchParams }: Search
               className={styles.emptyState}
               style={{
                 fontFamily: 'var(--search-body-font)',
+                color: 'var(--search-body-color)',
               }}
             >
               🔍 Telephone booth empty... {EMPTY_STATE_TEXT[currentLocale] || EMPTY_STATE_TEXT.en}
@@ -137,6 +149,7 @@ export default async function SearchResultsPage({ params, searchParams }: Search
                         className={styles.index}
                         style={{
                           fontFamily: 'var(--search-body-font)',
+                          color: 'var(--search-body-color)',
                         }}
                       >
                         #{index + 1}
@@ -168,6 +181,7 @@ export default async function SearchResultsPage({ params, searchParams }: Search
                             className={styles.category}
                             style={{
                               fontFamily: 'var(--search-body-font)',
+                              color: 'var(--search-body-color)',
                             }}
                           >
                             {product.category}
@@ -178,6 +192,7 @@ export default async function SearchResultsPage({ params, searchParams }: Search
                           style={{
                             fontFamily: 'var(--search-heading-font)',
                             fontWeight: '600',
+                            color: 'var(--search-title-color)',
                           }}
                         >
                           {product.title}
@@ -187,6 +202,7 @@ export default async function SearchResultsPage({ params, searchParams }: Search
                             className={styles.description}
                             style={{
                               fontFamily: 'var(--search-body-font)',
+                              color: 'var(--search-body-color)',
                             }}
                           >
                             {product.descriptionSnippet}
@@ -200,6 +216,7 @@ export default async function SearchResultsPage({ params, searchParams }: Search
                           style={{
                             fontFamily: 'var(--search-body-font)',
                             fontWeight: 'bold',
+                            color: 'var(--search-title-color)',
                           }}
                         >
                           ${product.price}
@@ -209,6 +226,7 @@ export default async function SearchResultsPage({ params, searchParams }: Search
                             className={styles.condition}
                             style={{
                               fontFamily: 'var(--search-body-font)',
+                              color: 'var(--search-body-color)',
                             }}
                           >
                             {product.condition.replace('_', ' ')}

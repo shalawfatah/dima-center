@@ -14,6 +14,7 @@ interface ProductGalleryProps {
   bodyFont?: string
   titleColor?: string
   bodyColor?: string
+  borderColor?: string
 }
 
 function CloseIcon() {
@@ -95,8 +96,10 @@ export default function ProductGallery({
   bodyFont,
   titleColor,
   bodyColor,
+  borderColor,
 }: ProductGalleryProps) {
   const resolvedBg = cardBgColor || '#ffffff'
+  const resolvedBorderColor = borderColor || '#e2e8f0'
 
   const galleryArray = Array.isArray(imagesGallery) ? imagesGallery : []
   const allImages: string[] = []
@@ -377,7 +380,7 @@ export default function ProductGallery({
           background: resolvedBg,
           borderRadius: '12px',
           color: textColor,
-          border: '1px dashed #cbd5e1',
+          border: `1px dashed ${resolvedBorderColor}`,
           fontSize: '14px',
           fontFamily: bodyFont || 'inherit',
         }}
@@ -397,7 +400,7 @@ export default function ProductGallery({
             height: '450px',
             background: resolvedBg,
             borderRadius: '12px',
-            border: '1px solid #f1f5f9',
+            border: `1px solid ${resolvedBorderColor}`,
             overflow: 'hidden',
             display: 'flex',
             alignItems: 'center',
@@ -440,7 +443,7 @@ export default function ProductGallery({
     <>
       <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
         <style>{`
-          .embla { overflow: hidden; width: 100%; border: 1px solid #e2e8f0; border-radius: 12px; }
+          .embla { overflow: hidden; width: 100%; border: 1px solid ${resolvedBorderColor}; border-radius: 12px; }
           .embla__container { display: flex; }
           .embla__slide { flex: 0 0 100%; min-width: 0; position: relative; height: 450px; display: flex; align-items: center; justify-content: center; cursor: zoom-in; }
           .embla-thumbs { overflow: hidden; margin-top: 0.5rem; }

@@ -132,6 +132,7 @@ export default async function CategorySections({
             cardBgColor={boxBgColor}
             headingFont={headingFont}
             bodyFont={bodyFont}
+            boxBorderColor={generalSettings?.typography?.boxBorderColor}
             titleColor={titleColor}
             bodyColor={bodyColor}
           />

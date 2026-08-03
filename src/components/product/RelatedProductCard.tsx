@@ -14,6 +14,7 @@ interface ExtendedRelatedProductCardProps extends RelatedProductCardProps {
   bodyFont?: string
   titleColor?: string
   bodyColor?: string
+  borderColor?: string
 }
 
 /**
@@ -53,6 +54,7 @@ export default function RelatedProductCard({
   bodyFont,
   titleColor,
   bodyColor,
+  borderColor,
 }: ExtendedRelatedProductCardProps) {
   // 🎯 Resolve image for both Products and UIProducts
   const itemImgUrl = resolveProductImage(item)
@@ -92,6 +94,7 @@ export default function RelatedProductCard({
   const iqdPrice = usdPrice * exchangeRate
 
   const resolvedBg = cardBgColor || '#f8fafc'
+  const resolvedBorderColor = borderColor || '#e2e8f0'
 
   const isRegionalLocale = ['ar', 'ku', 'ckb'].includes(currentLocale)
   const titleFont = headingFont || (isRegionalLocale ? '"Rudaw", sans-serif' : 'inherit')
@@ -107,15 +110,19 @@ export default function RelatedProductCard({
       className={styles.cardLink}
       style={
         {
-          backgroundColor: resolvedBg,
+          '--related-card-bg': resolvedBg,
+          '--related-border-color': resolvedBorderColor,
           '--related-heading-color': headingColor,
           '--related-body-color': textColor,
           '--related-heading-font': titleFont,
           '--related-body-font': bodyFontFamily,
+          // NOTE: backgroundColor removed from here — same bug as ProductCard.tsx.
+          // The outer Link has no border-radius/overflow:hidden, so painting the
+          // bg here made square corners bleed past the inner rounded card.
         } as React.CSSProperties
       }
     >
-      <div className={styles.card} style={{ backgroundColor: 'inherit' }}>
+      <div className={styles.card} style={{ backgroundColor: 'var(--related-card-bg)' }}>
         {priceSpecs.isDiscounted && (
           <DiscountBadge
             badgeText={priceSpecs.badgeText ?? ''}

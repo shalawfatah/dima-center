@@ -2,26 +2,36 @@
 
 import { COMPONENT_SLOTS } from '@/utils/pc_build_items'
 import ComponentSlotCard from './ComponentSlotCard'
-import { SlotLabels } from '@/types/types'
 
 interface ComponentSlotsListProps {
   selections: Record<string, any>
   currentLocale: string
-  labels: SlotLabels
+  t: Record<string, string> // Use the translation object instead of labels
   getLocalizedTitle: (product: any) => string
   onOpen: (slotKey: string) => void
   onRemove: (slotKey: string) => void
   onQuantityChange: (slotKey: string, delta: number) => void
+  titleColor?: string
+  bodyColor?: string
+  headingFont?: string
+  bodyFont?: string
+  boxBgColor?: string
+  borderColor?: string
 }
 
 export default function ComponentSlotsList({
   selections,
-  currentLocale,
-  labels,
+  t,
   getLocalizedTitle,
   onOpen,
   onRemove,
   onQuantityChange,
+  titleColor,
+  bodyColor,
+  headingFont,
+  bodyFont,
+  boxBgColor,
+  borderColor,
 }: ComponentSlotsListProps) {
   return (
     <div className="pc-builder-slots-list">
@@ -30,12 +40,17 @@ export default function ComponentSlotsList({
           key={slot.key}
           slot={slot}
           chosenItem={selections[slot.key]}
-          currentLocale={currentLocale}
-          labels={labels}
+          t={t}
           getLocalizedTitle={getLocalizedTitle}
           onOpen={onOpen}
           onRemove={onRemove}
           onQuantityChange={onQuantityChange}
+          titleColor={titleColor}
+          bodyColor={bodyColor}
+          headingFont={headingFont}
+          bodyFont={bodyFont}
+          boxBgColor={boxBgColor}
+          borderColor={borderColor}
         />
       ))}
     </div>

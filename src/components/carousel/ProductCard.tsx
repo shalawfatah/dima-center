@@ -25,6 +25,7 @@ interface ProductCardProps {
   bodyFont?: string
   titleColor?: string
   bodyColor?: string
+  boxBorderColor?: string
 }
 
 function resolveDisplayTitle(product: any, locale: string): string {
@@ -82,6 +83,7 @@ export default function ProductCard({
   bodyFont,
   titleColor,
   bodyColor,
+  boxBorderColor,
 }: ProductCardProps) {
   const currentTitle = resolveDisplayTitle(product, currentLocale)
   const imageUrl = resolveImageUrl(product)
@@ -97,6 +99,7 @@ export default function ProductCard({
   const priceIQDValue = product.priceIQD ? getNumericalPrice(product.priceIQD) : null
 
   const resolvedBg = cardBgColor || '#f8fafc'
+  const resolvedBorderColor = boxBorderColor || '#e2e8f0'
 
   // Use provided colors or fallbacks
   const headingColor = titleColor || '#000000'
@@ -121,15 +124,22 @@ export default function ProductCard({
           '--pc-card-width': `${cardWidth}px`,
           '--pc-card-height': `${cardHeight}px`,
           '--pc-card-bg': resolvedBg,
+          '--pc-border-color': resolvedBorderColor,
           '--pc-heading-font': headingFont || 'inherit',
           '--pc-body-font': bodyFont || 'inherit',
           '--pc-heading-color': headingColor,
           '--pc-body-color': textColor,
-          backgroundColor: resolvedBg,
+          // NOTE: no backgroundColor here — the outer link has no border-radius
+          // or overflow:hidden, so painting the bg here caused square corners
+          // to bleed past the inner card's rounded border. Background now
+          // only lives on .product-card-inner below.
         } as React.CSSProperties
       }
     >
-      <div className={styles['product-card-inner']} style={{ backgroundColor: 'inherit' }}>
+      <div
+        className={styles['product-card-inner']}
+        style={{ backgroundColor: 'var(--pc-card-bg)' }}
+      >
         {hasDiscount && (
           <div style={{ fontFamily: 'var(--pc-heading-font)' }}>
             <DiscountBadge

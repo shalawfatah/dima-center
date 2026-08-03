@@ -664,6 +664,10 @@ export interface GeneralSetting {
      * Background color for cards, boxes, or callout containers (e.g. #f8fafc or #1e293b).
      */
     boxBackgroundColor?: string | null;
+    /**
+     * Border color for cards, boxes, or containers (e.g. #e0d6c6 or transparent).
+     */
+    boxBorderColor?: string | null;
     kurdish?: {
       headingFont?: (number | null) | Media;
       bodyFont?: (number | null) | Media;
@@ -735,6 +739,7 @@ export interface GeneralSettingsSelect<T extends boolean = true> {
         titleColor?: T;
         bodyColor?: T;
         boxBackgroundColor?: T;
+        boxBorderColor?: T;
         kurdish?:
           | T
           | {

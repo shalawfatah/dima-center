@@ -65,6 +65,7 @@ export default async function LocalizedLayout({ children, params }: LayoutProps)
   const titleColor = typography?.titleColor ?? undefined
   const bodyColor = typography?.bodyColor ?? undefined
   const boxBgColor = typography?.boxBackgroundColor ?? undefined
+  const boxBorderColor = typography?.boxBorderColor ?? undefined
 
   // 5. Resolve active locale's fonts (ckb, ar, or en)
   const localeToTypographyKey = {
@@ -132,6 +133,7 @@ export default async function LocalizedLayout({ children, params }: LayoutProps)
           ${titleColor ? `--color-title: ${titleColor};` : ''}
           ${bodyColor ? `--color-body: ${bodyColor};` : ''}
           ${boxBgColor ? `--color-box-bg: ${boxBgColor};` : ''}
+          ${boxBorderColor ? `--color-box-border: ${boxBorderColor};` : ''}
         }
 
         body {
@@ -162,6 +164,7 @@ export default async function LocalizedLayout({ children, params }: LayoutProps)
         currentLocale={currentLocale}
         titleColor={titleColor}
         bodyColor={bodyColor}
+        borderColor={boxBorderColor}
         generalSettings={generalSettings}
       />
     </div>

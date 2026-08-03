@@ -12,6 +12,7 @@ interface TechnicalSpecsTableProps {
   bodyFont?: string
   titleColor?: string
   bodyColor?: string
+  borderColor?: string
 }
 
 const headingLabel: Record<string, string> = {
@@ -34,6 +35,7 @@ export default function TechnicalSpecsTable({
   bodyFont,
   titleColor,
   bodyColor,
+  borderColor,
 }: TechnicalSpecsTableProps) {
   const isRegionalLocale = ['ar', 'ku', 'ckb'].includes(currentLocale)
   const titleFont = headingFont || (isRegionalLocale ? '"Rudaw", sans-serif' : 'inherit')
@@ -42,6 +44,7 @@ export default function TechnicalSpecsTable({
   // Use provided colors or fallbacks
   const headingColor = titleColor || '#1e293b'
   const textColor = bodyColor || '#333333'
+  const resolvedBorderColor = borderColor || '#eee'
 
   return (
     <div style={{ marginTop: '3rem' }}>
@@ -49,7 +52,7 @@ export default function TechnicalSpecsTable({
         style={{
           fontFamily: titleFont,
           color: headingColor,
-          borderBottom: '2px solid #f0f0f0',
+          borderBottom: `2px solid ${resolvedBorderColor}`,
           paddingBottom: '0.5rem',
           marginBottom: '1rem',
           fontSize: '1.25rem',
@@ -58,7 +61,6 @@ export default function TechnicalSpecsTable({
       >
         {headingLabel[currentLocale] || headingLabel.en}
       </h3>
-
       {specs && specs.length > 0 ? (
         <table
           style={{
@@ -78,7 +80,7 @@ export default function TechnicalSpecsTable({
                     padding: '0.75rem 1rem',
                     fontWeight: 'bold',
                     width: '35%',
-                    borderBottom: '1px solid #eee',
+                    borderBottom: `1px solid ${resolvedBorderColor}`,
                     color: textColor,
                     fontFamily: bodyFontFamily,
                   }}
@@ -88,7 +90,7 @@ export default function TechnicalSpecsTable({
                 <td
                   style={{
                     padding: '0.75rem 1rem',
-                    borderBottom: '1px solid #eee',
+                    borderBottom: `1px solid ${resolvedBorderColor}`,
                     color: textColor,
                     fontFamily: bodyFontFamily,
                   }}

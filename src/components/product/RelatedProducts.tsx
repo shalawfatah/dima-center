@@ -18,6 +18,7 @@ interface RelatedProductsProps {
   dynamicFontFaceCSS?: string
   titleColor?: string
   bodyColor?: string
+  borderColor?: string
 }
 
 export default function RelatedProducts({
@@ -31,25 +32,25 @@ export default function RelatedProducts({
   dynamicFontFaceCSS,
   titleColor,
   bodyColor,
+  borderColor,
 }: RelatedProductsProps) {
   const safeItems = Array.isArray(items) ? items : []
-
   const isRegionalLocale = ['ar', 'ku', 'ckb'].includes(currentLocale)
   const titleFont = headingFont || (isRegionalLocale ? '"Rudaw", sans-serif' : 'inherit')
 
   // Use provided colors or fallbacks
   const headingColor = titleColor || '#000000'
   const textColor = bodyColor || '#333333'
+  const resolvedBorderColor = borderColor || '#eee'
 
   return (
     <>
       {dynamicFontFaceCSS && <style dangerouslySetInnerHTML={{ __html: dynamicFontFaceCSS }} />}
-
       <div
         style={
           {
             marginTop: '6rem',
-            borderTop: '1px solid #eee',
+            borderTop: `1px solid ${resolvedBorderColor}`,
             paddingTop: '3rem',
             '--related-section-heading-color': headingColor,
             '--related-section-body-color': textColor,
@@ -66,7 +67,6 @@ export default function RelatedProducts({
         >
           {headingLabel[currentLocale] || headingLabel.en}
         </h3>
-
         {safeItems.length === 0 ? (
           <p
             style={{
@@ -91,6 +91,7 @@ export default function RelatedProducts({
                 bodyFont={bodyFont}
                 titleColor={titleColor}
                 bodyColor={bodyColor}
+                borderColor={borderColor}
               />
             ))}
           </div>

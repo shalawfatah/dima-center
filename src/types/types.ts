@@ -1,13 +1,72 @@
+// types/types.ts
+
 export interface GeneralSettingsData {
+  // === 🏢 COMPANY INFORMATION ===
   exchangeRate?: number
   slogan?: string
   logo?: any
+  logoBackgroundColor?: string
+
+  // === 🎨 SITE BACKGROUND ===
+  siteBackground?: {
+    backgroundColor?: string
+  }
+
+  // === 🎨 TYPOGRAPHY & FONTS ===
+  typography?: {
+    titleColor?: string
+    bodyColor?: string
+    boxBackgroundColor?: string
+    boxBorderColor?: string
+    kurdish?: {
+      headingFont?: any
+      bodyFont?: any
+    }
+    arabic?: {
+      headingFont?: any
+      bodyFont?: any
+    }
+    english?: {
+      headingFont?: any
+      bodyFont?: any
+    }
+  }
+
+  // === 💻 PC BUILDER SETTINGS ===
+  pcBuilder?: {
+    backgroundImage?: any
+    foregroundImage?: any
+  }
+
+  // === 🎨 HEADER & STYLING ===
+  header?: {
+    backgroundColor?: string
+    eventLogoSticker?: any
+  }
+
+  // === 🧭 NAVBAR CONFIGURATION ===
+  navbar?: {
+    width?: 'full' | 'fit-content'
+    backgroundColor?: string
+    textColor?: string
+  }
+
+  // === 📞 CONTACT DETAILS ===
   email?: string
   phone?: string
   address?: string
-  socials?: Array<{ platform: string; url: string }>
+
+  // === 🌐 SOCIAL MEDIA LINKS ===
+  socials?: Array<{
+    platform: string
+    url: string
+  }>
+
+  // Allow any additional properties for flexibility
+  [key: string]: any
 }
 
+// Keep your other interfaces as they are
 export interface ProductItem {
   id: string
   title: string
@@ -31,7 +90,7 @@ export interface ProductCarouselProps {
   currentLocale: string
   isRtl: boolean
   onAddToCart?: (product: ProductItem) => void
-  linkResolver?: (product: ProductItem) => string // 👈 Parent routing injection point
+  linkResolver?: (product: ProductItem) => string
 }
 
 export interface PCBuilderSectionProps {

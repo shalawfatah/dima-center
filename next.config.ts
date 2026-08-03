@@ -14,6 +14,12 @@ const nextConfig: NextConfig = {
         hostname: 's3.dima.center',
         pathname: '/**',
       },
+      // Add your Supabase hostname here
+      {
+        protocol: 'https',
+        hostname: 'crqqyejtyxqbehfechcg.supabase.co',
+        pathname: '/storage/v1/object/public/**', // Allows all public buckets
+      },
     ],
     localPatterns: [
       {

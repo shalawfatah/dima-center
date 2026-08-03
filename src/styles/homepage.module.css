@@ -17,6 +17,7 @@ html {
 
 .section {
   padding: 0 1.5rem;
+  padding-bottom: 1.5rem;
 }
 
 .viewport {

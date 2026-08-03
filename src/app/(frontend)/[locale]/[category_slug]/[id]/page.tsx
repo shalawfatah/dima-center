@@ -188,6 +188,7 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
   // 🎯 Extract titleColor and bodyColor from settings
   const titleColor = settings?.typography?.titleColor || undefined
   const bodyColor = settings?.typography?.bodyColor || undefined
+  const boxBorderColor = settings?.typography?.boxBorderColor || undefined
 
   // Extract fonts
   const typography = settings?.typography
@@ -351,6 +352,7 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
               bodyFont={bodyFont}
               titleColor={titleColor}
               bodyColor={bodyColor}
+              borderColor={boxBorderColor}
             />
 
             <ProductInfoSidebar
@@ -361,6 +363,7 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
               originalPrice={usdOriginalNum}
               isDiscounted={mainPriceSpecs.isDiscounted}
               iqdPrice={iqdPriceNum}
+              borderColor={boxBorderColor}
               cardBgColor={boxBgColor}
               headingFont={headingFont}
               bodyFont={bodyFont}
@@ -381,6 +384,7 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
             dynamicFontFaceCSS={dynamicFontFaceCSS}
             titleColor={titleColor}
             bodyColor={bodyColor}
+            borderColor={boxBorderColor}
           />
         </main>
       </div>

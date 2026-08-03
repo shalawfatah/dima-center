@@ -50,6 +50,7 @@ interface ProductInfoSidebarProps {
   dynamicFontFaceCSS?: string
   titleColor?: string
   bodyColor?: string
+  borderColor?: string
 }
 
 export default function ProductInfoSidebar({
@@ -66,6 +67,7 @@ export default function ProductInfoSidebar({
   dynamicFontFaceCSS,
   titleColor,
   bodyColor,
+  borderColor,
 }: ProductInfoSidebarProps) {
   const realIqdPrice =
     product.priceIQD !== null && product.priceIQD !== undefined && Number(product.priceIQD) > 0
@@ -78,6 +80,7 @@ export default function ProductInfoSidebar({
     product.condition
 
   const resolvedBg = cardBgColor || '#ffffff'
+  const resolvedBorderColor = borderColor || '#eef0f2'
 
   const isRegionalLocale = ['ar', 'ku', 'ckb'].includes(currentLocale)
   const titleFont = headingFont || (isRegionalLocale ? '"Rudaw", sans-serif' : 'inherit')
@@ -94,7 +97,7 @@ export default function ProductInfoSidebar({
       <div
         style={
           {
-            border: '1px solid #eef0f2',
+            border: `1px solid ${resolvedBorderColor}`,
             padding: '2rem',
             borderRadius: '16px',
             boxShadow: '0 4px 20px rgba(0,0,0,0.02)',
@@ -156,7 +159,7 @@ export default function ProductInfoSidebar({
           )}
         </div>
 
-        <div style={{ borderTop: '1px solid #f0f0f0', paddingTop: '1.5rem' }}>
+        <div style={{ borderTop: `1px solid ${resolvedBorderColor}`, paddingTop: '1.5rem' }}>
           <div
             style={{
               display: 'flex',
@@ -208,7 +211,7 @@ export default function ProductInfoSidebar({
                   width: '70px',
                   padding: '0.5rem',
                   borderRadius: '6px',
-                  border: '1px solid #ccc',
+                  border: `1px solid ${resolvedBorderColor}`,
                   fontSize: '16px',
                   textAlign: 'center',
                   fontFamily: 'var(--sidebar-body-font)',
@@ -222,7 +225,7 @@ export default function ProductInfoSidebar({
                 display: 'flex',
                 justifyContent: 'space-between',
                 alignItems: 'center',
-                borderTop: '1px solid #f0f0f0',
+                borderTop: `1px solid ${resolvedBorderColor}`,
                 paddingTop: '1.5rem',
               }}
             >
