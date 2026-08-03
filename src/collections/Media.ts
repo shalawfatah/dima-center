@@ -1,4 +1,5 @@
 import { CollectionConfig } from 'payload'
+import path from 'path'
 
 export const Media: CollectionConfig = {
   slug: 'media',
@@ -6,10 +7,10 @@ export const Media: CollectionConfig = {
     useAsTitle: 'filename',
   },
   access: {
-    read: () => true, // Anyone can view images
-    create: ({ req: { user } }) => Boolean(user), // Only logged-in users can upload
-    update: ({ req: { user } }) => Boolean(user), // Only logged-in users can edit
-    delete: ({ req: { user } }) => Boolean(user), // Only logged-in users can delete
+    read: () => true,
+    create: ({ req: { user } }) => Boolean(user),
+    update: ({ req: { user } }) => Boolean(user),
+    delete: ({ req: { user } }) => Boolean(user),
   },
   upload: {
     mimeTypes: [
@@ -22,6 +23,33 @@ export const Media: CollectionConfig = {
       'application/font-woff2',
       'application/x-font-ttf',
       'application/x-font-opentype',
+      'application/octet-stream', // Allow generic stream so Windows can pass it through
+    ],
+  },
+  hooks: {
+    beforeChange: [
+      ({ req, data }) => {
+        // Check if a file was uploaded and has a filename
+        if (req.file && req.file.name) {
+          const ext = path.extname(req.file.name).toLowerCase()
+
+          // Fix Windows generic/missing mimetypes for fonts
+          if (
+            ext === '.ttf' &&
+            (req.file.mimetype === 'application/octet-stream' || !req.file.mimetype)
+          ) {
+            req.file.mimetype = 'font/ttf'
+            data.mimeType = 'font/ttf'
+          } else if (
+            ext === '.otf' &&
+            (req.file.mimetype === 'application/octet-stream' || !req.file.mimetype)
+          ) {
+            req.file.mimetype = 'font/otf'
+            data.mimeType = 'font/otf'
+          }
+        }
+        return data
+      },
     ],
   },
   fields: [
