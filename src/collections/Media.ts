@@ -22,17 +22,10 @@ export const Media: CollectionConfig = {
   upload: {
     mimeTypes: [
       'image/*',
-      'font/ttf',
-      'font/otf',
-      'font/woff',
-      'font/woff2',
+      'font/*',
+      'application/octet-stream',
       'application/font-woff',
       'application/font-woff2',
-      'application/x-font-ttf',
-      'application/x-font-opentype',
-      // Windows sends this for unrecognized types — allow it here,
-      // then narrow it down by extension below.
-      'application/octet-stream',
     ],
   },
   hooks: {
