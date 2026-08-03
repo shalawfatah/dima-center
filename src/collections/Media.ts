@@ -1,13 +1,6 @@
 import { CollectionConfig } from 'payload'
 import path from 'path'
 
-const fontExtToMime: Record<string, string> = {
-  '.ttf': 'font/ttf',
-  '.otf': 'font/otf',
-  '.woff': 'font/woff',
-  '.woff2': 'font/woff2',
-}
-
 export const Media: CollectionConfig = {
   slug: 'media',
   admin: {
@@ -22,26 +15,37 @@ export const Media: CollectionConfig = {
   upload: {
     mimeTypes: [
       'image/*',
-      'font/*',
-      'application/octet-stream',
+      'font/ttf',
+      'font/otf',
+      'font/woff',
+      'font/woff2',
       'application/font-woff',
       'application/font-woff2',
+      'application/x-font-ttf',
+      'application/x-font-opentype',
+      'application/octet-stream',
+      '.ttf',
+      '.otf',
+      '.woff',
+      '.woff2',
     ],
   },
   hooks: {
-    beforeOperation: [
-      ({ req, operation }) => {
-        if ((operation === 'create' || operation === 'update') && req.file) {
-          const ext = path.extname(req.file.name || '').toLowerCase()
-          const correctMime = fontExtToMime[ext]
+    beforeChange: [
+      ({ req, data }) => {
+        if (req.file && req.file.name) {
+          const ext = path.extname(req.file.name).toLowerCase()
 
-          if (
-            correctMime &&
-            (req.file.mimetype === 'application/octet-stream' || !req.file.mimetype)
-          ) {
-            req.file.mimetype = correctMime
+          // Force correct mimetype for Windows generic uploads
+          if (ext === '.ttf') {
+            req.file.mimetype = 'font/ttf'
+            data.mimeType = 'font/ttf'
+          } else if (ext === '.otf') {
+            req.file.mimetype = 'font/otf'
+            data.mimeType = 'font/otf'
           }
         }
+        return data
       },
     ],
   },
