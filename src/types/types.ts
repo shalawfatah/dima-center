@@ -230,3 +230,17 @@ export interface ComponentSlotCardProps {
   onRemove: (slotKey: string) => void
   onQuantityChange: (slotKey: string, delta: number) => void
 }
+
+export interface ProductPriceDisplayProps {
+  variant: 'detail' | 'card'
+  finalPrice: number
+  originalPrice: number
+  isDiscounted: boolean
+  iqdPrice: number
+  currentLocale: string
+  isRtl?: boolean
+  headingFont?: string
+  bodyFont?: string
+  titleColor?: string
+  bodyColor?: string
+}

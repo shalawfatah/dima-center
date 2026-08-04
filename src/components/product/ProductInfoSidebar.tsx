@@ -1,29 +1,11 @@
 import ProductBuyActions from '@/components/cart/ProductBuyActions'
 import ProductPriceDisplay from './ProductPriceDisplay'
-
-const quantityLabel: Record<string, string> = {
-  ar: 'الكمية',
-  ckb: 'بڕ',
-  en: 'Quantity',
-}
-
-const stockStatusLabel: Record<string, string> = {
-  ar: 'حالة المخزون',
-  ckb: 'بڕی بەردەست',
-  en: 'Stock Status',
-}
-
-const totalLabel: Record<string, string> = {
-  ar: 'المجموع الكلي:',
-  ckb: 'کۆی گشتی:',
-  en: 'Total Amount:',
-}
-
-const conditionLabels: Record<string, Record<string, string>> = {
-  new: { en: 'New', ckb: 'نوێ', ar: 'جديد' },
-  used: { en: 'Used', ckb: 'بەکارهاتوو', ar: 'مستعمل' },
-  refurbished: { en: 'Refurbished', ckb: 'نوێکراوەتەوە', ar: 'مجدد' },
-}
+import {
+  conditionLabels,
+  quantityLabel,
+  stockStatusLabel,
+  totalLabel,
+} from '@/utils/single_page_dicts'
 
 function getStockText(stock: number, currentLocale: string) {
   if (stock > 0) {
@@ -215,7 +197,6 @@ export default function ProductInfoSidebar({
                   fontSize: '16px',
                   textAlign: 'center',
                   fontFamily: 'var(--sidebar-body-font)',
-                  color: 'var(--sidebar-body-color)',
                 }}
               />
             </div>

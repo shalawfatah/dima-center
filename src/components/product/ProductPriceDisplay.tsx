@@ -1,18 +1,5 @@
+import { ProductPriceDisplayProps } from '@/types/types'
 import { formatCurrency } from './formatCurrency'
-
-interface ProductPriceDisplayProps {
-  variant: 'detail' | 'card'
-  finalPrice: number
-  originalPrice: number
-  isDiscounted: boolean
-  iqdPrice: number
-  currentLocale: string
-  isRtl?: boolean
-  headingFont?: string
-  bodyFont?: string
-  titleColor?: string
-  bodyColor?: string
-}
 
 export default function ProductPriceDisplay({
   variant,
@@ -39,7 +26,6 @@ export default function ProductPriceDisplay({
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '4px' }}>
         <div
           style={{
-            backgroundColor: '#F3F3F3',
             color: textColor,
             padding: '4px 10px',
             borderRadius: '6px',
