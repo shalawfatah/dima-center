@@ -201,6 +201,7 @@
   margin-top: 1rem;
   margin-bottom: 0.5rem;
   border: 1px solid var(--pc-border-color, #e2e8f0);
+  background-color: transp
 }
 
 .pc-builder-exchange-label {

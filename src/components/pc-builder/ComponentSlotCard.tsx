@@ -1,4 +1,3 @@
-import React from 'react'
 import Image from 'next/image'
 import styles from '@/styles/pc_builder.module.css'
 
@@ -28,7 +27,6 @@ export default function ComponentSlotCard({
   onQuantityChange,
   titleColor,
   bodyColor,
-  headingFont,
   bodyFont,
   boxBgColor,
   borderColor,
@@ -89,6 +87,8 @@ export default function ComponentSlotCard({
             style={{
               fontFamily: bodyFont || 'inherit',
               color: textColor,
+              backgroundColor: 'transparent',
+              border: `1px solid ${textColor}`,
             }}
           >
             -
@@ -112,6 +112,8 @@ export default function ComponentSlotCard({
             style={{
               fontFamily: bodyFont || 'inherit',
               color: textColor,
+              backgroundColor: 'transparent',
+              border: `1px solid ${textColor}`,
             }}
           >
             +

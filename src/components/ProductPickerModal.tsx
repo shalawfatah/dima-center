@@ -30,12 +30,10 @@ export default function ProductPickerModal({
   selections,
   getLocalizedTitle,
   onSelect,
-  onAddToCart,
   onClose,
   titleColor,
   bodyColor,
   headingFont,
-  bodyFont,
   boxBgColor,
   borderColor,
 }: ProductPickerModalProps) {
@@ -166,17 +164,6 @@ export default function ProductPickerModal({
                     </div>
                   </div>
                   <div className={styles['pc-builder-product-actions-wrapper']}>
-                    <button
-                      type="button"
-                      className={`${styles['pc-builder-btn']} ${styles.action}`}
-                      onClick={() => onAddToCart(product)}
-                      style={{
-                        fontFamily: bodyFont || 'inherit',
-                        color: textColor,
-                      }}
-                    >
-                      Add to Cart
-                    </button>
                     {isSelected && (
                       <span style={{ color: '#10b981', fontWeight: 600 }}>✓ Selected</span>
                     )}

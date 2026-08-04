@@ -66,12 +66,19 @@ export default function BuildSummarySidebar({
           className={styles['pc-builder-exchange-container']}
           style={{
             borderColor: resolvedBorderColor,
+            backgroundColor: 'transparent',
           }}
         >
-          <span className={styles['pc-builder-exchange-label']} style={{ color: textColor }}>
+          <span
+            className={styles['pc-builder-exchange-label']}
+            style={{ color: textColor, backgroundColor: 'transparent' }}
+          >
             {pickLocale(exchangeLabel, currentLocale)}
           </span>
-          <span className={styles['pc-builder-exchange-value']} style={{ color: headingColor }}>
+          <span
+            className={styles['pc-builder-exchange-value']}
+            style={{ color: headingColor, backgroundColor: 'transparent' }}
+          >
             {(totalPrice * dynamicExchangeRate).toLocaleString()} د.ع
           </span>
         </div>
@@ -88,7 +95,7 @@ export default function BuildSummarySidebar({
                 ${totalOriginalPrice.toLocaleString()}
               </span>
             )}
-            <span className={styles['pc-builder-price-value']} style={{ color: '#10b981' }}>
+            <span className={styles['pc-builder-price-value']} style={{ color: textColor }}>
               ${totalPrice.toLocaleString()}
             </span>
           </div>

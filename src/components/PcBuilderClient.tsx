@@ -235,6 +235,7 @@ export default function PcBuilderClient({
               style={{
                 fontFamily: 'var(--font-family)',
                 color: 'var(--pc-body-color)',
+                background: 'transparent',
               }}
             >
               {pickLocale(clearAllLabel, currentLocale)}
