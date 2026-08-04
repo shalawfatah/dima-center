@@ -3,6 +3,7 @@
 import Image from 'next/image'
 import styles from '@/styles/pc_builder.module.css'
 import { COMPONENT_SLOTS } from '@/utils/pc_build_items'
+import { checkCompatibility } from '@/utils/pc_compatibility'
 
 interface ProductPickerModalProps {
   activeModalSlot: string
@@ -46,9 +47,23 @@ export default function ProductPickerModal({
   // Find the slot definition
   const slot = COMPONENT_SLOTS.find((s) => s.key === activeModalSlot)
 
-  // Filter products by category if slot has categorySlug filter
+  // Filter products by category safely
   const filteredProducts = slot?.categorySlug
-    ? products.filter((p) => p.category === slot.categorySlug || p.cat === slot.categorySlug)
+    ? products.filter((p) => {
+        const getCatValue = (val: any) => {
+          if (!val) return ''
+          if (typeof val === 'object') {
+            return val.slug || val.key || val.id || val.title || ''
+          }
+          return String(val)
+        }
+
+        const pCat = getCatValue(p.category).toLowerCase()
+        const pCatAlt = getCatValue(p.cat).toLowerCase()
+        const targetSlug = slot.categorySlug.toLowerCase()
+
+        return pCat === targetSlug || pCatAlt === targetSlug
+      })
     : products
 
   return (
@@ -92,6 +107,10 @@ export default function ProductPickerModal({
           ) : (
             filteredProducts.map((product) => {
               const isSelected = selections[activeModalSlot]?.id === product.id
+
+              // 🔍 Run compatibility evaluation for this product
+              const compatibility = checkCompatibility(product, activeModalSlot, selections)
+
               return (
                 <div
                   key={product.id}
@@ -99,6 +118,7 @@ export default function ProductPickerModal({
                   style={{
                     backgroundColor: isSelected ? '#e2e8f0' : resolvedBoxBg,
                     borderColor: resolvedBorderColor,
+                    opacity: compatibility.isCompatible ? 1 : 0.65, // Dim incompatible parts slightly
                   }}
                 >
                   <div
@@ -129,6 +149,20 @@ export default function ProductPickerModal({
                       >
                         ${product.price}
                       </div>
+
+                      {/* ⚠️ Render compatibility warning message if incompatible */}
+                      {!compatibility.isCompatible && compatibility.reason && (
+                        <div
+                          style={{
+                            fontSize: '0.8rem',
+                            color: '#ef4444',
+                            marginTop: '4px',
+                            fontWeight: 500,
+                          }}
+                        >
+                          ⚠️ {compatibility.reason}
+                        </div>
+                      )}
                     </div>
                   </div>
                   <div className={styles['pc-builder-product-actions-wrapper']}>
