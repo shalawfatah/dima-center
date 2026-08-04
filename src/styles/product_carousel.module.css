@@ -29,10 +29,9 @@
   width: var(--pc-card-width, 220px);
   max-width: var(--pc-card-width, 220px);
   min-width: 0;
+  padding-top: 6px; /* <-- Add top padding to accommodate the upward translation */
   padding-bottom: 0px;
 }
-
-/* ---------- card shell ---------- */
 
 .product-card-inner {
   position: relative;
@@ -42,6 +41,7 @@
   border-radius: 12px;
   overflow: hidden;
   border: 1px solid var(--pc-border-color, #e2e8f0);
+  transform: translateY(0); /* <-- Ensure a clean initial state */
   transition:
     transform 0.3s cubic-bezier(0.16, 1, 0.3, 1),
     box-shadow 0.3s cubic-bezier(0.16, 1, 0.3, 1);
