@@ -129,10 +129,6 @@ export default function ProductCard({
           '--pc-body-font': bodyFont || 'inherit',
           '--pc-heading-color': headingColor,
           '--pc-body-color': textColor,
-          // NOTE: no backgroundColor here — the outer link has no border-radius
-          // or overflow:hidden, so painting the bg here caused square corners
-          // to bleed past the inner card's rounded border. Background now
-          // only lives on .product-card-inner below.
         } as React.CSSProperties
       }
     >
@@ -292,7 +288,7 @@ export default function ProductCard({
             onClick={(e) => onAddToCart(e, product)}
             style={{
               fontFamily: 'var(--pc-body-font)',
-              color: 'var(--pc-body-color)',
+              color: '#0F172A',
             }}
           >
             {t.addToCart}
