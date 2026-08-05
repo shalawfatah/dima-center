@@ -12,6 +12,7 @@ import { GeneralSettings } from './globals/GeneralSettings'
 import { UICategories } from './collections/UICategories'
 import { UIProducts } from './collections/UIProducts'
 import { Events } from './collections/Events'
+import { AnalyticsGlobal } from './globals/AnalyticsGlobals'
 
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
@@ -31,13 +32,13 @@ export default buildConfig({
         {
           rel: 'icon',
           type: 'image/x-icon',
-          url: '/dima.ico', // Points to public/dima.ico
+          url: '/dima.ico',
         },
       ],
     },
   },
   collections: [Users, Products, Media, Categories, UICategories, UIProducts, Events],
-  globals: [GeneralSettings],
+  globals: [GeneralSettings, AnalyticsGlobal],
   editor: lexicalEditor({}),
   secret: process.env.PAYLOAD_SECRET || '',
   typescript: {
@@ -73,7 +74,7 @@ export default buildConfig({
           secretAccessKey: process.env.S3_SECRET_ACCESS_KEY || '',
         },
         region: process.env.S3_REGION || 'garage',
-        forcePathStyle: true, // Standard requirement for self-hosted MinIO/Garage S3
+        forcePathStyle: true,
       },
     }),
   ],
