@@ -25,7 +25,6 @@ export default buildConfig({
         Icon: '@/components/CustomIcon',
         Logo: '@/components/CustomIcon',
       },
-      afterNavLinks: ['@/components/AnalyticsNavLink'],
     },
     meta: {
       icons: [
