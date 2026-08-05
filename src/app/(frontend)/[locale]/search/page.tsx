@@ -227,6 +227,8 @@ export default async function SearchResultsPage({ params, searchParams }: Search
                             style={{
                               fontFamily: 'var(--search-body-font)',
                               color: 'var(--search-body-color)',
+                              backgroundColor: 'transparent',
+                              border: `1px solid --search-title-color`,
                             }}
                           >
                             {product.condition.replace('_', ' ')}
