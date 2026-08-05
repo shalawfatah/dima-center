@@ -12,7 +12,6 @@ import { GeneralSettings } from './globals/GeneralSettings'
 import { UICategories } from './collections/UICategories'
 import { UIProducts } from './collections/UIProducts'
 import { Events } from './collections/Events'
-import { AnalyticsGlobal } from './globals/AnalyticsGlobals'
 
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
@@ -26,15 +25,7 @@ export default buildConfig({
         Icon: '@/components/CustomIcon',
         Logo: '@/components/CustomIcon',
       },
-      views: {
-        analytics: {
-          Component: '@/components/AnalyticsDashboard',
-          path: '/analytics',
-          meta: {
-            title: 'Analytics',
-          },
-        },
-      },
+      afterNavLinks: ['@/components/AnalyticsNavLink'],
     },
     meta: {
       icons: [
@@ -47,7 +38,7 @@ export default buildConfig({
     },
   },
   collections: [Users, Products, Media, Categories, UICategories, UIProducts, Events],
-  globals: [GeneralSettings, AnalyticsGlobal],
+  globals: [GeneralSettings],
   editor: lexicalEditor({}),
   secret: process.env.PAYLOAD_SECRET || '',
   typescript: {

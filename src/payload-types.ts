@@ -99,11 +99,9 @@ export interface Config {
   fallbackLocale: ('false' | 'none' | 'null') | false | null | ('ckb' | 'en' | 'ar') | ('ckb' | 'en' | 'ar')[];
   globals: {
     'general-settings': GeneralSetting;
-    analytics: Analytics;
   };
   globalsSelect: {
     'general-settings': GeneralSettingsSelect<false> | GeneralSettingsSelect<true>;
-    analytics: AnalyticsSelect<false> | AnalyticsSelect<true>;
   };
   locale: 'ckb' | 'en' | 'ar';
   widgets: {
@@ -724,15 +722,6 @@ export interface GeneralSetting {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "analytics".
- */
-export interface Analytics {
-  id: number;
-  updatedAt?: string | null;
-  createdAt?: string | null;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "general-settings_select".
  */
 export interface GeneralSettingsSelect<T extends boolean = true> {
@@ -800,15 +789,6 @@ export interface GeneralSettingsSelect<T extends boolean = true> {
         url?: T;
         id?: T;
       };
-  updatedAt?: T;
-  createdAt?: T;
-  globalType?: T;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "analytics_select".
- */
-export interface AnalyticsSelect<T extends boolean = true> {
   updatedAt?: T;
   createdAt?: T;
   globalType?: T;
