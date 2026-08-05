@@ -26,6 +26,15 @@ export default buildConfig({
         Icon: '@/components/CustomIcon',
         Logo: '@/components/CustomIcon',
       },
+      views: {
+        analytics: {
+          Component: '@/components/AnalyticsDashboard',
+          path: '/analytics',
+          meta: {
+            title: 'Analytics',
+          },
+        },
+      },
     },
     meta: {
       icons: [
