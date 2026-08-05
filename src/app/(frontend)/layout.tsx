@@ -25,6 +25,11 @@ export default async function LocalizedLayout({
   return (
     <html lang={locale} dir={isRtl ? 'rtl' : 'ltr'}>
       <head>
+        <script
+          defer
+          src="https://analytics.dima.center/script.js"
+          data-website-id="79bb66b4-ed56-4758-a041-b9c9cea33f71"
+        ></script>
         {/* 👈 Inject dynamic font-face definitions & CSS variable overrides */}
         <DynamicFonts locale={locale} />
       </head>
