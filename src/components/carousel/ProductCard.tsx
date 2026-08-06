@@ -2,31 +2,10 @@
 
 import Image from 'next/image'
 import Link from 'next/link'
-import { ProductItem } from '@/types/types'
 import styles from '@/styles/product_carousel.module.css'
 import { resolveImageUrl } from '@/utils/resolve_image_url'
 import { getDiscountedPrice, getFallbackText, getNumericalPrice } from '@/utils/product_helpers'
-import { carouselDictionary } from '@/utils/carousel_dictionary'
 import DiscountBadge from '@/components/product/DiscountBadge'
-
-type Dictionary = (typeof carouselDictionary)['en']
-
-interface ProductCardProps {
-  product: ProductItem
-  currentLocale: string
-  cardWidth: number
-  cardHeight: number
-  productPath: string
-  cardBgColor?: string
-  t: Dictionary
-  onQuickView: (product: ProductItem) => void
-  onAddToCart: (e: React.MouseEvent, product: ProductItem) => void
-  headingFont?: string
-  bodyFont?: string
-  titleColor?: string
-  bodyColor?: string
-  boxBorderColor?: string
-}
 
 function resolveDisplayTitle(product: any, locale: string): string {
   if (!product) return ''

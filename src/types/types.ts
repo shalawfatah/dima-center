@@ -1,5 +1,9 @@
 // types/types.ts
 
+import { carouselDictionary } from '@/utils/carousel_dictionary'
+
+type Dictionary = (typeof carouselDictionary)['en']
+
 export interface GeneralSettingsData {
   // === 🏢 COMPANY INFORMATION ===
   exchangeRate?: number
@@ -262,4 +266,21 @@ export interface ProductPriceDisplayProps {
   bodyFont?: string
   titleColor?: string
   bodyColor?: string
+}
+
+export interface ProductCardProps {
+  product: ProductItem
+  currentLocale: string
+  cardWidth: number
+  cardHeight: number
+  productPath: string
+  cardBgColor?: string
+  t: Dictionary
+  onQuickView: (product: ProductItem) => void
+  onAddToCart: (e: React.MouseEvent, product: ProductItem) => void
+  headingFont?: string
+  bodyFont?: string
+  titleColor?: string
+  bodyColor?: string
+  boxBorderColor?: string
 }
