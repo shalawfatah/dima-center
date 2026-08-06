@@ -2,170 +2,18 @@ import { getPayload } from 'payload'
 import config from '@/payload.config'
 import { notFound } from 'next/navigation'
 import { calculateProductPrice } from '@/utils/price'
-
-import type { Metadata } from 'next'
-import { getStorefrontMetadata } from '@/utils/seo'
-
 import ProductBreadcrumb from '@/components/product/ProductBreadcrumb'
 import ProductMediaColumn from '@/components/product/ProductMediaColumn'
 import ProductInfoSidebar from '@/components/product/ProductInfoSidebar'
 import RelatedProducts from '@/components/product/RelatedProducts'
 import styles from '@/styles/product-detail.module.css'
+import { ProductPageProps } from '@/types/types'
+import { resolveTitle } from '@/utils/resolve_title'
+import { fetchProductById } from '@/utils/fetch_product_by_id'
+import { resolveImageUrl } from '@/utils/resolve_image_url_single_product'
 
-interface ProductPageProps {
-  params: Promise<{
-    locale: string
-    category_slug: string
-    id: string
-  }>
-}
-
-function resolveTitle(product: any, locale: string): string {
-  if (!product) return 'Untitled Product'
-
-  let titleProp =
-    product.title || product.name || product.productName || product.label || product.title_en
-
-  if (!titleProp) return 'Untitled Product'
-
-  if (typeof titleProp === 'string' && titleProp.trim().startsWith('{')) {
-    try {
-      titleProp = JSON.parse(titleProp)
-    } catch {}
-  }
-
-  if (typeof titleProp === 'string' && titleProp.trim() !== '') {
-    return titleProp.trim()
-  }
-
-  if (typeof titleProp === 'object' && titleProp !== null) {
-    if (titleProp.root || Array.isArray(titleProp.children)) {
-      try {
-        const children = titleProp.root?.children || titleProp.children || []
-        const text = children
-          .map((c: any) => c.text || c.children?.map((tc: any) => tc.text).join('') || '')
-          .join(' ')
-          .trim()
-        if (text) return text
-      } catch {}
-    }
-
-    const match =
-      titleProp[locale] ||
-      titleProp.en ||
-      titleProp.ar ||
-      titleProp.ckb ||
-      Object.values(titleProp).find((v) => typeof v === 'string' && v.trim() !== '')
-
-    if (typeof match === 'string' && match.trim() !== '') {
-      return match.trim()
-    }
-  }
-
-  return 'Untitled Product'
-}
-
-function resolveImageUrl(product: any): string | null {
-  if (!product) return null
-
-  const img = product.image
-  if (typeof img === 'string' && img.startsWith('http')) return img
-  if (typeof img === 'object' && img?.url) return img.url
-
-  const featured = product.featuredImage
-  if (typeof featured === 'string' && featured.startsWith('http')) return featured
-  if (typeof featured === 'object' && featured?.url) return featured.url
-
-  if (Array.isArray(product.imagesGallery) && product.imagesGallery.length > 0) {
-    const first = product.imagesGallery[0]
-    const firstImg = typeof first === 'object' ? first?.image || first : first
-    if (typeof firstImg === 'string' && firstImg.startsWith('http')) return firstImg
-    if (typeof firstImg === 'object' && firstImg?.url) return firstImg.url
-  }
-
-  return null
-}
-
-async function fetchProductById(id: string, locale: string, payload: any) {
-  const numericId = /^\d+$/.test(id) ? parseInt(id, 10) : id
-
-  try {
-    const product = await payload.findByID({
-      collection: 'products',
-      where: { stock: { greater_than: 0 } },
-      id: numericId,
-      locale,
-      fallbackLocale: 'ckb',
-      depth: 1,
-    })
-    if (product) return { product, collectionName: 'products' as const }
-  } catch (err) {}
-
-  try {
-    const uiProduct = await payload.findByID({
-      collection: 'ui-products',
-      id: numericId,
-      locale,
-      fallbackLocale: 'ckb',
-      depth: 1,
-    })
-    if (uiProduct) return { product: uiProduct, collectionName: 'ui-products' as const }
-  } catch (err) {}
-
-  return null
-}
-
-export async function generateMetadata({ params }: ProductPageProps): Promise<Metadata> {
-  const resolvedParams = await params
-  const currentLocale = resolvedParams.locale || 'en'
-  const productId = resolvedParams.id
-
-  const baseMeta = await getStorefrontMetadata({ locale: currentLocale })
-
-  try {
-    const payload = await getPayload({ config })
-    const result = await fetchProductById(productId, currentLocale, payload)
-
-    if (!result) return baseMeta
-    const { product } = result
-
-    const title = resolveTitle(product, currentLocale)
-    const description = typeof product.description === 'string' ? product.description : ''
-    const imageUrl = resolveImageUrl(product) || undefined
-
-    const titleValue = baseMeta?.title as any
-    const baseSiteTitle =
-      titleValue && typeof titleValue === 'object'
-        ? titleValue.absolute || titleValue.default
-        : typeof titleValue === 'string'
-          ? titleValue
-          : 'Storefront'
-
-    return {
-      ...baseMeta,
-      title: `${title} | ${baseSiteTitle}`,
-      description: description || baseMeta.description,
-      openGraph: {
-        ...baseMeta?.openGraph,
-        title,
-        description,
-        type: 'video.other',
-        ...(imageUrl && {
-          images: [
-            {
-              url: imageUrl,
-              width: 800,
-              height: 800,
-              alt: title,
-            },
-          ],
-        }),
-      },
-    }
-  } catch (error) {
-    return baseMeta
-  }
-}
+import { generateProductMetadata as generateMetadata } from './generate-metadata'
+export { generateMetadata }
 
 export default async function ProductDetailPage({ params }: ProductPageProps) {
   const resolvedParams = await params
@@ -265,7 +113,12 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
         locale: currentLocale as 'en' | 'ar' | 'ckb',
         fallbackLocale: 'ckb',
         where: {
-          and: [{ [categoryKey]: { equals: categoryId } }, { id: { not_equals: product.id } }],
+          and: [
+            { [categoryKey]: { equals: categoryId } },
+            { id: { not_equals: product.id } },
+            // 👇 Add this condition to exclude out-of-stock items
+            { stock: { greater_than: 0 } },
+          ],
         },
         limit: 4,
       })

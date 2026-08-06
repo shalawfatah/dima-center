@@ -1,25 +1,7 @@
+import { RelatedProductsProps } from '@/types/types'
 import RelatedProductCard from './RelatedProductCard'
 import styles from '@/styles/product-detail.module.css'
-
-const headingLabel: Record<string, string> = {
-  ar: 'منتجات مشابهة قد تعجبك',
-  ckb: 'کاڵای هاوشێوە کە بەدڵت دەبێت',
-  en: 'More Products You Might Like',
-}
-
-interface RelatedProductsProps {
-  items?: any[]
-  currentLocale: string
-  isRtl: boolean
-  exchangeRate: number
-  cardBgColor?: string
-  headingFont?: string
-  bodyFont?: string
-  dynamicFontFaceCSS?: string
-  titleColor?: string
-  bodyColor?: string
-  borderColor?: string
-}
+import { headingLabel } from '@/utils/related_products_dict'
 
 export default function RelatedProducts({
   items = [],
@@ -38,7 +20,6 @@ export default function RelatedProducts({
   const isRegionalLocale = ['ar', 'ku', 'ckb'].includes(currentLocale)
   const titleFont = headingFont || (isRegionalLocale ? '"Rudaw", sans-serif' : 'inherit')
 
-  // Use provided colors or fallbacks
   const headingColor = titleColor || '#000000'
   const textColor = bodyColor || '#333333'
   const resolvedBorderColor = borderColor || '#eee'

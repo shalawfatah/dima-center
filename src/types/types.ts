@@ -284,3 +284,25 @@ export interface ProductCardProps {
   bodyColor?: string
   boxBorderColor?: string
 }
+
+export interface RelatedProductsProps {
+  items?: any[]
+  currentLocale: string
+  isRtl: boolean
+  exchangeRate: number
+  cardBgColor?: string
+  headingFont?: string
+  bodyFont?: string
+  dynamicFontFaceCSS?: string
+  titleColor?: string
+  bodyColor?: string
+  borderColor?: string
+}
+
+export interface ProductPageProps {
+  params: Promise<{
+    locale: string
+    category_slug: string
+    id: string
+  }>
+}
