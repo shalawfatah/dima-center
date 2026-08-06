@@ -71,7 +71,7 @@
   object-fit: contain;
   position: absolute;
   will-change: transform;
-  transition: transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  transform: none !important;
 }
 
 /* ---------- side action buttons ---------- */
