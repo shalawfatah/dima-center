@@ -107,11 +107,8 @@ export default function ComponentSlotCard({
                 type="button"
                 className="pc-builder-btn clear"
                 onClick={() => onRemove(slot.key)}
-                style={{
-                  fontFamily: bodyFont || 'inherit',
-                }}
               >
-                ✕
+                x
               </button>
             </div>
           </>
