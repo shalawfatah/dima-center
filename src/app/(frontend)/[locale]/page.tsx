@@ -87,7 +87,7 @@ export default async function StorefrontHome({ params, searchParams }: PageProps
       return null
     })
 
-  const typography = generalSettings?.typography
+  const typography = generalSettings?.typography as any
 
   // Safely resolve boxBorderColor string from various formats (string, object, or null)
   const rawBorderColor = typography?.boxBorderColor
