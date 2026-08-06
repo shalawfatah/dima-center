@@ -220,8 +220,21 @@ export interface SlotLabels {
 }
 
 export interface ComponentSlotCardProps {
-  slot: any
-  chosenItem: any
+  slot: {
+    key: string
+    label: string
+    categorySlug: string
+    defaultImage?: string
+  }
+  chosenItem: {
+    title?: string
+    price?: number | string
+    quantity?: number
+    featuredImage?: {
+      url?: string
+    } | null
+    [key: string]: any
+  } | null
   t?: Record<string, string>
   currentLocale?: string
   labels?: SlotLabels
@@ -229,6 +242,12 @@ export interface ComponentSlotCardProps {
   onOpen: (slotKey: string) => void
   onRemove: (slotKey: string) => void
   onQuantityChange: (slotKey: string, delta: number) => void
+  titleColor?: string
+  bodyColor?: string
+  headingFont?: string
+  bodyFont?: string
+  boxBgColor?: string
+  borderColor?: string
 }
 
 export interface ProductPriceDisplayProps {

@@ -1,0 +1,125 @@
+.pc-builder-slots-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.pc-builder-component-card {
+  background-color: var(--pc-box-bg, #ffffff);
+  border: 1px solid var(--pc-border-color, #e2e8f0);
+  border-radius: 6px;
+  padding: 0.4rem 0.75rem; /* Slimmer vertical padding */
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+  transition: all 0.15s ease-in-out;
+}
+
+.pc-builder-component-card:hover {
+  border-color: #3b82f6 !important;
+  box-shadow: 0 2px 6px rgba(59, 130, 246, 0.08);
+}
+
+.pc-builder-card-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex: 1;
+  min-width: 0;
+}
+
+.pc-builder-thumb-box {
+  width: 32px;
+  height: 32px; /* Smaller thumbnail box */
+  border-radius: 4px;
+  background: var(--pc-box-bg-secondary, #f1f5f9);
+  overflow: hidden;
+  flex-shrink: 0;
+  padding: 0.15rem;
+  border: 1px solid var(--pc-border-color, #e2e8f0);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pc-builder-slot-info {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex: 1;
+  min-width: 0;
+}
+
+.pc-builder-slot-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--pc-body-color, #64748b);
+  text-transform: uppercase;
+  font-family: var(--font-family);
+  flex-shrink: 0;
+}
+
+.pc-builder-chosen-title {
+  font-weight: 600;
+  font-size: 13px;
+  color: var(--pc-heading-color, #000);
+  font-family: var(--heading-font);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.pc-builder-empty-slot {
+  color: #94a3b8;
+  font-style: italic;
+  font-size: 12px;
+  font-family: var(--font-family);
+}
+
+.pc-builder-right-group {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-shrink: 0;
+}
+
+.pc-builder-chosen-price {
+  font-weight: 700;
+  font-size: 13px;
+  color: #10b981;
+}
+
+.pc-builder-actions-group {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+}
+
+.pc-builder-btn {
+  padding: 3px 6px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.pc-builder-btn.clear {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+.pc-builder-btn.clear:hover {
+  background: #fecaca;
+}
+
+.pc-builder-btn.action {
+  background: var(--pc-box-bg-secondary, #f1f5f9);
+  color: var(--pc-body-color, #334155);
+}
+
+.pc-builder-btn.action:hover {
+  background: var(--pc-box-bg-secondary-hover, #e2e8f0);
+}

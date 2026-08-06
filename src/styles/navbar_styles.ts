@@ -29,10 +29,11 @@ export const getNavbarStyles = (isRtl: boolean) => `
     font-family: inherit;
     font-size: 14px;
     font-weight: 600;
-    padding: 0.6rem 1.2rem;
+    padding: 0.2rem .5rem;
+    padding-bottom: .3rem;
     background: #df8026;
     color: #fff;
-    border-radius: 20px;
+    border-radius: 8px;
     text-decoration: none;
     transition: background 0.2s ease;
   }

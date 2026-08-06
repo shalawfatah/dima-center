@@ -73,9 +73,6 @@ export default function ClearConfirmModal({
             type="button"
             onClick={onConfirm}
             className={`${styles['pc-builder-btn']} ${styles.clear} ${styles['pc-builder-confirm-btn']}`}
-            style={{
-              color: 'var(--confirm-body-color)',
-            }}
           >
             {pickLocale(clearConfirmYes, currentLocale)}
           </button>
@@ -83,9 +80,6 @@ export default function ClearConfirmModal({
             type="button"
             onClick={onCancel}
             className={`${styles['pc-builder-btn']} ${styles.action} ${styles['pc-builder-confirm-btn']}`}
-            style={{
-              color: 'var(--confirm-body-color)',
-            }}
           >
             {pickLocale(clearConfirmCancel, currentLocale)}
           </button>

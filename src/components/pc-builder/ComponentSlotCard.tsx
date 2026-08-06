@@ -1,21 +1,6 @@
 import Image from 'next/image'
-import styles from '@/styles/pc_builder.module.css'
-
-interface ComponentSlotCardProps {
-  slot: any
-  chosenItem: any
-  t: Record<string, string>
-  getLocalizedTitle: (product: any) => string
-  onOpen: (key: string) => void
-  onRemove: (key: string) => void
-  onQuantityChange: (key: string, delta: number) => void
-  titleColor?: string
-  bodyColor?: string
-  headingFont?: string
-  bodyFont?: string
-  boxBgColor?: string
-  borderColor?: string
-}
+import '@/styles/pc-builder-styles/component-slot-card.css'
+import { ComponentSlotCardProps } from '@/types/types'
 
 export default function ComponentSlotCard({
   slot,
@@ -36,103 +21,102 @@ export default function ComponentSlotCard({
   const resolvedBoxBg = boxBgColor || '#ffffff'
   const resolvedBorderColor = borderColor || '#e2e8f0'
 
+  const displayImage = chosenItem?.featuredImage?.url || slot.defaultImage
+
   return (
     <div
-      className={styles['pc-builder-component-card']}
+      className="pc-builder-component-card"
       onClick={() => onOpen(slot.key)}
       style={{
         backgroundColor: resolvedBoxBg,
         borderColor: resolvedBorderColor,
       }}
     >
-      <div className={styles['pc-builder-card-meta']}>
-        {chosenItem?.featuredImage?.url && (
-          <div className={styles['pc-builder-thumb-box']}>
+      <div className="pc-builder-card-meta">
+        {displayImage && (
+          <div className="pc-builder-thumb-box">
             <Image
-              src={chosenItem.featuredImage.url}
-              alt={chosenItem.title}
-              width={50}
-              height={50}
+              src={displayImage}
+              alt={chosenItem?.title ?? slot.label}
+              width={32}
+              height={32}
               className="object-contain"
             />
           </div>
         )}
-        <div>
-          <span className={styles['pc-builder-slot-label']} style={{ color: textColor }}>
+        <div className="pc-builder-slot-info">
+          <span className="pc-builder-slot-label" style={{ color: textColor }}>
             {slot.label}
           </span>
           {chosenItem ? (
-            <div className={styles['pc-builder-chosen-title']} style={{ color: headingColor }}>
+            <div className="pc-builder-chosen-title" style={{ color: headingColor }}>
               {getLocalizedTitle(chosenItem)}
-              <span className={styles['pc-builder-chosen-price']} style={{ color: '#10b981' }}>
-                ${chosenItem.price}
-              </span>
             </div>
           ) : (
-            <div className={styles['pc-builder-empty-slot']} style={{ color: '#94a3b8' }}>
-              {t.selectComponent || 'Select component'}
+            <div className="pc-builder-empty-slot" style={{ color: '#94a3b8' }}>
+              {t?.selectComponent || 'Select component'}
             </div>
           )}
         </div>
       </div>
-      {chosenItem && (
-        <div className={styles['pc-builder-actions-group']}>
-          <button
-            type="button"
-            className={`${styles['pc-builder-btn']} ${styles.action}`}
-            onClick={(e) => {
-              e.stopPropagation()
-              onQuantityChange(slot.key, -1)
-            }}
-            style={{
-              fontFamily: bodyFont || 'inherit',
-              color: textColor,
-              backgroundColor: 'transparent',
-              border: `1px solid ${textColor}`,
-            }}
-          >
-            -
-          </button>
-          <span
-            style={{
-              color: textColor,
-              fontFamily: bodyFont || 'inherit',
-              fontWeight: 600,
-            }}
-          >
-            {chosenItem.quantity || 1}
-          </span>
-          <button
-            type="button"
-            className={`${styles['pc-builder-btn']} ${styles.action}`}
-            onClick={(e) => {
-              e.stopPropagation()
-              onQuantityChange(slot.key, 1)
-            }}
-            style={{
-              fontFamily: bodyFont || 'inherit',
-              color: textColor,
-              backgroundColor: 'transparent',
-              border: `1px solid ${textColor}`,
-            }}
-          >
-            +
-          </button>
-          <button
-            type="button"
-            className={`${styles['pc-builder-btn']} ${styles.clear}`}
-            onClick={(e) => {
-              e.stopPropagation()
-              onRemove(slot.key)
-            }}
-            style={{
-              fontFamily: bodyFont || 'inherit',
-            }}
-          >
-            ✕
-          </button>
-        </div>
-      )}
+
+      <div className="pc-builder-right-group" onClick={(e) => e.stopPropagation()}>
+        {chosenItem && (
+          <>
+            <span className="pc-builder-chosen-price" style={{ color: '#10b981' }}>
+              ${chosenItem.price}
+            </span>
+            <div className="pc-builder-actions-group">
+              <button
+                type="button"
+                className="pc-builder-btn action"
+                onClick={() => onQuantityChange(slot.key, -1)}
+                style={{
+                  fontFamily: bodyFont || 'inherit',
+                  color: textColor,
+                  backgroundColor: 'transparent',
+                  border: `1px solid ${textColor}`,
+                }}
+              >
+                -
+              </button>
+              <span
+                style={{
+                  color: textColor,
+                  fontFamily: bodyFont || 'inherit',
+                  fontWeight: 600,
+                  fontSize: '12px',
+                }}
+              >
+                {chosenItem.quantity || 1}
+              </span>
+              <button
+                type="button"
+                className="pc-builder-btn action"
+                onClick={() => onQuantityChange(slot.key, 1)}
+                style={{
+                  fontFamily: bodyFont || 'inherit',
+                  color: textColor,
+                  backgroundColor: 'transparent',
+                  border: `1px solid ${textColor}`,
+                }}
+              >
+                +
+              </button>
+              <button
+                type="button"
+                className="pc-builder-btn clear"
+                onClick={() => onRemove(slot.key)}
+                style={{
+                  fontFamily: bodyFont || 'inherit',
+                }}
+              >
+                ✕
+              </button>
+            </div>
+          </>
+        )}
+      </div>
     </div>
   )
 }
