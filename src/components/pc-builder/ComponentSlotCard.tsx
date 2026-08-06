@@ -40,7 +40,7 @@ export default function ComponentSlotCard({
               alt={chosenItem?.title ?? slot.label}
               width={32}
               height={32}
-              className="object-contain"
+              className="object-contain pc-builder-thumb-img"
             />
           </div>
         )}
@@ -85,7 +85,7 @@ export default function ComponentSlotCard({
                   color: textColor,
                   fontFamily: bodyFont || 'inherit',
                   fontWeight: 600,
-                  fontSize: '12px',
+                  fontSize: '14px',
                 }}
               >
                 {chosenItem.quantity || 1}

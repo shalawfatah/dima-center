@@ -3,8 +3,6 @@ import { getPayload } from 'payload'
 import config from '@/payload.config'
 import dynamic from 'next/dynamic'
 import PromoCarousel from '@/components/PromoCarousel'
-import LocalizedHeading from '@/components/LocalizedHeading'
-import Link from 'next/link'
 import styles from '@/styles/homepage.module.css'
 
 interface PageProps {
@@ -14,10 +12,10 @@ interface PageProps {
 
 import type { Metadata } from 'next'
 import { getStorefrontMetadata } from '@/utils/seo'
-import Image from 'next/image'
 import SectionSkeleton from '@/components/SectionSkeleton'
 import { MINIMAL_PRODUCT_FIELDS } from '@/utils/homepage-helpers'
 import CategoryDropdownNav from '@/components/CategoryCarousel'
+import FilteredCategoryView from '@/components/FilteredCategoryView'
 
 const PCBuilderSection = dynamic(() => import('@/components/PCBuilderSection'), {
   loading: () => <div className={styles.pcBuilderSkeleton} />,
@@ -73,12 +71,10 @@ export default async function StorefrontHome({ params, searchParams }: PageProps
   const isRtl = currentLocale === 'ar' || currentLocale === 'ckb'
   const dirClass = isRtl ? styles.rtl : styles.ltr
 
-  // Declare fonts early so they're available everywhere
   let headingFont = isRtl ? '"Rudaw", sans-serif' : 'system-ui, sans-serif'
   let bodyFont = isRtl ? '"Sarchia", sans-serif' : 'system-ui, sans-serif'
   let dynamicFontFaceCSS = ''
 
-  // 🎯 FETCH generalSettings FIRST so fonts are available for both filtered and default views
   const payload = await getPayload({ config })
 
   const generalSettings = await payload
@@ -91,8 +87,26 @@ export default async function StorefrontHome({ params, searchParams }: PageProps
       return null
     })
 
-  // 🎯 Update fonts from generalSettings BEFORE checking activeCategory
   const typography = generalSettings?.typography
+
+  // Safely resolve boxBorderColor string from various formats (string, object, or null)
+  const rawBorderColor = typography?.boxBorderColor
+  const boxBorderColor: string | undefined =
+    typeof rawBorderColor === 'string'
+      ? rawBorderColor
+      : rawBorderColor && typeof rawBorderColor === 'object'
+        ? rawBorderColor.value || rawBorderColor.hex || undefined
+        : undefined
+
+  // Safely resolve box background color string from various formats (string, object, or null)
+  const rawBgColor = typography?.boxBackgroundColor || typography?.boxBgColor
+  const boxBgColor: string | undefined =
+    typeof rawBgColor === 'string'
+      ? rawBgColor
+      : rawBgColor && typeof rawBgColor === 'object'
+        ? rawBgColor.value || rawBgColor.hex || undefined
+        : undefined
+
   const localeMap = {
     ckb: 'kurdish',
     ar: 'arabic',
@@ -127,11 +141,6 @@ export default async function StorefrontHome({ params, searchParams }: PageProps
         font-display: swap;
       }
     `
-  }
-
-  const resolveProductHref = (id: string | number, isCaseOffer: boolean) => {
-    const routeSegment = isCaseOffer ? 'case-offers' : 'products'
-    return `/${currentLocale}/${routeSegment}/${id}`
   }
 
   if (activeCategory) {
@@ -295,136 +304,21 @@ export default async function StorefrontHome({ params, searchParams }: PageProps
     }
     const allProducts = Array.from(productMap.values())
 
-    // Get discount label translation
-    const discountLabel: Record<string, string> = {
-      en: 'OFF',
-      ar: 'خصم',
-      ckb: 'داشکاندن',
-    }
-
     return (
-      <>
-        {dynamicFontFaceCSS && <style dangerouslySetInnerHTML={{ __html: dynamicFontFaceCSS }} />}
-
-        <div
-          className={`${styles.pageWrapper} ${styles.pageWrapperFiltered} ${dirClass}`}
-          style={
-            {
-              '--filtered-heading-font': headingFont,
-              '--filtered-body-font': bodyFont,
-            } as React.CSSProperties
-          }
-        >
-          <main className={styles.filteredMain}>
-            <div className={styles.filteredHeader}>
-              <LocalizedHeading
-                currentLocale={currentLocale}
-                en={matchedTitleEn || 'Products'}
-                ar={matchedTitleAr || 'المنتجات'}
-                ckb={matchedTitleCkb || 'کاڵاکان'}
-                headingFont={headingFont}
-                style={{
-                  fontSize: '1.75rem',
-                  fontWeight: '700',
-                }}
-              />
-              <Link
-                href={`/${currentLocale}`}
-                className={styles.showAllLink}
-                style={{ fontFamily: 'var(--filtered-body-font)' }}
-              >
-                {currentLocale === 'ar'
-                  ? '← عرض الكل'
-                  : currentLocale === 'ckb'
-                    ? '← گەڕانەوە'
-                    : '← Show All'}
-              </Link>
-            </div>
-
-            {allProducts.length === 0 ? (
-              <div
-                className={styles.emptyState}
-                style={{ fontFamily: 'var(--filtered-body-font)' }}
-              >
-                📦{' '}
-                {currentLocale === 'ar'
-                  ? 'لا توجد منتجات في هذه الفئة حالياً.'
-                  : currentLocale === 'ckb'
-                    ? 'هیچ کاڵایەک لەم بەشەدا نییە.'
-                    : 'No products found in this category.'}
-              </div>
-            ) : (
-              <div className={styles.productGrid}>
-                {allProducts.map((product: any) => {
-                  const imgData = product.featuredImage || product.image
-                  let imageUrl: string | null = null
-
-                  if (typeof imgData === 'string') {
-                    imageUrl = imgData
-                  } else if (typeof imgData === 'object' && imgData?.url) {
-                    imageUrl = imgData.url
-                  }
-
-                  const productHref = resolveProductHref(product.id, !!product.isCaseOffer)
-                  const hasDiscount = product.hasDiscount || false
-                  const discountLabelText =
-                    discountLabel[currentLocale as keyof typeof discountLabel] || 'OFF'
-
-                  return (
-                    <Link key={product.id} href={productHref} className={styles.productCardLink}>
-                      <div className={styles.productCard}>
-                        {/* 🏷️ DISCOUNT BADGE */}
-                        {hasDiscount && (
-                          <div className={styles.discountBadge}>
-                            {product.discountType === 'percentage'
-                              ? `-${product.discountValue}% ${discountLabelText}`
-                              : `-$${product.discountValue} ${discountLabelText}`}
-                          </div>
-                        )}
-                        <div className={styles.productImageWrapper}>
-                          {imageUrl ? (
-                            <Image
-                              src={imageUrl}
-                              width={200}
-                              height={200}
-                              alt={product.title || 'Product'}
-                              className={styles.productImage}
-                            />
-                          ) : (
-                            <span
-                              className={styles.productImagePlaceholder}
-                              style={{ fontFamily: 'var(--filtered-body-font)' }}
-                            >
-                              📦
-                            </span>
-                          )}
-                        </div>
-                        <h3
-                          className={styles.productTitle}
-                          style={{
-                            fontFamily: 'var(--filtered-heading-font)',
-                            fontWeight: '600',
-                          }}
-                        >
-                          {product.title}
-                        </h3>
-                        <div
-                          className={styles.productPrice}
-                          style={{ fontFamily: 'var(--filtered-body-font)' }}
-                        >
-                          {product.price !== null && product.price !== undefined
-                            ? `$${product.price}`
-                            : ''}
-                        </div>
-                      </div>
-                    </Link>
-                  )
-                })}
-              </div>
-            )}
-          </main>
-        </div>
-      </>
+      <FilteredCategoryView
+        currentLocale={currentLocale}
+        dirClass={dirClass}
+        headingFont={headingFont}
+        bodyFont={bodyFont}
+        dynamicFontFaceCSS={dynamicFontFaceCSS}
+        matchedTitleEn={matchedTitleEn}
+        matchedTitleAr={matchedTitleAr}
+        matchedTitleCkb={matchedTitleCkb}
+        allProducts={allProducts}
+        activeCategory={activeCategory}
+        boxBorderColor={boxBorderColor}
+        boxBgColor={boxBgColor}
+      />
     )
   }
 
