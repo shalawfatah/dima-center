@@ -6,6 +6,7 @@ import styles from '@/styles/product_carousel.module.css'
 import { resolveImageUrl } from '@/utils/resolve_image_url'
 import { getDiscountedPrice, getFallbackText, getNumericalPrice } from '@/utils/product_helpers'
 import DiscountBadge from '@/components/product/DiscountBadge'
+import { ProductCardProps } from '@/types/types'
 
 function resolveDisplayTitle(product: any, locale: string): string {
   if (!product) return ''
