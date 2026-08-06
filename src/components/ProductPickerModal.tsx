@@ -1,7 +1,7 @@
 'use client'
 
 import Image from 'next/image'
-import styles from '@/styles/pc_builder.module.css'
+import '@/styles/pc-builder-styles/product-picker-modal.css'
 import { COMPONENT_SLOTS } from '@/utils/pc_build_items'
 import { checkCompatibility } from '@/utils/pc_compatibility'
 
@@ -34,6 +34,7 @@ export default function ProductPickerModal({
   titleColor,
   bodyColor,
   headingFont,
+  bodyFont,
   boxBgColor,
   borderColor,
 }: ProductPickerModalProps) {
@@ -42,10 +43,8 @@ export default function ProductPickerModal({
   const resolvedBoxBg = boxBgColor || '#ffffff'
   const resolvedBorderColor = borderColor || '#e2e8f0'
 
-  // Find the slot definition
   const slot = COMPONENT_SLOTS.find((s) => s.key === activeModalSlot)
 
-  // Filter products by category safely
   const filteredProducts = slot?.categorySlug
     ? products.filter((p) => {
         const getCatValue = (val: any) => {
@@ -65,9 +64,9 @@ export default function ProductPickerModal({
     : products
 
   return (
-    <div className={styles['pc-builder-modal-overlay']} onClick={onClose}>
+    <div className="pc-builder-modal-overlay" onClick={onClose}>
       <div
-        className={styles['pc-builder-modal-window']}
+        className="pc-builder-modal-window"
         onClick={(e) => e.stopPropagation()}
         style={{
           backgroundColor: resolvedBoxBg,
@@ -75,13 +74,13 @@ export default function ProductPickerModal({
         }}
       >
         <div
-          className={styles['pc-builder-modal-header']}
+          className="pc-builder-modal-header"
           style={{
             borderBottomColor: resolvedBorderColor,
           }}
         >
           <h3
-            className={styles['pc-builder-modal-title']}
+            className="pc-builder-modal-title"
             style={{
               color: headingColor,
               fontFamily: headingFont || 'inherit',
@@ -89,72 +88,58 @@ export default function ProductPickerModal({
           >
             {labels.modalSelectPrefix} {slot?.label || activeModalSlot}
           </h3>
-          <button
-            className={styles['pc-builder-modal-close']}
-            onClick={onClose}
-            style={{ color: textColor }}
-          >
+          <button className="pc-builder-modal-close" onClick={onClose} style={{ color: textColor }}>
             ✕
           </button>
         </div>
-        <div className={styles['pc-builder-modal-body']}>
+        <div className="pc-builder-modal-body">
           {filteredProducts.length === 0 ? (
-            <div className={styles['pc-builder-modal-empty']} style={{ color: textColor }}>
+            <div className="pc-builder-modal-empty" style={{ color: textColor }}>
               {labels.noItems}
             </div>
           ) : (
             filteredProducts.map((product) => {
               const isSelected = selections[activeModalSlot]?.id === product.id
-
-              // 🔍 Run compatibility evaluation for this product
               const compatibility = checkCompatibility(product, activeModalSlot, selections)
 
               return (
                 <div
                   key={product.id}
-                  className={styles['pc-builder-product-row']}
+                  className="pc-builder-product-row"
+                  onClick={() => onSelect(activeModalSlot, product)}
                   style={{
-                    backgroundColor: isSelected ? '#e2e8f0' : resolvedBoxBg,
+                    backgroundColor: isSelected
+                      ? 'var(--pc-box-bg-secondary, #f1f5f9)'
+                      : resolvedBoxBg,
                     borderColor: resolvedBorderColor,
-                    opacity: compatibility.isCompatible ? 1 : 0.65, // Dim incompatible parts slightly
+                    opacity: compatibility.isCompatible ? 1 : 0.65,
                   }}
                 >
-                  <div
-                    className={styles['pc-builder-product-info']}
-                    onClick={() => onSelect(activeModalSlot, product)}
-                  >
+                  <div className="pc-builder-product-info">
                     {product.featuredImage?.url && (
-                      <div className={styles['pc-builder-product-thumb']}>
+                      <div className="pc-builder-product-thumb">
                         <Image
                           src={product.featuredImage.url}
                           alt={product.title}
-                          width={45}
-                          height={45}
+                          width={32}
+                          height={32}
                           className="object-contain"
                         />
                       </div>
                     )}
-                    <div>
+                    <div className="pc-builder-product-details">
                       <div
-                        className={styles['pc-builder-product-title']}
-                        style={{ color: headingColor }}
+                        className="pc-builder-product-title"
+                        style={{ color: headingColor, fontFamily: bodyFont || 'inherit' }}
                       >
                         {getLocalizedTitle(product)}
                       </div>
-                      <div
-                        className={styles['pc-builder-product-price']}
-                        style={{ color: '#10b981' }}
-                      >
-                        ${product.price}
-                      </div>
-
-                      {/* ⚠️ Render compatibility warning message if incompatible */}
                       {!compatibility.isCompatible && compatibility.reason && (
                         <div
                           style={{
-                            fontSize: '0.8rem',
+                            fontSize: '0.75rem',
                             color: '#ef4444',
-                            marginTop: '4px',
+                            marginTop: '2px',
                             fontWeight: 500,
                           }}
                         >
@@ -163,10 +148,17 @@ export default function ProductPickerModal({
                       )}
                     </div>
                   </div>
-                  <div className={styles['pc-builder-product-actions-wrapper']}>
-                    {isSelected && (
-                      <span style={{ color: '#10b981', fontWeight: 600 }}>✓ Selected</span>
-                    )}
+                  <div className="pc-builder-product-right-group">
+                    <span className="pc-builder-product-price" style={{ color: '#10b981' }}>
+                      ${product.price}
+                    </span>
+                    <div className="pc-builder-product-actions-wrapper">
+                      {isSelected && (
+                        <span style={{ color: '#10b981', fontWeight: 600, fontSize: '13px' }}>
+                          ✓
+                        </span>
+                      )}
+                    </div>
                   </div>
                 </div>
               )
