@@ -99,7 +99,6 @@
 
 .pc-builder-exchange-label {
   font-size: 14px;
-  color: var(--pc-body-color, #000);
   font-weight: 600;
   font-family: var(--font-family);
 }

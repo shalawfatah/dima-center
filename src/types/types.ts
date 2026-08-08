@@ -326,3 +326,24 @@ export interface ProductInfoSidebarProps {
   boxPriceColor?: string
   borderColor?: string
 }
+
+export interface BuildSummarySidebarProps {
+  t: Record<string, string>
+  currentLocale: string
+  mounted: boolean
+  totalPrice: number
+  totalOriginalPrice: number
+  dynamicExchangeRate: number
+  buyerNumber: string
+  setBuyerNumber: (value: string) => void
+  hasSelections: boolean
+  onSubmit: (e: React.SubmitEvent<HTMLFormElement>) => void
+  fontFam: string
+  titleColor?: string
+  bodyColor?: string
+  boxTitleColor?: string
+  boxBodyColor?: string
+  boxPriceColor?: string
+  boxBgColor?: string
+  borderColor?: string
+}

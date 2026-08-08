@@ -1,28 +1,7 @@
-import React from 'react'
 import { exchangeLabel, phoneAriaLabel, pickLocale } from '@/utils/pc_builder_translations'
 import { submitLabel, whatsappPriceNotice } from '@/utils/pc_build_items'
 import styles from '@/styles/pc_builder.module.css'
-
-interface BuildSummarySidebarProps {
-  t: Record<string, string>
-  currentLocale: string
-  mounted: boolean
-  totalPrice: number
-  totalOriginalPrice: number
-  dynamicExchangeRate: number
-  buyerNumber: string
-  setBuyerNumber: (value: string) => void
-  hasSelections: boolean
-  onSubmit: (e: React.FormEvent<HTMLFormElement>) => void
-  fontFam: string
-  titleColor?: string
-  bodyColor?: string
-  boxTitleColor?: string
-  boxBodyColor?: string
-  boxPriceColor?: string
-  boxBgColor?: string
-  borderColor?: string
-}
+import { BuildSummarySidebarProps } from '@/types/types'
 
 export default function BuildSummarySidebar({
   t,
@@ -46,7 +25,6 @@ export default function BuildSummarySidebar({
 }: BuildSummarySidebarProps) {
   const submitDisabled = !mounted || !hasSelections
 
-  // Resolve settings with proper fallbacks
   const headingColor = boxTitleColor || titleColor || '#000000'
   const textColor = boxBodyColor || bodyColor || '#333333'
   const priceColor = boxPriceColor || textColor
