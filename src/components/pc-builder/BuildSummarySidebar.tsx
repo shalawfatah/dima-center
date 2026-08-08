@@ -13,10 +13,13 @@ interface BuildSummarySidebarProps {
   buyerNumber: string
   setBuyerNumber: (value: string) => void
   hasSelections: boolean
-  onSubmit: (e: React.SubmitEvent<HTMLFormElement>) => void
+  onSubmit: (e: React.FormEvent<HTMLFormElement>) => void
   fontFam: string
   titleColor?: string
   bodyColor?: string
+  boxTitleColor?: string
+  boxBodyColor?: string
+  boxPriceColor?: string
   boxBgColor?: string
   borderColor?: string
 }
@@ -35,12 +38,18 @@ export default function BuildSummarySidebar({
   fontFam,
   titleColor,
   bodyColor,
+  boxTitleColor,
+  boxBodyColor,
+  boxPriceColor,
   boxBgColor,
   borderColor,
 }: BuildSummarySidebarProps) {
   const submitDisabled = !mounted || !hasSelections
-  const headingColor = titleColor || '#000000'
-  const textColor = bodyColor || '#333333'
+
+  // Resolve settings with proper fallbacks
+  const headingColor = boxTitleColor || titleColor || '#000000'
+  const textColor = boxBodyColor || bodyColor || '#333333'
+  const priceColor = boxPriceColor || textColor
   const resolvedBoxBg = boxBgColor || '#ffffff'
   const resolvedBorderColor = borderColor || '#e2e8f0'
 
@@ -62,6 +71,7 @@ export default function BuildSummarySidebar({
         >
           {t.summary}
         </h3>
+
         <div
           className={styles['pc-builder-exchange-container']}
           style={{
@@ -77,11 +87,12 @@ export default function BuildSummarySidebar({
           </span>
           <span
             className={styles['pc-builder-exchange-value']}
-            style={{ color: headingColor, backgroundColor: 'transparent' }}
+            style={{ color: priceColor, backgroundColor: 'transparent' }}
           >
             {(totalPrice * dynamicExchangeRate).toLocaleString()} د.ع
           </span>
         </div>
+
         <div
           className={styles['pc-builder-price-row']}
           style={{ borderTopColor: resolvedBorderColor }}
@@ -91,18 +102,23 @@ export default function BuildSummarySidebar({
           </span>
           <div className={styles['pc-builder-total-price-wrap']}>
             {totalOriginalPrice > totalPrice && (
-              <span className={styles['pc-builder-total-original']} style={{ color: textColor }}>
+              <span
+                className={styles['pc-builder-total-original']}
+                style={{ color: priceColor, opacity: 0.8 }}
+              >
                 ${totalOriginalPrice.toLocaleString()}
               </span>
             )}
-            <span className={styles['pc-builder-price-value']} style={{ color: textColor }}>
+            <span className={styles['pc-builder-price-value']} style={{ color: priceColor }}>
               ${totalPrice.toLocaleString()}
             </span>
           </div>
         </div>
+
         <div className={styles['pc-builder-whatsapp-notice']} style={{ color: textColor }}>
           ℹ️ {whatsappPriceNotice[currentLocale] || whatsappPriceNotice.en}
         </div>
+
         <form onSubmit={onSubmit} className={styles['pc-builder-order-form']}>
           <input
             type="tel"

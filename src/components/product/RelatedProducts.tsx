@@ -3,6 +3,13 @@ import RelatedProductCard from './RelatedProductCard'
 import styles from '@/styles/product-detail.module.css'
 import { headingLabel } from '@/utils/related_products_dict'
 
+interface ExtendedRelatedProductsProps extends RelatedProductsProps {
+  boxTitleColor?: string
+  boxBodyColor?: string
+  boxPriceColor?: string
+  boxBgColor?: string
+}
+
 export default function RelatedProducts({
   items = [],
   currentLocale,
@@ -15,14 +22,19 @@ export default function RelatedProducts({
   titleColor,
   bodyColor,
   borderColor,
-}: RelatedProductsProps) {
+  boxTitleColor,
+  boxBodyColor,
+  boxPriceColor,
+  boxBgColor,
+}: ExtendedRelatedProductsProps) {
   const safeItems = Array.isArray(items) ? items : []
   const isRegionalLocale = ['ar', 'ku', 'ckb'].includes(currentLocale)
   const titleFont = headingFont || (isRegionalLocale ? '"Rudaw", sans-serif' : 'inherit')
 
-  const headingColor = titleColor || '#000000'
-  const textColor = bodyColor || '#333333'
+  const headingColor = boxTitleColor || titleColor || '#000000'
+  const textColor = boxBodyColor || bodyColor || '#333333'
   const resolvedBorderColor = borderColor || '#eee'
+  const resolvedCardBg = boxBgColor || cardBgColor || '#f8fafc'
 
   return (
     <>
@@ -67,12 +79,15 @@ export default function RelatedProducts({
                 currentLocale={currentLocale}
                 isRtl={isRtl}
                 exchangeRate={exchangeRate}
-                cardBgColor={cardBgColor}
+                cardBgColor={resolvedCardBg}
                 headingFont={headingFont}
                 bodyFont={bodyFont}
-                titleColor={titleColor}
-                bodyColor={bodyColor}
-                borderColor={borderColor}
+                titleColor={headingColor}
+                bodyColor={textColor}
+                borderColor={resolvedBorderColor}
+                boxTitleColor={boxTitleColor}
+                boxBodyColor={boxBodyColor}
+                boxPriceColor={boxPriceColor}
               />
             ))}
           </div>

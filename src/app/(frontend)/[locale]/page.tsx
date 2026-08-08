@@ -394,6 +394,9 @@ export default async function StorefrontHome({ params, searchParams }: PageProps
               dynamicFontFaceCSS={dynamicFontFaceCSS}
               titleColor={generalSettings?.typography?.titleColor ?? undefined}
               bodyColor={generalSettings?.typography?.bodyColor ?? undefined}
+              boxTitleColor={generalSettings?.typography?.boxTitleColor ?? undefined}
+              boxBodyColor={generalSettings?.typography?.boxBodyColor ?? undefined}
+              boxPriceColor={generalSettings?.typography?.boxPriceColor ?? undefined}
             />
           </Suspense>
         </main>

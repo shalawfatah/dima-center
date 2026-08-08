@@ -78,17 +78,24 @@ export default async function SearchResultsPage({ params, searchParams }: Search
     dynamicFontFaceCSS += `
       @font-face {
         font-family: '${fontName}';
-        src: url('${bodyFontObj.url}') format('truetype');
+        src: url('${fontName}') format('truetype');
         font-display: swap;
       }
     `
   }
 
-  // 🎯 Extract colors from generalSettings — this was missing entirely
+  // 🎯 Extract exact colors matching the rest of the application
   const titleColor = typography?.titleColor || undefined
   const bodyColor = typography?.bodyColor || undefined
+  const boxTitleColor = typography?.boxTitleColor || undefined
+  const boxBodyColor = typography?.boxBodyColor || undefined
+  const boxPriceColor = typography?.boxPriceColor || undefined
   const boxBgColor = typography?.boxBackgroundColor || undefined
   const boxBorderColor = typography?.boxBorderColor || undefined
+
+  const resolvedSearchTitleColor = boxTitleColor || titleColor || '#000000'
+  const resolvedSearchBodyColor = boxBodyColor || bodyColor || '#333333'
+  const resolvedSearchPriceColor = boxPriceColor || resolvedSearchBodyColor
 
   const matchedProducts: MatchedProduct[] = await searchProducts(query, currentLocale)
 
@@ -103,8 +110,9 @@ export default async function SearchResultsPage({ params, searchParams }: Search
           {
             '--search-heading-font': headingFont,
             '--search-body-font': bodyFont,
-            '--search-title-color': titleColor || '#000000',
-            '--search-body-color': bodyColor || '#333333',
+            '--search-title-color': resolvedSearchTitleColor,
+            '--search-body-color': resolvedSearchBodyColor,
+            '--search-price-color': resolvedSearchPriceColor,
             '--search-card-bg': boxBgColor || '#ffffff',
             '--search-border-color': boxBorderColor || '#eee',
           } as React.CSSProperties
@@ -216,7 +224,7 @@ export default async function SearchResultsPage({ params, searchParams }: Search
                           style={{
                             fontFamily: 'var(--search-body-font)',
                             fontWeight: 'bold',
-                            color: 'var(--search-title-color)',
+                            color: 'var(--search-price-color)',
                           }}
                         >
                           ${product.price}
@@ -228,7 +236,7 @@ export default async function SearchResultsPage({ params, searchParams }: Search
                               fontFamily: 'var(--search-body-font)',
                               color: 'var(--search-body-color)',
                               backgroundColor: 'transparent',
-                              border: `1px solid --search-title-color`,
+                              border: `1px solid var(--search-title-color)`,
                             }}
                           >
                             {product.condition.replace('_', ' ')}

@@ -306,3 +306,23 @@ export interface ProductPageProps {
     id: string
   }>
 }
+
+export interface ProductInfoSidebarProps {
+  product: any
+  currentLocale: string
+  isRtl: boolean
+  finalPrice: number
+  originalPrice: number
+  isDiscounted: boolean
+  iqdPrice: number
+  cardBgColor?: string
+  headingFont?: string
+  bodyFont?: string
+  dynamicFontFaceCSS?: string
+  titleColor?: string
+  bodyColor?: string
+  boxTitleColor?: string
+  boxBodyColor?: string
+  boxPriceColor?: string
+  borderColor?: string
+}

@@ -68,9 +68,12 @@ export default async function PcBuilderPage({ params }: PageProps) {
   let bodyFont = isRtl ? '"Sarchia", sans-serif' : 'system-ui, sans-serif'
   let dynamicFontFaceCSS = ''
 
-  // Extract colors from general settings
+  // Extract all relevant typography colors including box-specific overrides
   const titleColor = typography?.titleColor || undefined
   const bodyColor = typography?.bodyColor || undefined
+  const boxTitleColor = typography?.boxTitleColor || undefined
+  const boxBodyColor = typography?.boxBodyColor || undefined
+  const boxPriceColor = typography?.boxPriceColor || undefined
   const boxBgColor = typography?.boxBackgroundColor || undefined
   const boxBorderColor = typography?.boxBorderColor || undefined
 
@@ -92,7 +95,7 @@ export default async function PcBuilderPage({ params }: PageProps) {
     dynamicFontFaceCSS += `
       @font-face {
         font-family: '${fontName}';
-        src: url('${bodyFontObj.url}') format('truetype');
+        src: url('${fontName}') format('truetype');
         font-display: swap;
       }
     `
@@ -113,6 +116,9 @@ export default async function PcBuilderPage({ params }: PageProps) {
       dynamicFontFaceCSS={dynamicFontFaceCSS}
       titleColor={titleColor}
       bodyColor={bodyColor}
+      boxTitleColor={boxTitleColor}
+      boxBodyColor={boxBodyColor}
+      boxPriceColor={boxPriceColor}
       boxBgColor={boxBgColor}
       boxBorderColor={boxBorderColor}
     />

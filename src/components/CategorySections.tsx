@@ -17,6 +17,9 @@ export default async function CategorySections({
   dynamicFontFaceCSS,
   titleColor,
   bodyColor,
+  boxTitleColor,
+  boxBodyColor,
+  boxPriceColor,
 }: {
   currentLocale: string
   isRtl: boolean
@@ -26,6 +29,9 @@ export default async function CategorySections({
   dynamicFontFaceCSS?: string
   titleColor?: string
   bodyColor?: string
+  boxTitleColor?: string
+  boxBodyColor?: string
+  boxPriceColor?: string
 }) {
   const payload = await getPayload({ config })
 
@@ -44,6 +50,11 @@ export default async function CategorySections({
 
   const typography = generalSettings?.typography
   const boxBgColor = typography?.boxBackgroundColor || undefined
+
+  // Fallback to typography directly if props aren't explicitly passed
+  const resolvedBoxTitleColor = boxTitleColor ?? typography?.boxTitleColor ?? undefined
+  const resolvedBoxBodyColor = boxBodyColor ?? typography?.boxBodyColor ?? undefined
+  const resolvedBoxPriceColor = boxPriceColor ?? typography?.boxPriceColor ?? undefined
 
   if (!uiCategoriesResult.docs.length) return null
 
@@ -135,6 +146,9 @@ export default async function CategorySections({
             boxBorderColor={generalSettings?.typography?.boxBorderColor}
             titleColor={titleColor}
             bodyColor={bodyColor}
+            boxTitleColor={resolvedBoxTitleColor}
+            boxBodyColor={resolvedBoxBodyColor}
+            boxPriceColor={resolvedBoxPriceColor}
           />
         </section>
       ))}

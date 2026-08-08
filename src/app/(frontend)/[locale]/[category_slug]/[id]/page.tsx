@@ -33,9 +33,12 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
   const exchangeRate = settings?.exchangeRate || 1500
   const boxBgColor = settings?.typography?.boxBackgroundColor || undefined
 
-  // 🎯 Extract titleColor and bodyColor from settings
+  // 🎯 Extract colors from settings
   const titleColor = settings?.typography?.titleColor || undefined
   const bodyColor = settings?.typography?.bodyColor || undefined
+  const boxTitleColor = settings?.typography?.boxTitleColor || undefined
+  const boxBodyColor = settings?.typography?.boxBodyColor || undefined
+  const boxPriceColor = settings?.typography?.boxPriceColor || undefined
   const boxBorderColor = settings?.typography?.boxBorderColor || undefined
 
   // Extract fonts
@@ -116,7 +119,6 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
           and: [
             { [categoryKey]: { equals: categoryId } },
             { id: { not_equals: product.id } },
-            // 👇 Add this condition to exclude out-of-stock items
             { stock: { greater_than: 0 } },
           ],
         },
@@ -223,6 +225,9 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
               dynamicFontFaceCSS={dynamicFontFaceCSS}
               titleColor={titleColor}
               bodyColor={bodyColor}
+              boxTitleColor={boxTitleColor}
+              boxBodyColor={boxBodyColor}
+              boxPriceColor={boxPriceColor}
             />
           </div>
 
@@ -238,6 +243,10 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
             titleColor={titleColor}
             bodyColor={bodyColor}
             borderColor={boxBorderColor}
+            boxTitleColor={boxTitleColor}
+            boxBodyColor={boxBodyColor}
+            boxPriceColor={boxPriceColor}
+            boxBgColor={boxBgColor}
           />
         </main>
       </div>

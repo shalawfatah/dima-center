@@ -15,6 +15,9 @@ interface ExtendedRelatedProductCardProps extends RelatedProductCardProps {
   titleColor?: string
   bodyColor?: string
   borderColor?: string
+  boxTitleColor?: string
+  boxBodyColor?: string
+  boxPriceColor?: string
 }
 
 /**
@@ -55,6 +58,9 @@ export default function RelatedProductCard({
   titleColor,
   bodyColor,
   borderColor,
+  boxTitleColor,
+  boxBodyColor,
+  boxPriceColor,
 }: ExtendedRelatedProductCardProps) {
   // 🎯 Resolve image for both Products and UIProducts
   const itemImgUrl = resolveProductImage(item)
@@ -100,9 +106,10 @@ export default function RelatedProductCard({
   const titleFont = headingFont || (isRegionalLocale ? '"Rudaw", sans-serif' : 'inherit')
   const bodyFontFamily = bodyFont || (isRegionalLocale ? '"Rudaw", sans-serif' : 'inherit')
 
-  // Use provided colors or fallbacks
-  const headingColor = titleColor || '#000000'
-  const textColor = bodyColor || '#333333'
+  // Use provided box colors or general fallbacks
+  const headingColor = boxTitleColor || titleColor || '#000000'
+  const textColor = boxBodyColor || bodyColor || '#333333'
+  const priceColor = boxPriceColor || textColor
 
   return (
     <Link
@@ -116,9 +123,6 @@ export default function RelatedProductCard({
           '--related-body-color': textColor,
           '--related-heading-font': titleFont,
           '--related-body-font': bodyFontFamily,
-          // NOTE: backgroundColor removed from here — same bug as ProductCard.tsx.
-          // The outer Link has no border-radius/overflow:hidden, so painting the
-          // bg here made square corners bleed past the inner rounded card.
         } as React.CSSProperties
       }
     >
@@ -146,7 +150,6 @@ export default function RelatedProductCard({
             <div className={styles.imagePlaceholder}>📦 No Image</div>
           )}
         </div>
-
         <h4
           className={styles.title}
           style={{
@@ -166,8 +169,9 @@ export default function RelatedProductCard({
           currentLocale={currentLocale}
           headingFont={headingFont}
           bodyFont={bodyFont}
-          titleColor={titleColor}
-          bodyColor={bodyColor}
+          titleColor={headingColor}
+          bodyColor={textColor}
+          priceColor={priceColor}
         />
       </div>
     </Link>

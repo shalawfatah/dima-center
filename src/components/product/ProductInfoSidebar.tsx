@@ -6,6 +6,7 @@ import {
   stockStatusLabel,
   totalLabel,
 } from '@/utils/single_page_dicts'
+import { ProductInfoSidebarProps } from '@/types/types'
 
 function getStockText(stock: number, currentLocale: string) {
   if (stock > 0) {
@@ -16,23 +17,6 @@ function getStockText(stock: number, currentLocale: string) {
   if (currentLocale === 'ar') return 'غير متوفر'
   if (currentLocale === 'ckb') return 'بڕاوە'
   return 'Out of Stock'
-}
-
-interface ProductInfoSidebarProps {
-  product: any
-  currentLocale: string
-  isRtl: boolean
-  finalPrice: number
-  originalPrice: number
-  isDiscounted: boolean
-  iqdPrice: number
-  cardBgColor?: string
-  headingFont?: string
-  bodyFont?: string
-  dynamicFontFaceCSS?: string
-  titleColor?: string
-  bodyColor?: string
-  borderColor?: string
 }
 
 export default function ProductInfoSidebar({
@@ -49,6 +33,9 @@ export default function ProductInfoSidebar({
   dynamicFontFaceCSS,
   titleColor,
   bodyColor,
+  boxTitleColor,
+  boxBodyColor,
+  boxPriceColor,
   borderColor,
 }: ProductInfoSidebarProps) {
   const realIqdPrice =
@@ -68,9 +55,10 @@ export default function ProductInfoSidebar({
   const titleFont = headingFont || (isRegionalLocale ? '"Rudaw", sans-serif' : 'inherit')
   const bodyFontFamily = bodyFont || (isRegionalLocale ? '"Rudaw", sans-serif' : 'inherit')
 
-  // Use provided colors or fallbacks
-  const headingColor = titleColor || '#000000'
-  const textColor = bodyColor || '#333333'
+  // Explicit mapping for Box typography overrides
+  const headingColor = boxTitleColor || titleColor || '#000000'
+  const textColor = boxBodyColor || bodyColor || '#333333'
+  const priceColor = boxPriceColor || textColor
 
   return (
     <>
@@ -90,6 +78,7 @@ export default function ProductInfoSidebar({
             '--sidebar-body-font': bodyFontFamily,
             '--sidebar-heading-color': headingColor,
             '--sidebar-body-color': textColor,
+            '--sidebar-price-color': priceColor,
           } as React.CSSProperties
         }
       >
@@ -151,14 +140,17 @@ export default function ProductInfoSidebar({
             }}
           >
             <span
-              style={{ color: 'var(--sidebar-body-color)', fontFamily: 'var(--sidebar-body-font)' }}
+              style={{
+                color: 'var(--sidebar-body-color)',
+                fontFamily: 'var(--sidebar-body-font)',
+              }}
             >
               {stockStatusLabel[currentLocale] || stockStatusLabel.en}
             </span>
             <span
               style={{
                 fontWeight: 'bold',
-                color: product.stock > 0 ? '#16a34a' : '#dc2626',
+                color: 'var(--sidebar-body-color)',
                 fontFamily: 'var(--sidebar-body-font)',
               }}
             >
@@ -197,6 +189,8 @@ export default function ProductInfoSidebar({
                   fontSize: '16px',
                   textAlign: 'center',
                   fontFamily: 'var(--sidebar-body-font)',
+                  color: 'var(--sidebar-body-color)',
+                  backgroundColor: 'transparent',
                 }}
               />
             </div>
@@ -231,8 +225,8 @@ export default function ProductInfoSidebar({
                 isRtl={isRtl}
                 headingFont={headingFont}
                 bodyFont={bodyFont}
-                titleColor={titleColor}
-                bodyColor={bodyColor}
+                titleColor={headingColor}
+                bodyColor={priceColor}
               />
             </div>
 
@@ -242,7 +236,7 @@ export default function ProductInfoSidebar({
               iqdPrice={realIqdPrice}
               currentLocale={currentLocale}
               bodyFont={bodyFont}
-              bodyColor={bodyColor}
+              bodyColor={textColor}
             />
           </div>
         </div>

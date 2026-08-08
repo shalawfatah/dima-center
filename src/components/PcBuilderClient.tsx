@@ -28,6 +28,9 @@ interface ExtendedPcBuilderClientProps extends PcBuilderClientProps {
   dynamicFontFaceCSS?: string
   titleColor?: string
   bodyColor?: string
+  boxTitleColor?: string
+  boxBodyColor?: string
+  boxPriceColor?: string
   boxBgColor?: string
   boxBorderColor?: string
 }
@@ -42,6 +45,9 @@ export default function PcBuilderClient({
   dynamicFontFaceCSS,
   titleColor,
   bodyColor,
+  boxTitleColor,
+  boxBodyColor,
+  boxPriceColor,
   boxBgColor,
   boxBorderColor,
 }: ExtendedPcBuilderClientProps) {
@@ -59,7 +65,6 @@ export default function PcBuilderClient({
 
   const dynamicExchangeRate = generals?.exchangeRate ?? 1500
 
-  // Signal layout mounting sequence to prevent layout flashes without synchronous setState warning
   useEffect(() => {
     queueMicrotask(() => {
       setMounted(true)
@@ -118,7 +123,7 @@ export default function PcBuilderClient({
     return calculateBuildTotals(selections)
   }, [selections, mounted])
 
-  const handleWhatsAppBuildOrder = (e: React.SubmitEvent<HTMLFormElement>) => {
+  const handleWhatsAppBuildOrder = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     if (!buyerNumber.trim()) {
       alert(phoneErrorLabel[currentLocale] || phoneErrorLabel.en)
@@ -153,7 +158,6 @@ export default function PcBuilderClient({
   const t = dict[currentLocale] || dict['en']
   const isRegionalLocale = ['ar', 'ku', 'ckb'].includes(currentLocale)
 
-  // Use provided fonts or fallback
   const titleFont =
     headingFont ||
     (isRegionalLocale
@@ -165,13 +169,11 @@ export default function PcBuilderClient({
       ? '"Rudaw", "Inter", "Noto Sans Arabic", -apple-system, sans-serif'
       : '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif')
 
-  // Use provided colors or fallbacks
   const headingColor = titleColor || '#000000'
   const textColor = bodyColor || '#333333'
   const resolvedBoxBg = boxBgColor || '#ffffff'
   const resolvedBorderColor = boxBorderColor || '#e2e8f0'
 
-  // Get site background color with safe fallback
   const siteBackgroundColor = generals?.siteBackground?.backgroundColor || 'transparent'
 
   const hasSelections = Object.keys(selections).length > 0
@@ -257,6 +259,9 @@ export default function PcBuilderClient({
                 onQuantityChange={updateSlotQuantity}
                 titleColor={titleColor}
                 bodyColor={bodyColor}
+                boxTitleColor={boxTitleColor}
+                boxBodyColor={boxBodyColor}
+                boxPriceColor={boxPriceColor}
                 headingFont={headingFont}
                 bodyFont={bodyFont}
                 boxBgColor={boxBgColor}
@@ -279,6 +284,9 @@ export default function PcBuilderClient({
             fontFam={bodyFontFamily}
             titleColor={titleColor}
             bodyColor={bodyColor}
+            boxTitleColor={boxTitleColor}
+            boxBodyColor={boxBodyColor}
+            boxPriceColor={boxPriceColor}
             boxBgColor={boxBgColor}
             borderColor={boxBorderColor}
           />
@@ -297,6 +305,9 @@ export default function PcBuilderClient({
             onClose={closeModal}
             titleColor={titleColor}
             bodyColor={bodyColor}
+            boxTitleColor={boxTitleColor}
+            boxBodyColor={boxBodyColor}
+            boxPriceColor={boxPriceColor}
             headingFont={headingFont}
             bodyFont={bodyFont}
             boxBgColor={boxBgColor}

@@ -63,8 +63,11 @@ export default function ProductCard({
   bodyFont,
   titleColor,
   bodyColor,
+  boxTitleColor,
+  boxBodyColor,
+  boxPriceColor,
   boxBorderColor,
-}: ProductCardProps) {
+}: ProductCardProps & { boxTitleColor?: string; boxBodyColor?: string; boxPriceColor?: string }) {
   const currentTitle = resolveDisplayTitle(product, currentLocale)
   const imageUrl = resolveImageUrl(product)
 
@@ -81,9 +84,10 @@ export default function ProductCard({
   const resolvedBg = cardBgColor || '#f8fafc'
   const resolvedBorderColor = boxBorderColor || '#e2e8f0'
 
-  // Use provided colors or fallbacks
-  const headingColor = titleColor || '#000000'
-  const textColor = bodyColor || '#333333'
+  // Use general settings colors or fallbacks
+  const headingColor = boxTitleColor || titleColor || '#000000'
+  const textColor = boxBodyColor || bodyColor || '#333333'
+  const priceColor = boxPriceColor || textColor
 
   // Build badge text
   const badgeText = hasDiscount
@@ -109,6 +113,7 @@ export default function ProductCard({
           '--pc-body-font': bodyFont || 'inherit',
           '--pc-heading-color': headingColor,
           '--pc-body-color': textColor,
+          '--pc-price-color': priceColor,
         } as React.CSSProperties
       }
     >
@@ -200,7 +205,7 @@ export default function ProductCard({
           </button>
         </div>
 
-        <div className={styles['pc-info-panel']} style={{ backgroundColor: 'transparent' }}>
+        <div className={styles['pc-info-panel']} style={{ backgroundColor: '#00000050' }}>
           <h3
             className={styles['pc-title']}
             style={{
@@ -218,7 +223,7 @@ export default function ProductCard({
                     className={styles['pc-price-final']}
                     style={{
                       fontFamily: 'var(--pc-body-font)',
-                      color: 'var(--pc-body-color)',
+                      color: 'var(--pc-price-color)',
                     }}
                   >
                     {t.currency}
@@ -240,7 +245,7 @@ export default function ProductCard({
                   className={styles['pc-price-final']}
                   style={{
                     fontFamily: 'var(--pc-body-font)',
-                    color: 'var(--pc-body-color)',
+                    color: 'var(--pc-price-color)',
                   }}
                 >
                   {t.currency}
@@ -253,7 +258,7 @@ export default function ProductCard({
                 className={styles['pc-iqd-badge']}
                 style={{
                   fontFamily: 'var(--pc-body-font)',
-                  color: 'var(--pc-body-color)',
+                  color: 'var(--pc-price-color)',
                 }}
               >
                 {priceIQDValue.toLocaleString()} IQD د.ع

@@ -661,9 +661,21 @@ export interface GeneralSetting {
      */
     bodyColor?: string | null;
     /**
-     * Background color for cards, boxes, or callout containers (e.g. #f8fafc or #1e293b).
+     * Background color for cards, boxes, or callout containers.
      */
     boxBackgroundColor?: string | null;
+    /**
+     * Color of Title/Heading text inside a box.
+     */
+    boxTitleColor?: string | null;
+    /**
+     * Color of body text inside a box.
+     */
+    boxBodyColor?: string | null;
+    /**
+     * Color for prices displayed inside boxes or cards.
+     */
+    boxPriceColor?: string | null;
     /**
      * Border color for cards, boxes, or containers (e.g. #e0d6c6 or transparent).
      */
@@ -712,7 +724,7 @@ export interface GeneralSetting {
   address?: string | null;
   socials?:
     | {
-        platform: 'facebook' | 'instagram' | 'tiktok' | 'whatsapp' | 'linkedin';
+        platform: 'facebook' | 'instagram' | 'tiktok' | 'whatsapp' | 'linkedin' | 'snapchat' | 'youtube';
         url: string;
         id?: string | null;
       }[]
@@ -739,6 +751,9 @@ export interface GeneralSettingsSelect<T extends boolean = true> {
         titleColor?: T;
         bodyColor?: T;
         boxBackgroundColor?: T;
+        boxTitleColor?: T;
+        boxBodyColor?: T;
+        boxPriceColor?: T;
         boxBorderColor?: T;
         kurdish?:
           | T

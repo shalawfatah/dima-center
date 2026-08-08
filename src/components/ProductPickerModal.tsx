@@ -1,5 +1,3 @@
-'use client'
-
 import Image from 'next/image'
 import '@/styles/pc-builder-styles/product-picker-modal.css'
 import { COMPONENT_SLOTS } from '@/utils/pc_build_items'
@@ -17,6 +15,9 @@ interface ProductPickerModalProps {
   onClose: () => void
   titleColor?: string
   bodyColor?: string
+  boxTitleColor?: string
+  boxBodyColor?: string
+  boxPriceColor?: string
   headingFont?: string
   bodyFont?: string
   boxBgColor?: string
@@ -33,13 +34,17 @@ export default function ProductPickerModal({
   onClose,
   titleColor,
   bodyColor,
+  boxTitleColor,
+  boxBodyColor,
+  boxPriceColor,
   headingFont,
   bodyFont,
   boxBgColor,
   borderColor,
 }: ProductPickerModalProps) {
-  const headingColor = titleColor || '#000000'
-  const textColor = bodyColor || '#333333'
+  const headingColor = boxTitleColor || titleColor || '#000000'
+  const textColor = boxBodyColor || bodyColor || '#333333'
+  const priceColor = boxPriceColor || '#10b981'
   const resolvedBoxBg = boxBgColor || '#ffffff'
   const resolvedBorderColor = borderColor || '#e2e8f0'
 
@@ -149,12 +154,12 @@ export default function ProductPickerModal({
                     </div>
                   </div>
                   <div className="pc-builder-product-right-group">
-                    <span className="pc-builder-product-price" style={{ color: '#10b981' }}>
+                    <span className="pc-builder-product-price" style={{ color: priceColor }}>
                       ${product.price}
                     </span>
                     <div className="pc-builder-product-actions-wrapper">
                       {isSelected && (
-                        <span style={{ color: '#10b981', fontWeight: 600, fontSize: '13px' }}>
+                        <span style={{ color: priceColor, fontWeight: 600, fontSize: '13px' }}>
                           ✓
                         </span>
                       )}

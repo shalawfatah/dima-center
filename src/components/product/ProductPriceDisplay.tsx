@@ -1,6 +1,10 @@
 import { ProductPriceDisplayProps } from '@/types/types'
 import { formatCurrency } from './formatCurrency'
 
+interface ExtendedProductPriceDisplayProps extends ProductPriceDisplayProps {
+  priceColor?: string
+}
+
 export default function ProductPriceDisplay({
   variant,
   finalPrice,
@@ -12,7 +16,8 @@ export default function ProductPriceDisplay({
   bodyFont,
   titleColor,
   bodyColor,
-}: ProductPriceDisplayProps) {
+  priceColor,
+}: ExtendedProductPriceDisplayProps) {
   const isRegionalLocale = ['ar', 'ku', 'ckb'].includes(currentLocale)
   const titleFont = headingFont || (isRegionalLocale ? '"Rudaw", sans-serif' : 'inherit')
   const bodyFontFamily = bodyFont || (isRegionalLocale ? '"Rudaw", sans-serif' : 'inherit')
@@ -20,13 +25,14 @@ export default function ProductPriceDisplay({
   // Use provided colors or fallbacks
   const headingColor = titleColor || '#000000'
   const textColor = bodyColor || '#333333'
+  const resolvedPriceColor = priceColor || textColor
 
   if (variant === 'detail') {
     return (
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '4px' }}>
         <div
           style={{
-            color: textColor,
+            color: resolvedPriceColor,
             padding: '4px 10px',
             borderRadius: '6px',
             fontSize: '15px',
@@ -43,9 +49,10 @@ export default function ProductPriceDisplay({
               style={{
                 fontSize: '14px',
                 textDecoration: 'line-through',
-                color: textColor,
+                color: resolvedPriceColor,
                 fontWeight: '500',
                 fontFamily: bodyFontFamily,
+                opacity: 0.8,
               }}
             >
               {formatCurrency(originalPrice, currentLocale)}
@@ -54,7 +61,7 @@ export default function ProductPriceDisplay({
               style={{
                 fontSize: '2.25rem',
                 fontWeight: '800',
-                color: '#ef4444',
+                color: resolvedPriceColor,
                 fontFamily: titleFont,
               }}
             >
@@ -66,7 +73,7 @@ export default function ProductPriceDisplay({
             style={{
               fontSize: '2.25rem',
               fontWeight: '800',
-              color: headingColor,
+              color: resolvedPriceColor,
               fontFamily: titleFont,
             }}
           >
@@ -83,7 +90,7 @@ export default function ProductPriceDisplay({
       <span
         style={{
           fontSize: '12px',
-          color: textColor,
+          color: resolvedPriceColor,
           fontWeight: '600',
           fontFamily: bodyFontFamily,
         }}
@@ -97,7 +104,7 @@ export default function ProductPriceDisplay({
               style={{
                 fontWeight: 'bold',
                 fontSize: '15px',
-                color: '#ef4444',
+                color: resolvedPriceColor,
                 fontFamily: titleFont,
               }}
             >
@@ -107,8 +114,9 @@ export default function ProductPriceDisplay({
               style={{
                 fontSize: '11px',
                 textDecoration: 'line-through',
-                color: textColor,
+                color: resolvedPriceColor,
                 fontFamily: bodyFontFamily,
+                opacity: 0.8,
               }}
             >
               {formatCurrency(originalPrice, currentLocale)}

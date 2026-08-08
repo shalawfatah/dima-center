@@ -4,7 +4,7 @@ export const GeneralSettings: GlobalConfig = {
   slug: 'general-settings',
   label: 'General Settings',
   admin: {
-    group: 'System', // Organizes it into a sidebar group
+    group: 'System',
   },
   access: {
     read: () => true,
@@ -67,7 +67,7 @@ export const GeneralSettings: GlobalConfig = {
       type: 'group',
       label: 'Typography & Custom Fonts',
       fields: [
-        // --- Global Typography Colors ---
+        // --- Global Typography Colors (50% / 50%) ---
         {
           type: 'row',
           fields: [
@@ -77,7 +77,7 @@ export const GeneralSettings: GlobalConfig = {
               label: 'Title / Heading Color',
               defaultValue: '#000000',
               admin: {
-                width: '33.33%',
+                width: '50%',
                 description: 'Default color for h1, h2, h3, etc. (e.g. #000000 or #f8fafc).',
               },
             },
@@ -87,11 +87,17 @@ export const GeneralSettings: GlobalConfig = {
               label: 'Body Text Color',
               defaultValue: '#333333',
               admin: {
-                width: '33.33%',
+                width: '50%',
                 description:
                   'Default color for paragraphs and general text (e.g. #333333 or #94a3b8).',
               },
             },
+          ],
+        },
+        // --- Box/Card Colors (33.33% x 3) ---
+        {
+          type: 'row',
+          fields: [
             {
               name: 'boxBackgroundColor',
               type: 'text',
@@ -99,22 +105,52 @@ export const GeneralSettings: GlobalConfig = {
               defaultValue: '#f8fafc',
               admin: {
                 width: '33.33%',
-                description:
-                  'Background color for cards, boxes, or callout containers (e.g. #f8fafc or #1e293b).',
+                description: 'Background color for cards, boxes, or callout containers.',
+              },
+            },
+            {
+              name: 'boxTitleColor',
+              type: 'text',
+              label: 'Box Title Color',
+              defaultValue: '#000000',
+              admin: {
+                width: '33.33%',
+                description: 'Color of Title/Heading text inside a box.',
+              },
+            },
+            {
+              name: 'boxBodyColor',
+              type: 'text',
+              label: 'Box Body Color',
+              defaultValue: '#333333',
+              admin: {
+                width: '33.33%',
+                description: 'Color of body text inside a box.',
               },
             },
           ],
         },
+        // --- Box Price & Border Color (33.33% / 66.66%) ---
         {
           type: 'row',
           fields: [
+            {
+              name: 'boxPriceColor',
+              type: 'text',
+              label: 'Box Price Color',
+              defaultValue: '#10b981',
+              admin: {
+                width: '33.33%',
+                description: 'Color for prices displayed inside boxes or cards.',
+              },
+            },
             {
               name: 'boxBorderColor',
               type: 'text',
               label: 'Box Border Color',
               defaultValue: '#e0d6c6',
               admin: {
-                width: '50%',
+                width: '66.66%',
                 description:
                   'Border color for cards, boxes, or containers (e.g. #e0d6c6 or transparent).',
               },
@@ -349,6 +385,8 @@ export const GeneralSettings: GlobalConfig = {
                 { label: 'TikTok', value: 'tiktok' },
                 { label: 'WhatsApp', value: 'whatsapp' },
                 { label: 'LinkedIn', value: 'linkedin' },
+                { label: 'Snapchat', value: 'snapchat' },
+                { label: 'Youtube', value: 'youtube' },
               ],
             },
             {

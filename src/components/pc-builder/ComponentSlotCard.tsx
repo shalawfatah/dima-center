@@ -2,6 +2,12 @@ import Image from 'next/image'
 import '@/styles/pc-builder-styles/component-slot-card.css'
 import { ComponentSlotCardProps } from '@/types/types'
 
+interface ExtendedComponentSlotCardProps extends ComponentSlotCardProps {
+  boxTitleColor?: string
+  boxBodyColor?: string
+  boxPriceColor?: string
+}
+
 export default function ComponentSlotCard({
   slot,
   chosenItem,
@@ -12,12 +18,16 @@ export default function ComponentSlotCard({
   onQuantityChange,
   titleColor,
   bodyColor,
+  boxTitleColor,
+  boxBodyColor,
+  boxPriceColor,
   bodyFont,
   boxBgColor,
   borderColor,
-}: ComponentSlotCardProps) {
-  const headingColor = titleColor || '#000000'
-  const textColor = bodyColor || '#333333'
+}: ExtendedComponentSlotCardProps) {
+  const headingColor = boxTitleColor || titleColor || '#000000'
+  const textColor = boxBodyColor || bodyColor || '#333333'
+  const priceColor = boxPriceColor || '#10b981'
   const resolvedBoxBg = boxBgColor || '#ffffff'
   const resolvedBorderColor = borderColor || '#e2e8f0'
 
@@ -53,7 +63,7 @@ export default function ComponentSlotCard({
               {getLocalizedTitle(chosenItem)}
             </div>
           ) : (
-            <div className="pc-builder-empty-slot" style={{ color: '#94a3b8' }}>
+            <div className="pc-builder-empty-slot" style={{ color: textColor, opacity: 0.6 }}>
               {t?.selectComponent || 'Select component'}
             </div>
           )}
@@ -63,7 +73,7 @@ export default function ComponentSlotCard({
       <div className="pc-builder-right-group" onClick={(e) => e.stopPropagation()}>
         {chosenItem && (
           <>
-            <span className="pc-builder-chosen-price" style={{ color: '#10b981' }}>
+            <span className="pc-builder-chosen-price" style={{ color: priceColor }}>
               ${chosenItem.price}
             </span>
             <div className="pc-builder-actions-group">

@@ -22,6 +22,9 @@ interface CarouselPropsWithBg extends ExtendedProductCarouselProps {
   bodyFont?: string
   titleColor?: string
   bodyColor?: string
+  boxTitleColor?: string
+  boxBodyColor?: string
+  boxPriceColor?: string
   boxBorderColor?: string
 }
 
@@ -38,6 +41,9 @@ export default function ProductCarousel({
   bodyFont,
   titleColor,
   bodyColor,
+  boxTitleColor,
+  boxBodyColor,
+  boxPriceColor,
   boxBorderColor,
 }: CarouselPropsWithBg) {
   const { emblaRef, emblaDirection, canScrollPrev, canScrollNext, scrollPrev, scrollNext } =
@@ -162,6 +168,9 @@ export default function ProductCarousel({
               bodyFont={bodyFont}
               titleColor={titleColor}
               bodyColor={bodyColor}
+              boxTitleColor={boxTitleColor}
+              boxBodyColor={boxBodyColor}
+              boxPriceColor={boxPriceColor}
               boxBorderColor={boxBorderColor}
             />
           ))}
