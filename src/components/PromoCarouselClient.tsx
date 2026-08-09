@@ -6,15 +6,7 @@ import useEmblaCarousel from 'embla-carousel-react'
 import Autoplay from 'embla-carousel-autoplay'
 import Image from 'next/image'
 import styles from '@/styles/promo_carousel.module.css'
-
-interface PromoCarouselClientProps {
-  promotions: any[]
-  currentLocale: string
-  isRtl: boolean
-  headingFont?: string
-  bodyFont?: string
-  dynamicFontFaceCSS?: string
-}
+import { PromoCarouselClientProps } from '@/types/promo_types'
 
 function getLocalizedField(field: any, currentLocale: string): string {
   if (!field) return ''

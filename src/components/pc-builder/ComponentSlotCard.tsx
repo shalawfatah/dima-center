@@ -48,8 +48,8 @@ export default function ComponentSlotCard({
             <Image
               src={displayImage}
               alt={chosenItem?.title ?? slot.label}
-              width={32}
-              height={32}
+              width={96}
+              height={96}
               className="object-contain pc-builder-thumb-img"
             />
           </div>
