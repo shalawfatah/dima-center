@@ -121,177 +121,10 @@ export async function executeDifferentialSync() {
   }
 
   // =================================================================
-  // 2. FETCH & SYNC PRODUCTS
-  // =================================================================
-  payload.logger.info('⏳ Fetching existing or fallback category for required relationship...')
-
-  let fallbackCategoryId: string | number
-  const existingFallback = await payload.find({
-    collection: 'categories',
-    where: { slug: { equals: 'uncategorized' } },
-    limit: 1,
-    locale: DEFAULT_LOCALE,
-  })
-
-  if (existingFallback.docs.length > 0) {
-    fallbackCategoryId = existingFallback.docs[0].id
-  } else {
-    const fallbackCat = await payload.create({
-      collection: 'categories',
-      data: {
-        title: 'Uncategorized',
-        slug: 'uncategorized',
-      },
-      context: {
-        skipSlugValidation: true,
-      },
-      locale: DEFAULT_LOCALE,
-    })
-    fallbackCategoryId = fallbackCat.id
-  }
-
-  payload.logger.info('📡 Fetching active Bruska catalog snapshot...')
-  const itemRes = await fetch(`${BASE_URL}${PREFIX}/items?branchId=${BRANCH_ID}&t=${timestamp}`, {
-    method: 'GET',
-    headers: requestHeaders,
-    cache: 'no-store',
-  })
-
-  if (!itemRes.ok) throw new Error('Failed to retrieve items from endpoint.')
-
-  const itemData = await itemRes.json()
-  const allItems: ExternalItem[] = itemData.items || []
-
-  const externalActiveIds = new Set<string>()
-  let createCount = 0
-  let updateCount = 0
-  const errors: { item: string; message: string }[] = []
-
-  for (const item of allItems) {
-    externalActiveIds.add(item._id)
-    try {
-      const existingItem = await payload.find({
-        collection: 'products',
-        where: { code: { equals: item._id } },
-        limit: 1,
-        locale: DEFAULT_LOCALE,
-      })
-
-      const calculatedStock =
-        (item.barcode && stockByBarcode[item.barcode.trim()] !== undefined
-          ? stockByBarcode[item.barcode.trim()]
-          : undefined) ??
-        item.quantity ??
-        0
-
-      if (existingItem.docs.length > 0) {
-        const current = existingItem.docs[0] as any
-
-        const dbPrice = parseFloat(current.price) || 0
-        const apiPrice = parseFloat(item.price as any) || 0
-
-        const dbStock = parseInt(current.stock, 10) || 0
-        const apiStock = parseInt(calculatedStock as any, 10) || 0
-
-        const needsCodeLinkUpdate = !current.code || current.code !== item._id
-
-        if (dbPrice !== apiPrice || dbStock !== apiStock || needsCodeLinkUpdate) {
-          const currentTitle =
-            typeof current.title === 'string' ? current.title : current.title?.en || item.name
-
-          const safeSpecs = Array.isArray(current.technicalSpecs)
-            ? current.technicalSpecs.map((spec: any) => ({
-                key: spec.key || '',
-                value: typeof spec.value === 'string' ? spec.value : spec.value?.en || '',
-              }))
-            : undefined
-
-          const updateData: Record<string, any> = {
-            title: currentTitle,
-            price: apiPrice,
-            stock: apiStock,
-          }
-
-          if (safeSpecs) {
-            updateData.technicalSpecs = safeSpecs
-          }
-
-          if (needsCodeLinkUpdate) {
-            updateData.code = item._id
-          }
-
-          payload.logger.info(
-            `🔄 Updating price/stock: ${item.name} (ID: ${current.id}) — price ${dbPrice}→${apiPrice}, stock ${dbStock}→${apiStock}`,
-          )
-
-          await payload.update({
-            collection: 'products',
-            id: current.id,
-            data: updateData,
-            locale: DEFAULT_LOCALE,
-          })
-          updateCount++
-        }
-      } else {
-        payload.logger.info(`✨ Creating product: ${item.name}`)
-
-        const productPayloadData = {
-          title: item.name,
-          description: item.description || '',
-          barcode: item.barcode || '',
-          code: item._id,
-          price: item.price || 0,
-          stock: calculatedStock,
-          brand: item.brand || '',
-          condition: 'new' as const,
-          category: fallbackCategoryId,
-          hasDiscount: false,
-        }
-
-        await payload.create({
-          collection: 'products',
-          data: productPayloadData,
-          locale: DEFAULT_LOCALE,
-        })
-        createCount++
-      }
-    } catch (err: any) {
-      console.error(`⚠️ Skip error on item ${item.name}:`, err)
-      errors.push({ item: item.name, message: err?.message || String(err) })
-    }
-  }
-
-  // =================================================================
-  // 3. PURGE DELETED PRODUCTS
-  // =================================================================
-  payload.logger.info('🔍 Checking for products removed from Bruska...')
-
-  const localProducts = await payload.find({
-    collection: 'products',
-    limit: 5000,
-    locale: DEFAULT_LOCALE,
-  })
-
-  let deleteCount = 0
-  for (const prod of localProducts.docs as any[]) {
-    if (prod.code && !externalActiveIds.has(prod.code)) {
-      const logTitle =
-        typeof prod.title === 'string'
-          ? prod.title
-          : prod.title?.en || prod.title?.ckb || 'Unknown Item'
-      payload.logger.info(`🗑️ Purging deleted catalog item: ${logTitle}`)
-      await payload.delete({
-        collection: 'products',
-        id: prod.id,
-      })
-      deleteCount++
-    }
-  }
-
-  // =================================================================
-  // 4. SYNC CATEGORIES (DIFFERENTIAL BASED ON SLUG)
+  // 2. SYNC CATEGORIES FIRST (Builds lookup maps for products)
   // =================================================================
   payload.logger.info('⏳ Syncing external categories...')
+  const categoryIdMap = new Map<string, string | number>()
   let syncedCatCount = 0
   let createdCatCount = 0
   let updatedCatCount = 0
@@ -310,14 +143,12 @@ export async function executeDifferentialSync() {
     if (catRes.ok) {
       const catData = await catRes.json()
       const externalCategories: ExternalCategory[] = catData.categories || []
-
       const externalActiveSlugs = new Set<string>()
 
       for (const cat of externalCategories) {
         if (!cat.name) continue
 
         const targetSlug = slugify(cat.name)
-
         const finalSlug =
           targetSlug && targetSlug !== '-'
             ? targetSlug
@@ -335,8 +166,14 @@ export async function executeDifferentialSync() {
             locale: DEFAULT_LOCALE,
           })
 
+          let payloadCatId: string | number
+
           if (existingCat.docs.length > 0) {
             const catDoc = existingCat.docs[0] as any
+            payloadCatId = catDoc.id
+            categoryIdMap.set(cat._id, payloadCatId)
+            categoryIdMap.set(cat.name.toLowerCase(), payloadCatId)
+
             const existingTitleEn =
               typeof catDoc.title === 'object' ? catDoc.title?.en : catDoc.title
 
@@ -360,7 +197,7 @@ export async function executeDifferentialSync() {
             }
           } else {
             payload.logger.info(`✨ Creating new category [slug: ${finalSlug}]: "${cat.name}"`)
-            await payload.create({
+            const newCat = await payload.create({
               collection: 'categories',
               data: {
                 title: cat.name,
@@ -371,6 +208,9 @@ export async function executeDifferentialSync() {
               },
               locale: DEFAULT_LOCALE,
             })
+            payloadCatId = newCat.id
+            categoryIdMap.set(cat._id, payloadCatId)
+            categoryIdMap.set(cat.name.toLowerCase(), payloadCatId)
             createdCatCount++
           }
           syncedCatCount++
@@ -400,15 +240,194 @@ export async function executeDifferentialSync() {
           deletedCatCount++
         }
       }
-
-      payload.logger.info(
-        `📁 Categories Summary — Created: ${createdCatCount}, Updated: ${updatedCatCount}, Purged: ${deletedCatCount}`,
-      )
-    } else {
-      payload.logger.info(`⚠️ Bruska Category API returned status ${catRes.status}`)
     }
   } catch (catSyncErr) {
     console.error('⚠️ Category sync section failed:', catSyncErr)
+  }
+
+  // Ensure fallback category exists
+  let fallbackCategoryId: string | number
+  const existingFallback = await payload.find({
+    collection: 'categories',
+    where: { slug: { equals: 'uncategorized' } },
+    limit: 1,
+    locale: DEFAULT_LOCALE,
+  })
+
+  if (existingFallback.docs.length > 0) {
+    fallbackCategoryId = existingFallback.docs[0].id
+  } else {
+    const fallbackCat = await payload.create({
+      collection: 'categories',
+      data: {
+        title: 'Uncategorized',
+        slug: 'uncategorized',
+      },
+      context: {
+        skipSlugValidation: true,
+      },
+      locale: DEFAULT_LOCALE,
+    })
+    fallbackCategoryId = fallbackCat.id
+  }
+
+  // =================================================================
+  // 3. FETCH & SYNC PRODUCTS
+  // =================================================================
+  payload.logger.info('📡 Fetching active Bruska catalog snapshot...')
+  const itemRes = await fetch(`${BASE_URL}${PREFIX}/items?branchId=${BRANCH_ID}&t=${timestamp}`, {
+    method: 'GET',
+    headers: requestHeaders,
+    cache: 'no-store',
+  })
+
+  if (!itemRes.ok) throw new Error('Failed to retrieve items from endpoint.')
+
+  const itemData = await itemRes.json()
+  const allItems: ExternalItem[] = itemData.items || []
+
+  const externalActiveIds = new Set<string>()
+  let createCount = 0
+  let updateCount = 0
+  const errors: { item: string; message: string }[] = []
+
+  for (const item of allItems) {
+    externalActiveIds.add(item._id)
+    try {
+      // Resolve category against the synced maps
+      let resolvedCategory: number = Number(fallbackCategoryId)
+      if (item.category) {
+        const catKey = typeof item.category === 'string' ? item.category.toLowerCase() : ''
+        const mappedId = categoryIdMap.get(catKey)
+        if (mappedId !== undefined) {
+          resolvedCategory = Number(mappedId)
+        }
+      }
+
+      const existingItem = await payload.find({
+        collection: 'products',
+        where: { code: { equals: item._id } },
+        limit: 1,
+        locale: DEFAULT_LOCALE,
+      })
+
+      const calculatedStock =
+        (item.barcode && stockByBarcode[item.barcode.trim()] !== undefined
+          ? stockByBarcode[item.barcode.trim()]
+          : undefined) ??
+        item.quantity ??
+        0
+
+      if (existingItem.docs.length > 0) {
+        const current = existingItem.docs[0] as any
+
+        const dbPrice = parseFloat(current.price) || 0
+        const apiPrice = parseFloat(item.price as any) || 0
+
+        const dbStock = parseInt(current.stock, 10) || 0
+        const apiStock = parseInt(calculatedStock as any, 10) || 0
+
+        const dbCategory =
+          typeof current.category === 'object' ? current.category?.id : current.category
+
+        const needsCodeLinkUpdate = !current.code || current.code !== item._id
+        const needsCategoryUpdate = dbCategory !== resolvedCategory
+
+        if (
+          dbPrice !== apiPrice ||
+          dbStock !== apiStock ||
+          needsCodeLinkUpdate ||
+          needsCategoryUpdate
+        ) {
+          const currentTitle =
+            typeof current.title === 'string' ? current.title : current.title?.en || item.name
+
+          const safeSpecs = Array.isArray(current.technicalSpecs)
+            ? current.technicalSpecs.map((spec: any) => ({
+                key: spec.key || '',
+                value: typeof spec.value === 'string' ? spec.value : spec.value?.en || '',
+              }))
+            : undefined
+
+          const updateData: Record<string, any> = {
+            title: currentTitle,
+            price: apiPrice,
+            stock: apiStock,
+            category: resolvedCategory,
+          }
+
+          if (safeSpecs) {
+            updateData.technicalSpecs = safeSpecs
+          }
+
+          if (needsCodeLinkUpdate) {
+            updateData.code = item._id
+          }
+
+          payload.logger.info(`🔄 Updating item details: ${item.name} (ID: ${current.id})`)
+
+          await payload.update({
+            collection: 'products',
+            id: current.id,
+            data: updateData,
+            locale: DEFAULT_LOCALE,
+          })
+          updateCount++
+        }
+      } else {
+        payload.logger.info(`✨ Creating product: ${item.name}`)
+
+        const productPayloadData = {
+          title: item.name,
+          description: item.description || '',
+          barcode: item.barcode || '',
+          code: item._id,
+          price: item.price || 0,
+          stock: calculatedStock,
+          brand: item.brand || '',
+          condition: 'new' as const,
+          category: resolvedCategory,
+          hasDiscount: false,
+        }
+
+        await payload.create({
+          collection: 'products',
+          data: productPayloadData,
+          locale: DEFAULT_LOCALE,
+        })
+        createCount++
+      }
+    } catch (err: any) {
+      console.error(`⚠️ Skip error on item ${item.name}:`, err)
+      errors.push({ item: item.name, message: err?.message || String(err) })
+    }
+  }
+
+  // =================================================================
+  // 4. PURGE DELETED PRODUCTS
+  // =================================================================
+  payload.logger.info('🔍 Checking for products removed from Bruska...')
+
+  const localProducts = await payload.find({
+    collection: 'products',
+    limit: 5000,
+    locale: DEFAULT_LOCALE,
+  })
+
+  let deleteCount = 0
+  for (const prod of localProducts.docs as any[]) {
+    if (prod.code && !externalActiveIds.has(prod.code)) {
+      const logTitle =
+        typeof prod.title === 'string'
+          ? prod.title
+          : prod.title?.en || prod.title?.ckb || 'Unknown Item'
+      payload.logger.info(`🗑️ Purging deleted catalog item: ${logTitle}`)
+      await payload.delete({
+        collection: 'products',
+        id: prod.id,
+      })
+      deleteCount++
+    }
   }
 
   payload.logger.info(
