@@ -3,13 +3,46 @@ dotenv.config()
 
 import { getPayload } from 'payload'
 import config from '../payload.config'
-import { CategoryItem, ExternalInventory, ExternalItem, ExternalStock } from '@/types/types'
 
-// The live API includes `categoryId` on each item even though it isn't
-// declared on ExternalItem yet — extend it locally rather than editing the
-// shared type file blind.
-type ExternalItemWithCategory = ExternalItem & { categoryId?: string }
-import { slugify } from 'payload/shared'
+interface ExternalCategory {
+  _id: string
+  name: string
+}
+
+interface ExternalItem {
+  _id: string
+  name: string
+  barcode?: string
+  price: number
+  currency: string
+  quantity?: number
+  category?: string
+  brand?: string
+  description?: string
+}
+
+interface ExternalInventory {
+  _id: string
+  name: string
+}
+
+interface ExternalStock {
+  _id: string
+  name: string
+  code?: string
+  barcode?: string
+  totalQuantity: number
+}
+
+function slugify(text: string): string {
+  return text
+    .toString()
+    .toLowerCase()
+    .trim()
+    .replace(/\s+/g, '-')
+    .replace(/[^\w\-]+/g, '')
+    .replace(/\-\-+/g, '-')
+}
 
 const DEFAULT_LOCALE = 'en'
 
@@ -34,6 +67,9 @@ export async function executeDifferentialSync() {
 
   const timestamp = Date.now()
 
+  // =================================================================
+  // 1. FETCH REAL STOCK LEVELS
+  // =================================================================
   payload.logger.info('📦 Fetching inventories and real stock levels...')
   const stockByBarcode: Record<string, number> = {}
 
@@ -84,9 +120,12 @@ export async function executeDifferentialSync() {
     console.error('⚠️ Stock fetch failed, falling back to items[].quantity:', stockErr)
   }
 
+  // =================================================================
+  // 2. FETCH & SYNC PRODUCTS
+  // =================================================================
   payload.logger.info('⏳ Fetching existing or fallback category for required relationship...')
 
-  let fallbackCategoryId: number
+  let fallbackCategoryId: string | number
   const existingFallback = await payload.find({
     collection: 'categories',
     where: { slug: { equals: 'uncategorized' } },
@@ -95,7 +134,7 @@ export async function executeDifferentialSync() {
   })
 
   if (existingFallback.docs.length > 0) {
-    fallbackCategoryId = Number(existingFallback.docs[0].id)
+    fallbackCategoryId = existingFallback.docs[0].id
   } else {
     const fallbackCat = await payload.create({
       collection: 'categories',
@@ -108,216 +147,7 @@ export async function executeDifferentialSync() {
       },
       locale: DEFAULT_LOCALE,
     })
-    fallbackCategoryId = Number(fallbackCat.id)
-  }
-
-  // =================================================================
-  // 2. SYNC CATEGORIES FIRST (DIFFERENTIAL BASED ON SLUG)
-  // Moved ahead of item processing so we have a slug/id -> local id map
-  // ready before items try to resolve their category.
-  // =================================================================
-  payload.logger.info('⏳ Syncing external categories...')
-  let syncedCatCount = 0
-  let createdCatCount = 0
-  let updatedCatCount = 0
-  let deletedCatCount = 0
-
-  // slug -> local category id
-  const categorySlugToLocalId: Record<string, number> = {}
-  // external category id (CategoryItem.id, top-level only) -> local category id
-  const externalCategoryIdToLocalId: Record<string, number> = {}
-  // lowercased title (top-level AND subCategories) -> local category id
-  const categoryNameToLocalId: Record<string, number> = {}
-
-  // Helper: create-or-update one Payload category doc from a title, returning its local id.
-  // Pass parentId to link this category under a parent (used for subCategories).
-  async function upsertCategory(title: string, parentId?: number): Promise<number> {
-    const targetSlug = slugify(title)
-    const finalSlug =
-      targetSlug && targetSlug !== '-'
-        ? targetSlug
-        : `cat-${Buffer.from(title).toString('hex').slice(0, 8)}`
-
-    const existingCat = await payload.find({
-      collection: 'categories',
-      where: { slug: { equals: finalSlug } },
-      limit: 1,
-      locale: DEFAULT_LOCALE,
-    })
-
-    let localCatId: number
-
-    if (existingCat.docs.length > 0) {
-      const catDoc = existingCat.docs[0] as any
-      localCatId = Number(catDoc.id)
-      const existingTitleEn = typeof catDoc.title === 'object' ? catDoc.title?.en : catDoc.title
-      const existingParentId =
-        catDoc.parent && typeof catDoc.parent === 'object'
-          ? Number(catDoc.parent.id)
-          : catDoc.parent
-            ? Number(catDoc.parent)
-            : undefined
-
-      const needsTitleUpdate = existingTitleEn !== title
-      const needsParentUpdate =
-        parentId !== undefined && Number(existingParentId) !== Number(parentId)
-
-      if (needsTitleUpdate || needsParentUpdate) {
-        payload.logger.info(
-          `📝 Updating category [slug: ${finalSlug}]` +
-            (needsTitleUpdate ? ` title: "${existingTitleEn}" ➔ "${title}"` : '') +
-            (needsParentUpdate ? ` parent: ${existingParentId ?? 'none'} ➔ ${parentId}` : ''),
-        )
-        await payload.update({
-          collection: 'categories',
-          id: catDoc.id,
-          data: {
-            title,
-            ...(needsParentUpdate ? { parent: parentId } : {}),
-          },
-          context: { skipSlugValidation: true },
-          locale: DEFAULT_LOCALE,
-        })
-        updatedCatCount++
-      }
-    } else {
-      payload.logger.info(
-        `✨ Creating new category [slug: ${finalSlug}]: "${title}"` +
-          (parentId ? ` (parent: ${parentId})` : ''),
-      )
-      const createdCat = await payload.create({
-        collection: 'categories',
-        data: {
-          title,
-          slug: finalSlug,
-          ...(parentId ? { parent: parentId } : {}),
-        },
-        context: { skipSlugValidation: true },
-        locale: DEFAULT_LOCALE,
-      })
-      localCatId = Number(createdCat.id)
-      createdCatCount++
-    }
-
-    categorySlugToLocalId[finalSlug] = localCatId
-    categoryNameToLocalId[title.trim().toLowerCase()] = localCatId
-    syncedCatCount++
-    return localCatId
-  }
-
-  try {
-    const catRes = await fetch(
-      `${BASE_URL}${PREFIX}/categories?branchId=${BRANCH_ID}&t=${timestamp}`,
-      {
-        method: 'GET',
-        headers: requestHeaders,
-        cache: 'no-store',
-      },
-    )
-
-    if (catRes.ok) {
-      const catData = await catRes.json()
-      const externalCategories: CategoryItem[] = catData.categories || []
-
-      const externalActiveSlugs = new Set<string>()
-
-      for (const cat of externalCategories) {
-        if (!cat.title) continue
-
-        try {
-          const localCatId = await upsertCategory(cat.title)
-          externalActiveSlugs.add(
-            slugify(cat.title) || `cat-${Buffer.from(cat.title).toString('hex').slice(0, 8)}`,
-          )
-
-          if (cat.id) {
-            externalCategoryIdToLocalId[cat.id] = localCatId
-          }
-
-          // Subcategories don't carry an external id in the API, only
-          // title/slug, so they can only be matched by name later — but we
-          // still create them as their own Payload categories so items
-          // referencing a subcategory name have somewhere real to link to.
-          if (Array.isArray(cat.subCategories)) {
-            for (const sub of cat.subCategories) {
-              if (!sub.title) continue
-              try {
-                await upsertCategory(sub.title, localCatId)
-                externalActiveSlugs.add(
-                  sub.slug ||
-                    slugify(sub.title) ||
-                    `cat-${Buffer.from(sub.title).toString('hex').slice(0, 8)}`,
-                )
-              } catch (subErr: any) {
-                console.error(
-                  `⚠️ Failed to sync subcategory "${sub.title}":`,
-                  subErr?.message || subErr,
-                )
-              }
-            }
-          }
-        } catch (catErr: any) {
-          console.error(`⚠️ Failed to sync category "${cat.title}":`, catErr?.message || catErr)
-        }
-      }
-
-      payload.logger.info('🔍 Checking for categories removed from Bruska...')
-      const localCategories = await payload.find({
-        collection: 'categories',
-        limit: 1000,
-        locale: DEFAULT_LOCALE,
-      })
-
-      for (const localCat of localCategories.docs as any[]) {
-        if (!localCat.slug || localCat.slug === 'uncategorized') continue
-
-        if (!externalActiveSlugs.has(localCat.slug)) {
-          const catTitle = typeof localCat.title === 'object' ? localCat.title?.en : localCat.title
-          payload.logger.info(`🗑️ Purging removed category [slug: ${localCat.slug}]: "${catTitle}"`)
-
-          await payload.delete({
-            collection: 'categories',
-            id: localCat.id,
-          })
-          deletedCatCount++
-        }
-      }
-
-      payload.logger.info(
-        `📁 Categories Summary — Created: ${createdCatCount}, Updated: ${updatedCatCount}, Purged: ${deletedCatCount}`,
-      )
-    } else {
-      payload.logger.info(`⚠️ Bruska Category API returned status ${catRes.status}`)
-    }
-  } catch (catSyncErr) {
-    console.error('⚠️ Category sync section failed:', catSyncErr)
-  }
-
-  /**
-   * Resolve an external item's category reference to a local Payload category id.
-   *
-   * Confirmed against real API response:
-   *   - item.categoryId is the authoritative external category id, matching
-   *     the top-level `id` field from /categories (CategoryItem.id).
-   *   - item.category is the human-readable category (or subcategory) name,
-   *     used as a fallback since subcategories have no id in the API.
-   */
-  function resolveLocalCategoryId(item: ExternalItemWithCategory): number {
-    if (item.categoryId && externalCategoryIdToLocalId[item.categoryId]) {
-      return externalCategoryIdToLocalId[item.categoryId]
-    }
-
-    if (item.category) {
-      const byName = categoryNameToLocalId[item.category.trim().toLowerCase()]
-      if (byName) return byName
-    }
-
-    // Nothing matched — fall back, but log it so unmapped categories are
-    // visible instead of silently disappearing into "Uncategorized".
-    payload.logger.info(
-      `⚠️ Could not resolve category for "${item.name}" (categoryId: ${item.categoryId || 'none'}, category: ${item.category || 'none'}) — using fallback.`,
-    )
-    return fallbackCategoryId
+    fallbackCategoryId = fallbackCat.id
   }
 
   payload.logger.info('📡 Fetching active Bruska catalog snapshot...')
@@ -330,12 +160,11 @@ export async function executeDifferentialSync() {
   if (!itemRes.ok) throw new Error('Failed to retrieve items from endpoint.')
 
   const itemData = await itemRes.json()
-  const allItems: ExternalItemWithCategory[] = itemData.items || []
+  const allItems: ExternalItem[] = itemData.items || []
 
   const externalActiveIds = new Set<string>()
   let createCount = 0
   let updateCount = 0
-  let categoryFixCount = 0
   const errors: { item: string; message: string }[] = []
 
   for (const item of allItems) {
@@ -355,8 +184,6 @@ export async function executeDifferentialSync() {
         item.quantity ??
         0
 
-      const resolvedCategoryId = resolveLocalCategoryId(item)
-
       if (existingItem.docs.length > 0) {
         const current = existingItem.docs[0] as any
 
@@ -368,20 +195,7 @@ export async function executeDifferentialSync() {
 
         const needsCodeLinkUpdate = !current.code || current.code !== item._id
 
-        // current.category can be a populated doc, an id, or null depending on depth
-        const currentCategoryId =
-          current.category && typeof current.category === 'object'
-            ? current.category.id
-            : current.category
-
-        const needsCategoryUpdate = String(currentCategoryId) !== String(resolvedCategoryId)
-
-        if (
-          dbPrice !== apiPrice ||
-          dbStock !== apiStock ||
-          needsCodeLinkUpdate ||
-          needsCategoryUpdate
-        ) {
+        if (dbPrice !== apiPrice || dbStock !== apiStock || needsCodeLinkUpdate) {
           const currentTitle =
             typeof current.title === 'string' ? current.title : current.title?.en || item.name
 
@@ -406,14 +220,8 @@ export async function executeDifferentialSync() {
             updateData.code = item._id
           }
 
-          if (needsCategoryUpdate) {
-            updateData.category = resolvedCategoryId
-            categoryFixCount++
-          }
-
           payload.logger.info(
-            `🔄 Updating price/stock: ${item.name} (ID: ${current.id}) — price ${dbPrice}→${apiPrice}, stock ${dbStock}→${apiStock}` +
-              (needsCategoryUpdate ? `, category ${currentCategoryId}→${resolvedCategoryId}` : ''),
+            `🔄 Updating price/stock: ${item.name} (ID: ${current.id}) — price ${dbPrice}→${apiPrice}, stock ${dbStock}→${apiStock}`,
           )
 
           await payload.update({
@@ -436,7 +244,7 @@ export async function executeDifferentialSync() {
           stock: calculatedStock,
           brand: item.brand || '',
           condition: 'new' as const,
-          category: resolvedCategoryId,
+          category: fallbackCategoryId,
           hasDiscount: false,
         }
 
@@ -480,13 +288,135 @@ export async function executeDifferentialSync() {
     }
   }
 
+  // =================================================================
+  // 4. SYNC CATEGORIES (DIFFERENTIAL BASED ON SLUG)
+  // =================================================================
+  payload.logger.info('⏳ Syncing external categories...')
+  let syncedCatCount = 0
+  let createdCatCount = 0
+  let updatedCatCount = 0
+  let deletedCatCount = 0
+
+  try {
+    const catRes = await fetch(
+      `${BASE_URL}${PREFIX}/categories?branchId=${BRANCH_ID}&t=${timestamp}`,
+      {
+        method: 'GET',
+        headers: requestHeaders,
+        cache: 'no-store',
+      },
+    )
+
+    if (catRes.ok) {
+      const catData = await catRes.json()
+      const externalCategories: ExternalCategory[] = catData.categories || []
+
+      const externalActiveSlugs = new Set<string>()
+
+      for (const cat of externalCategories) {
+        if (!cat.name) continue
+
+        const targetSlug = slugify(cat.name)
+
+        const finalSlug =
+          targetSlug && targetSlug !== '-'
+            ? targetSlug
+            : `cat-${Buffer.from(cat.name).toString('hex').slice(0, 8)}`
+
+        externalActiveSlugs.add(finalSlug)
+
+        try {
+          const existingCat = await payload.find({
+            collection: 'categories',
+            where: {
+              slug: { equals: finalSlug },
+            },
+            limit: 1,
+            locale: DEFAULT_LOCALE,
+          })
+
+          if (existingCat.docs.length > 0) {
+            const catDoc = existingCat.docs[0] as any
+            const existingTitleEn =
+              typeof catDoc.title === 'object' ? catDoc.title?.en : catDoc.title
+
+            if (existingTitleEn !== cat.name) {
+              payload.logger.info(
+                `📝 Updating title for category [slug: ${finalSlug}]: "${existingTitleEn}" ➔ "${cat.name}"`,
+              )
+
+              await payload.update({
+                collection: 'categories',
+                id: catDoc.id,
+                data: {
+                  title: cat.name,
+                },
+                context: {
+                  skipSlugValidation: true,
+                },
+                locale: DEFAULT_LOCALE,
+              })
+              updatedCatCount++
+            }
+          } else {
+            payload.logger.info(`✨ Creating new category [slug: ${finalSlug}]: "${cat.name}"`)
+            await payload.create({
+              collection: 'categories',
+              data: {
+                title: cat.name,
+                slug: finalSlug,
+              },
+              context: {
+                skipSlugValidation: true,
+              },
+              locale: DEFAULT_LOCALE,
+            })
+            createdCatCount++
+          }
+          syncedCatCount++
+        } catch (catErr: any) {
+          console.error(`⚠️ Failed to sync category "${cat.name}":`, catErr?.message || catErr)
+        }
+      }
+
+      payload.logger.info('🔍 Checking for categories removed from Bruska...')
+      const localCategories = await payload.find({
+        collection: 'categories',
+        limit: 1000,
+        locale: DEFAULT_LOCALE,
+      })
+
+      for (const localCat of localCategories.docs as any[]) {
+        if (!localCat.slug || localCat.slug === 'uncategorized') continue
+
+        if (!externalActiveSlugs.has(localCat.slug)) {
+          const catTitle = typeof localCat.title === 'object' ? localCat.title?.en : localCat.title
+          payload.logger.info(`🗑️ Purging removed category [slug: ${localCat.slug}]: "${catTitle}"`)
+
+          await payload.delete({
+            collection: 'categories',
+            id: localCat.id,
+          })
+          deletedCatCount++
+        }
+      }
+
+      payload.logger.info(
+        `📁 Categories Summary — Created: ${createdCatCount}, Updated: ${updatedCatCount}, Purged: ${deletedCatCount}`,
+      )
+    } else {
+      payload.logger.info(`⚠️ Bruska Category API returned status ${catRes.status}`)
+    }
+  } catch (catSyncErr) {
+    console.error('⚠️ Category sync section failed:', catSyncErr)
+  }
+
   payload.logger.info(
-    `🏁 Sync Complete. Products Created: ${createCount}, Updated: ${updateCount} (category fixes: ${categoryFixCount}), Purged: ${deleteCount}, Categories Synced: ${syncedCatCount}, Errors: ${errors.length}`,
+    `🏁 Sync Complete. Products Created: ${createCount}, Updated: ${updateCount}, Purged: ${deleteCount}, Categories Synced: ${syncedCatCount}, Errors: ${errors.length}`,
   )
   return {
     created: createCount,
     updated: updateCount,
-    categoryFixes: categoryFixCount,
     deleted: deleteCount,
     categoriesSynced: syncedCatCount,
     errors,
