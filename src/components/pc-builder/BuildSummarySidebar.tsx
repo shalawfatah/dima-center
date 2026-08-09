@@ -51,49 +51,78 @@ export default function BuildSummarySidebar({
         </h3>
 
         <div
-          className={styles['pc-builder-exchange-container']}
+          className={styles['pc-builder-price-row']}
           style={{
             borderColor: resolvedBorderColor,
             backgroundColor: 'transparent',
+            borderTop: 'none',
+            paddingTop: 0,
           }}
         >
           <span
-            className={styles['pc-builder-exchange-label']}
-            style={{ color: textColor, backgroundColor: 'transparent' }}
+            className={styles['pc-builder-price-label']}
+            style={{
+              color: textColor,
+              fontFamily: fontFam,
+            }}
           >
             {pickLocale(exchangeLabel, currentLocale)}
           </span>
-          <span
-            className={styles['pc-builder-exchange-value']}
-            style={{ color: priceColor, backgroundColor: 'transparent' }}
-          >
-            {(totalPrice * dynamicExchangeRate).toLocaleString()} د.ع
-          </span>
+          <div className={styles['pc-builder-total-price-wrap']}>
+            <span
+              className={styles['pc-builder-price-value']}
+              style={{
+                color: priceColor,
+                fontFamily: fontFam,
+              }}
+            >
+              {(totalPrice * dynamicExchangeRate).toLocaleString()} د.ع
+            </span>
+          </div>
         </div>
 
         <div
           className={styles['pc-builder-price-row']}
-          style={{ borderTopColor: resolvedBorderColor }}
+          style={{
+            borderTopColor: resolvedBorderColor,
+            fontFamily: fontFam,
+          }}
         >
-          <span className={styles['pc-builder-price-label']} style={{ color: textColor }}>
+          <span
+            className={styles['pc-builder-price-label']}
+            style={{
+              color: textColor,
+              fontFamily: fontFam,
+            }}
+          >
             {t.totalPrice}
           </span>
           <div className={styles['pc-builder-total-price-wrap']}>
             {totalOriginalPrice > totalPrice && (
               <span
                 className={styles['pc-builder-total-original']}
-                style={{ color: priceColor, opacity: 0.8 }}
+                style={{
+                  color: priceColor,
+                  opacity: 0.8,
+                  fontFamily: fontFam,
+                }}
               >
                 ${totalOriginalPrice.toLocaleString()}
               </span>
             )}
-            <span className={styles['pc-builder-price-value']} style={{ color: priceColor }}>
+            <span
+              className={styles['pc-builder-price-value']}
+              style={{
+                color: priceColor,
+                fontFamily: fontFam,
+              }}
+            >
               ${totalPrice.toLocaleString()}
             </span>
           </div>
         </div>
 
-        <div className={styles['pc-builder-whatsapp-notice']} style={{ color: textColor }}>
+        <div className={styles['pc-builder-whatsapp-notice']}>
           ℹ️ {whatsappPriceNotice[currentLocale] || whatsappPriceNotice.en}
         </div>
 
