@@ -21,7 +21,7 @@ export const COMPONENT_SLOTS = [
   {
     key: 'm-2',
     label: 'Storage (SSD/HDD)',
-    categorySlug: 'm-2',
+    categorySlug: 'storage',
     defaultImage: '/categories/m2.png',
   },
   {

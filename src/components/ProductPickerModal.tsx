@@ -2,27 +2,7 @@ import Image from 'next/image'
 import '@/styles/pc-builder-styles/product-picker-modal.css'
 import { COMPONENT_SLOTS } from '@/utils/pc_build_items'
 import { checkCompatibility } from '@/utils/pc_compatibility'
-
-interface ProductPickerModalProps {
-  activeModalSlot: string
-  products: any[]
-  currentLocale: string
-  labels: { modalSelectPrefix: string; noItems: string }
-  selections: Record<string, any>
-  getLocalizedTitle: (product: any) => string
-  onSelect: (slotKey: string, product: any) => void
-  onAddToCart: (product: any) => void
-  onClose: () => void
-  titleColor?: string
-  bodyColor?: string
-  boxTitleColor?: string
-  boxBodyColor?: string
-  boxPriceColor?: string
-  headingFont?: string
-  bodyFont?: string
-  boxBgColor?: string
-  borderColor?: string
-}
+import { ProductPickerModalProps } from '@/types/types'
 
 export default function ProductPickerModal({
   activeModalSlot,
@@ -63,6 +43,22 @@ export default function ProductPickerModal({
         const pCat = getCatValue(p.category).toLowerCase()
         const pCatAlt = getCatValue(p.cat).toLowerCase()
         const targetSlug = slot.categorySlug.toLowerCase()
+
+        // Special fallback rule for storage slot to catch m.2, ssd, hdd, storage variations
+        if (activeModalSlot === 'm-2') {
+          return (
+            pCat.includes('storage') ||
+            pCat.includes('ssd') ||
+            pCat.includes('hdd') ||
+            pCat.includes('m.2') ||
+            pCat.includes('m-2') ||
+            pCatAlt.includes('storage') ||
+            pCatAlt.includes('ssd') ||
+            pCatAlt.includes('hdd') ||
+            pCatAlt.includes('m.2') ||
+            pCatAlt.includes('m-2')
+          )
+        }
 
         return pCat === targetSlug || pCatAlt === targetSlug
       })

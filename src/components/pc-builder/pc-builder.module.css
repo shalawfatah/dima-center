@@ -106,7 +106,7 @@
 .pc-builder-exchange-value {
   font-size: 16px;
   font-weight: 800;
-  color: var(--pc-heading-color, #000);
+  color: var(--pc-heading-color);
   font-family: var(--heading-font);
 }
 

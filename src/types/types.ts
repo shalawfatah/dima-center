@@ -1,6 +1,7 @@
 // types/types.ts
 
 import { carouselDictionary } from '@/utils/carousel_dictionary'
+import { PcBuilderClientProps } from '@/utils/pc_build_items'
 
 type Dictionary = (typeof carouselDictionary)['en']
 
@@ -344,6 +345,41 @@ export interface BuildSummarySidebarProps {
   boxTitleColor?: string
   boxBodyColor?: string
   boxPriceColor?: string
+  boxBgColor?: string
+  borderColor?: string
+}
+
+export interface ExtendedPcBuilderClientProps extends PcBuilderClientProps {
+  generals?: GeneralSettingsData
+  headingFont?: string
+  bodyFont?: string
+  dynamicFontFaceCSS?: string
+  titleColor?: string
+  bodyColor?: string
+  boxTitleColor?: string
+  boxBodyColor?: string
+  boxPriceColor?: string
+  boxBgColor?: string
+  boxBorderColor?: string
+}
+
+export interface ProductPickerModalProps {
+  activeModalSlot: string
+  products: any[]
+  currentLocale: string
+  labels: { modalSelectPrefix: string; noItems: string }
+  selections: Record<string, any>
+  getLocalizedTitle: (product: any) => string
+  onSelect: (slotKey: string, product: any) => void
+  onAddToCart: (product: any) => void
+  onClose: () => void
+  titleColor?: string
+  bodyColor?: string
+  boxTitleColor?: string
+  boxBodyColor?: string
+  boxPriceColor?: string
+  headingFont?: string
+  bodyFont?: string
   boxBgColor?: string
   borderColor?: string
 }

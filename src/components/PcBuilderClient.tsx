@@ -2,13 +2,7 @@
 
 import { useState, useEffect, useMemo, useCallback } from 'react'
 import { useLocalStorageState } from '../utils/pc_build_local_storage'
-import {
-  COMPONENT_SLOTS,
-  dict,
-  PcBuilderClientProps,
-  phoneErrorLabel,
-} from '@/utils/pc_build_items'
-import { GeneralSettingsData } from '@/types/types'
+import { COMPONENT_SLOTS, dict, phoneErrorLabel } from '@/utils/pc_build_items'
 import ProductPickerModal from './ProductPickerModal'
 import ComponentSlotCard from '@/components/pc-builder/ComponentSlotCard'
 import BuildSummarySidebar from '@/components/pc-builder/BuildSummarySidebar'
@@ -20,20 +14,7 @@ import { addProductToCart } from '@/utils/pc_builder_cart'
 import { buildWhatsAppOrderMessage, sendWhatsAppOrder } from '@/utils/pc_builder_whatsapp'
 import styles from '@/styles/pc_builder.module.css'
 import { usePcBuilderUrlSync } from '@/utils/use_pc_builder_url_sync'
-
-interface ExtendedPcBuilderClientProps extends PcBuilderClientProps {
-  generals?: GeneralSettingsData
-  headingFont?: string
-  bodyFont?: string
-  dynamicFontFaceCSS?: string
-  titleColor?: string
-  bodyColor?: string
-  boxTitleColor?: string
-  boxBodyColor?: string
-  boxPriceColor?: string
-  boxBgColor?: string
-  boxBorderColor?: string
-}
+import { ExtendedPcBuilderClientProps } from '@/types/types'
 
 export default function PcBuilderClient({
   products,
