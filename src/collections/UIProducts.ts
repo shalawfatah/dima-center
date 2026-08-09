@@ -14,11 +14,10 @@ export const UIProducts: CollectionConfig = {
       required: true,
       localized: true, // Supports EN, AR, CKB
     },
-    // --- ADDED: Cross-Collection Unique Slug ---
     {
       name: 'slug',
       type: 'text',
-      required: false, // Optional if it links externally or acts as a banner
+      required: false,
       unique: true,
       validate: validateCrossCollectionSlug('products'),
       admin: {
@@ -74,6 +73,7 @@ export const UIProducts: CollectionConfig = {
       options: [
         { label: 'None', value: 'none' },
         { label: 'Link to CRM Product', value: 'product' },
+        { label: 'Link to Category (e.g. CPU, GPU)', value: 'category' },
         { label: 'Static URL / External Link', value: 'static' },
       ],
       admin: {
@@ -88,6 +88,16 @@ export const UIProducts: CollectionConfig = {
       admin: {
         condition: (data) => data?.linkType === 'product',
         description: 'Select the CRM product this item points to.',
+      },
+    },
+    {
+      name: 'linkedCategory',
+      type: 'relationship',
+      relationTo: 'categories',
+      required: true,
+      admin: {
+        condition: (data) => data?.linkType === 'category',
+        description: 'Select a category (main or nested subcategory like cpu, gpu).',
       },
     },
     {

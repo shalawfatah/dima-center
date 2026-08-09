@@ -291,11 +291,15 @@ export interface UiProduct {
   /**
    * Choose what happens when the user clicks this item.
    */
-  linkType?: ('none' | 'product' | 'static') | null;
+  linkType?: ('none' | 'product' | 'category' | 'static') | null;
   /**
    * Select the CRM product this item points to.
    */
   linkedProduct?: (number | null) | Product;
+  /**
+   * Select a category (main or nested subcategory like cpu, gpu).
+   */
+  linkedCategory?: (number | null) | Category;
   /**
    * Enter a custom route (e.g. /custom-landing) or external URL (https://...).
    */
@@ -564,6 +568,7 @@ export interface UiProductsSelect<T extends boolean = true> {
   category?: T;
   linkType?: T;
   linkedProduct?: T;
+  linkedCategory?: T;
   staticUrl?: T;
   order?: T;
   metadata?: T;

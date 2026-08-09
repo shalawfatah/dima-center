@@ -16,19 +16,12 @@ interface PromoCarouselClientProps {
   dynamicFontFaceCSS?: string
 }
 
-/**
- * Safely resolves localized fields with strict fallback hierarchy:
- * Preferred Locale -> EN -> CKB -> AR -> Any available non-empty string
- */
 function getLocalizedField(field: any, currentLocale: string): string {
   if (!field) return ''
 
-  // 1. Direct string check
   if (typeof field === 'string' && field.trim()) return field.trim()
 
-  // 2. Handle localized object structure: { en: '...', ckb: '...', ar: '...' }
   if (typeof field === 'object' && field !== null) {
-    // A. Requested locale
     if (
       field[currentLocale] &&
       typeof field[currentLocale] === 'string' &&
@@ -37,7 +30,6 @@ function getLocalizedField(field: any, currentLocale: string): string {
       return field[currentLocale].trim()
     }
 
-    // B. Preferred fallbacks in order
     const priorityKeys = ['en', 'ckb', 'ar']
     for (const key of priorityKeys) {
       if (field[key] && typeof field[key] === 'string' && field[key].trim()) {
@@ -45,7 +37,6 @@ function getLocalizedField(field: any, currentLocale: string): string {
       }
     }
 
-    // C. Scan all object values for ANY non-empty string
     for (const val of Object.values(field)) {
       if (typeof val === 'string' && val.trim()) {
         return val.trim()
@@ -153,7 +144,7 @@ export default function PromoCarouselClient({
               const rawDescription = promo.description || promo.linkedProduct?.description
               const description = getLocalizedField(rawDescription, currentLocale)
 
-              // Resolve dynamic links matching the rest of the application (category_slug/product_id)
+              // Resolve dynamic links matching product, category, or static targets
               let targetUrl: string | null = null
               let shouldLink = false
 
@@ -165,6 +156,15 @@ export default function PromoCarouselClient({
                 // Resolves to /[locale]/[category_slug]/[id]
                 targetUrl = `/${currentLocale}/${catSlug}/${prodId}`
                 shouldLink = true
+              } else if (promo.linkType === 'category' && promo.linkedCategory) {
+                const linkedCat = promo.linkedCategory
+                const catSlug = typeof linkedCat === 'object' ? linkedCat.slug : linkedCat
+
+                if (catSlug) {
+                  // Resolves to /[locale]?category=[slug]
+                  targetUrl = `/${currentLocale}?category=${catSlug}`
+                  shouldLink = true
+                }
               } else if (promo.linkType === 'static' && promo.staticUrl) {
                 targetUrl = promo.staticUrl.startsWith('http')
                   ? promo.staticUrl
