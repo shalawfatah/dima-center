@@ -35,8 +35,9 @@ export default function PriceFilter({
     onFilterChange(currentMin, value)
   }
 
-  const handleSortSelect = (sortOrder: 'asc' | 'desc') => {
-    const nextSort = currentSort === sortOrder ? null : sortOrder
+  const handleSortChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const value = e.target.value as 'asc' | 'desc' | ''
+    const nextSort = value === '' ? null : value
     if (onSortChange) {
       onSortChange(nextSort)
     }
@@ -91,39 +92,23 @@ export default function PriceFilter({
             padding-inline-start: 1.5rem;
           }
 
-          .sort-chips-container {
-            display: flex;
-            gap: 0.5rem;
-          }
-
-          .sort-chip-btn {
-            flex: 1;
-            padding: 0.45rem 0.6rem;
+          .sort-select-dropdown {
+            width: 100%;
+            padding: 0.5rem 0.75rem;
             border-radius: 8px;
-            font-size: 12px;
+            font-size: 13px;
             font-weight: 500;
             cursor: pointer;
-            transition: all 0.2s ease;
             border: 1px solid ${resolvedBorder};
             background-color: transparent;
-            color: ${resolvedTextColor};
-            white-space: nowrap;
-            text-align: center;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
+            color: inherit;
+            outline: none;
+            transition: border-color 0.2s ease;
           }
 
-          .sort-chip-btn:hover {
+          .sort-select-dropdown:hover,
+          .sort-select-dropdown:focus {
             border-color: #2563eb;
-            color: #2563eb;
-          }
-
-          .sort-chip-btn.active {
-            background-color: #2563eb !important;
-            color: #ffffff !important;
-            border-color: #2563eb !important;
-            font-weight: 600;
           }
 
           /* Dual Range Input Styling */
@@ -266,22 +251,21 @@ export default function PriceFilter({
           >
             {t.sortTitle}
           </span>
-          <div className="sort-chips-container">
-            <button
-              type="button"
-              onClick={() => handleSortSelect('asc')}
-              className={`sort-chip-btn ${currentSort === 'asc' ? 'active' : ''}`}
-            >
+          <select
+            value={currentSort || ''}
+            onChange={handleSortChange}
+            className="sort-select-dropdown"
+          >
+            <option value="" style={{ color: '#000' }}>
+              {currentLocale === 'ar' ? 'افتراضي' : currentLocale === 'ckb' ? 'ئاسایی' : 'Default'}
+            </option>
+            <option value="asc" style={{ color: '#000' }}>
               {t.lowToHigh}
-            </button>
-            <button
-              type="button"
-              onClick={() => handleSortSelect('desc')}
-              className={`sort-chip-btn ${currentSort === 'desc' ? 'active' : ''}`}
-            >
+            </option>
+            <option value="desc" style={{ color: '#000' }}>
               {t.highToLow}
-            </button>
-          </div>
+            </option>
+          </select>
         </div>
       </div>
     </div>
