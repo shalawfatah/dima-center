@@ -60,6 +60,16 @@ export default function ProductInfoSidebar({
   const textColor = boxBodyColor || bodyColor || '#333333'
   const priceColor = boxPriceColor || textColor
 
+  // Check if product is part of 'case-offers'
+  const categorySlug =
+    typeof product?.category === 'object' && product?.category !== null
+      ? product.category.slug
+      : typeof product?.category === 'string'
+        ? product.category
+        : ''
+
+  const isCaseOffer = Boolean(product.isCaseOffer) || categorySlug === 'case-offers'
+
   return (
     <>
       {dynamicFontFaceCSS && <style dangerouslySetInnerHTML={{ __html: dynamicFontFaceCSS }} />}
@@ -131,77 +141,84 @@ export default function ProductInfoSidebar({
         </div>
 
         <div style={{ borderTop: `1px solid ${resolvedBorderColor}`, paddingTop: '1.5rem' }}>
-          <div
-            style={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              marginBottom: '1rem',
-            }}
-          >
-            <span
+          {/* Hide stock status row ONLY for case-offers */}
+          {!isCaseOffer && (
+            <div
               style={{
-                color: 'var(--sidebar-body-color)',
-                fontFamily: 'var(--sidebar-body-font)',
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                marginBottom: '1rem',
               }}
             >
-              {stockStatusLabel[currentLocale] || stockStatusLabel.en}
-            </span>
-            <span
-              style={{
-                fontWeight: 'bold',
-                color: 'var(--sidebar-body-color)',
-                fontFamily: 'var(--sidebar-body-font)',
-              }}
-            >
-              {getStockText(product.stock, currentLocale)}
-            </span>
-          </div>
+              <span
+                style={{
+                  color: 'var(--sidebar-body-color)',
+                  fontFamily: 'var(--sidebar-body-font)',
+                }}
+              >
+                {stockStatusLabel[currentLocale] || stockStatusLabel.en}
+              </span>
+              <span
+                style={{
+                  fontWeight: 'bold',
+                  color: 'var(--sidebar-body-color)',
+                  fontFamily: 'var(--sidebar-body-font)',
+                }}
+              >
+                {getStockText(product.stock, currentLocale)}
+              </span>
+            </div>
+          )}
 
           <div
             style={{
               display: 'flex',
               flexDirection: 'column',
               gap: '1.5rem',
-              marginTop: '1.5rem',
             }}
           >
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <label
-                style={{
-                  color: 'var(--sidebar-body-color)',
-                  fontFamily: 'var(--sidebar-body-font)',
-                }}
+            {/* Quantity selector is preserved for normal products, hidden only for case-offers */}
+            {!isCaseOffer && (
+              <div
+                style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
               >
-                {quantityLabel[currentLocale] || quantityLabel.en}
-              </label>
-              <input
-                type="number"
-                id="qty-counter"
-                defaultValue="1"
-                min="1"
-                max={product.stock}
-                style={{
-                  width: '70px',
-                  padding: '0.5rem',
-                  borderRadius: '6px',
-                  border: `1px solid ${resolvedBorderColor}`,
-                  fontSize: '16px',
-                  textAlign: 'center',
-                  fontFamily: 'var(--sidebar-body-font)',
-                  color: 'var(--sidebar-body-color)',
-                  backgroundColor: 'transparent',
-                }}
-              />
-            </div>
+                <label
+                  style={{
+                    color: 'var(--sidebar-body-color)',
+                    fontFamily: 'var(--sidebar-body-font)',
+                  }}
+                >
+                  {quantityLabel[currentLocale] || quantityLabel.en}
+                </label>
+                <input
+                  type="number"
+                  id="qty-counter"
+                  defaultValue="1"
+                  min="1"
+                  max={product.stock}
+                  style={{
+                    width: '70px',
+                    padding: '0.5rem',
+                    borderRadius: '6px',
+                    border: `1px solid ${resolvedBorderColor}`,
+                    fontSize: '16px',
+                    textAlign: 'center',
+                    fontFamily: 'var(--sidebar-body-font)',
+                    color: 'var(--sidebar-body-color)',
+                    backgroundColor: 'transparent',
+                  }}
+                />
+              </div>
+            )}
 
             <div
               style={{
                 display: 'flex',
                 justifyContent: 'space-between',
                 alignItems: 'center',
-                borderTop: `1px solid ${resolvedBorderColor}`,
-                paddingTop: '1.5rem',
+                borderTop: isCaseOffer ? 'none' : `1px solid ${resolvedBorderColor}`,
+                paddingTop: isCaseOffer ? '0' : '1.5rem',
               }}
             >
               <span

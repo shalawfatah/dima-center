@@ -103,6 +103,10 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
       ? categoryObject.id
       : categoryObject
 
+  const categorySlug =
+    typeof categoryObject === 'object' && categoryObject !== null ? categoryObject.slug : ''
+  const isCaseOffer = categorySlug === 'case-offers'
+
   let relatedDocs: any[] = []
 
   if (categoryId) {
@@ -111,17 +115,20 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
       collectionName === 'ui-products' && product?.uiCategory ? 'uiCategory' : 'category'
 
     try {
+      const relatedQueryWhere: any = {
+        and: [{ [categoryKey]: { equals: categoryId } }, { id: { not_equals: product.id } }],
+      }
+
+      // Do not filter out 0 stock if it's a case-offers category
+      if (!isCaseOffer) {
+        relatedQueryWhere.and.push({ stock: { greater_than: 0 } })
+      }
+
       const relatedData = await payload.find({
         collection: targetCollection,
         locale: currentLocale as 'en' | 'ar' | 'ckb',
         fallbackLocale: 'ckb',
-        where: {
-          and: [
-            { [categoryKey]: { equals: categoryId } },
-            { id: { not_equals: product.id } },
-            { stock: { greater_than: 0 } },
-          ],
-        },
+        where: relatedQueryWhere,
         limit: 4,
       })
       relatedDocs = relatedData.docs || []
@@ -162,6 +169,7 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
   const normalizedProduct = {
     ...product,
     title: productTitle,
+    isCaseOffer,
   }
 
   return (

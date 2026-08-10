@@ -70,6 +70,7 @@
   height: 100%;
   object-fit: contain;
   position: absolute;
+  top: -2.2rem;
   will-change: transform;
   transform: none !important;
 }
