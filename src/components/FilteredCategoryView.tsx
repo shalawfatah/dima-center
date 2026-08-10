@@ -6,24 +6,7 @@ import Image from 'next/image'
 import LocalizedHeading from '@/components/LocalizedHeading'
 import PriceFilter from '@/components/PriceFilter'
 import '@/styles/home-page-styles/filtered-category-view.css'
-
-interface FilteredCategoryViewProps {
-  currentLocale: string
-  dirClass: string
-  headingFont: string
-  bodyFont: string
-  dynamicFontFaceCSS: string
-  matchedTitleEn: string | null
-  matchedTitleAr: string | null
-  matchedTitleCkb: string | null
-  allProducts: any[]
-  activeCategory: string
-  boxBorderColor?: string
-  boxBgColor?: string
-  boxBodyColor?: string
-  bodyColor?: string
-  textColor?: string
-}
+import { FilteredCategoryViewProps } from '@/types/category_related_types'
 
 export default function FilteredCategoryView({
   currentLocale,
@@ -41,9 +24,10 @@ export default function FilteredCategoryView({
   bodyColor,
   textColor,
 }: FilteredCategoryViewProps) {
-  // 1. Track both minimum and maximum filter values
+  // 1. Track minimum, maximum filter values, and sorting state
   const [minPriceFilter, setMinPriceFilter] = useState<number>(0)
   const [maxPriceFilter, setMaxPriceFilter] = useState<number>(7000)
+  const [priceSort, setPriceSort] = useState<'asc' | 'desc' | null>(null)
 
   const discountLabel: Record<string, string> = {
     en: 'OFF',
@@ -60,6 +44,19 @@ export default function FilteredCategoryView({
   const filteredProducts = allProducts.filter((product: any) => {
     const price = Number(product.price) || 0
     return price >= minPriceFilter && price <= maxPriceFilter
+  })
+
+  // 3. Sort products if a sort option is selected
+  const sortedAndFilteredProducts = [...filteredProducts].sort((a, b) => {
+    if (!priceSort) return 0
+    const priceA = Number(a.price) || 0
+    const priceB = Number(b.price) || 0
+
+    if (priceSort === 'asc') {
+      return priceA - priceB
+    } else {
+      return priceB - priceA
+    }
   })
 
   return (
@@ -103,7 +100,7 @@ export default function FilteredCategoryView({
             </Link>
           </div>
 
-          {/* 3. Pass min and color props properly to PriceFilter */}
+          {/* Pass filter changes and sort changes down to PriceFilter */}
           <PriceFilter
             minPrice={0}
             maxPrice={7000}
@@ -116,13 +113,17 @@ export default function FilteredCategoryView({
             boxBodyColor={boxBodyColor}
             bodyColor={bodyColor}
             textColor={textColor}
+            currentSort={priceSort}
             onFilterChange={(newMin, newMax) => {
               setMinPriceFilter(newMin)
               setMaxPriceFilter(newMax)
             }}
+            onSortChange={(newSort) => {
+              setPriceSort(newSort)
+            }}
           />
 
-          {filteredProducts.length === 0 ? (
+          {sortedAndFilteredProducts.length === 0 ? (
             <div className="emptyState" style={{ fontFamily: 'var(--filtered-body-font)' }}>
               📦{' '}
               {currentLocale === 'ar'
@@ -133,7 +134,7 @@ export default function FilteredCategoryView({
             </div>
           ) : (
             <div className="productGrid">
-              {filteredProducts.map((product: any) => {
+              {sortedAndFilteredProducts.map((product: any) => {
                 const imgData = product.featuredImage || product.image
                 let imageUrl: string | null = null
 
