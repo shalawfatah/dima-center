@@ -30,3 +30,8 @@ export interface FilteredCategoryViewProps {
   bodyColor?: string
   textColor?: string
 }
+
+export interface ExtendedPriceFilterProps extends PriceFilterProps {
+  currentSort?: 'asc' | 'desc' | null
+  onSortChange?: (sort: 'asc' | 'desc' | null) => void
+}

@@ -1,13 +1,8 @@
 'use client'
 
-import { PriceFilterProps } from '@/types/category_related_types'
+import { ExtendedPriceFilterProps } from '@/types/category_related_types'
+import { translations } from '@/utils/price_filter_translations'
 import React, { useState } from 'react'
-
-// Extended prop type in case onSortChange or currentSort aren't yet in your types file
-interface ExtendedPriceFilterProps extends PriceFilterProps {
-  currentSort?: 'asc' | 'desc' | null
-  onSortChange?: (sort: 'asc' | 'desc' | null) => void
-}
 
 export default function PriceFilter({
   minPrice = 0,
@@ -52,33 +47,13 @@ export default function PriceFilter({
   const isRtl = currentLocale === 'ar' || currentLocale === 'ckb'
   const resolvedBg = cardBgColor || '#ffffff'
   const resolvedBorder = borderColor || '#e2e8f0'
-  const resolvedTextColor = boxBodyColor || bodyColor || textColor || '#0f172a'
+  const resolvedTextColor = boxBodyColor || '#fff'
 
   // Calculate track fill percentages for the dual slider appearance
   const minPercent = ((currentMin - minPrice) / (maxPrice - minPrice)) * 100
   const maxPercent = ((currentMax - minPrice) / (maxPrice - minPrice)) * 100
 
   // Multi-language dictionary
-  const translations = {
-    en: {
-      filterTitle: 'Filter by Price',
-      sortTitle: 'Sort',
-      lowToHigh: 'Low to High',
-      highToLow: 'High to Low',
-    },
-    ckb: {
-      filterTitle: 'پاڵاوتن بە نرخ',
-      sortTitle: 'ڕیزبەندکردن',
-      lowToHigh: 'لە نزمەوە بۆ بەرز',
-      highToLow: 'لە بەرزەوە بۆ نزم',
-    },
-    ar: {
-      filterTitle: 'تصفية حسب السعر',
-      sortTitle: 'ترتيب',
-      lowToHigh: 'من الأقل إلى الأعلى',
-      highToLow: 'من الأعلى إلى الأقل',
-    },
-  }
 
   const t = translations[currentLocale as keyof typeof translations] || translations.en
 
