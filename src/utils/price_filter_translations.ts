@@ -6,8 +6,8 @@ export const translations = {
     highToLow: 'High to Low',
   },
   ckb: {
-    filterTitle: 'پاڵاوتن بە نرخ',
-    sortTitle: 'ڕیزبەندکردن',
+    filterTitle: 'فلتەر بە نرخ',
+    sortTitle: 'ریزبەندی بە نرخ',
     lowToHigh: 'لە نزمەوە بۆ بەرز',
     highToLow: 'لە بەرزەوە بۆ نزم',
   },
