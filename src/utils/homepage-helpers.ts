@@ -141,18 +141,27 @@ export function buildDynamicSectionMetaMapping(uiCategoryDocs: any[]): SectionMe
       if (!obj) return { en: fallback, ar: fallback, ckb: fallback }
       if (typeof obj === 'string') return { en: obj, ar: obj, ckb: obj }
 
-      const en = obj.en || fallback
+      const en = obj.en || obj.ar || obj.ckb || fallback
       const ar = obj.ar || en || fallback
-      const ckb = obj.ckb || en || ar || fallback
+      const ckb = obj.ckb || obj.en || ar || fallback
 
       return { en, ar, ckb }
     }
 
     const groupTitles = getLocalizedTitle(group.title)
-    const englishTitle = groupTitles.en.toLowerCase()
+    const englishTitle = (groupTitles.en || '').toLowerCase()
+    const arabicTitle = groupTitles.ar || ''
+    const kurdishTitle = groupTitles.ckb || ''
+    const groupSlug = (group.slug || '').toLowerCase()
 
     const isComputerParts =
-      englishTitle.includes('computer parts') || englishTitle.includes('parts')
+      englishTitle.includes('computer parts') ||
+      englishTitle.includes('parts') ||
+      groupSlug.includes('computer-parts') ||
+      groupSlug.includes('parts') ||
+      arabicTitle.includes('قطع') ||
+      kurdishTitle.includes('پارچە') ||
+      kurdishTitle.includes('بەش')
 
     if (isComputerParts && group.subCategories?.length) {
       for (const sub of group.subCategories) {

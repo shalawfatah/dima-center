@@ -40,7 +40,7 @@ export default async function CategorySections({
       collection: 'ui-categories',
       limit: 100,
       sort: 'order',
-      locale: currentLocale as 'en' | 'ar' | 'ckb',
+      locale: currentLocale as 'en' | 'ckb' | 'ar',
       fallbackLocale: 'ckb',
     })
     .catch((err) => {
@@ -69,7 +69,7 @@ export default async function CategorySections({
         collection: 'products',
         depth: 1,
         locale: currentLocale as 'en' | 'ar' | 'ckb',
-        fallbackLocale: 'ckb',
+        fallbackLocale: 'en', // 👈 Change from 'ckb' to 'en'
         where: {
           and: [{ 'category.slug': { in: allLeafSlugs } }, { stock: { greater_than: 0 } }],
         },
@@ -83,7 +83,7 @@ export default async function CategorySections({
         collection: 'ui-products',
         depth: 1,
         locale: currentLocale as 'en' | 'ar' | 'ckb',
-        fallbackLocale: 'ckb',
+        fallbackLocale: 'en', // 👈 Change from 'ckb' to 'en'
         where: {
           or: [
             { 'category.slug': { in: allLeafSlugs } },
