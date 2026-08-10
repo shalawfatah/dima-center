@@ -22,7 +22,6 @@ export default function PriceFilter({
 }: ExtendedPriceFilterProps) {
   const [currentMin, setCurrentMin] = useState<number>(defaultMin)
   const [currentMax, setCurrentMax] = useState<number>(defaultMax)
-  const [activeSort, setActiveSort] = useState<'asc' | 'desc' | null>(currentSort)
 
   const handleMinChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = Math.min(Number(e.target.value), currentMax - 50)
@@ -37,8 +36,7 @@ export default function PriceFilter({
   }
 
   const handleSortSelect = (sortOrder: 'asc' | 'desc') => {
-    const nextSort = activeSort === sortOrder ? null : sortOrder
-    setActiveSort(nextSort)
+    const nextSort = currentSort === sortOrder ? null : sortOrder
     if (onSortChange) {
       onSortChange(nextSort)
     }
@@ -47,13 +45,11 @@ export default function PriceFilter({
   const isRtl = currentLocale === 'ar' || currentLocale === 'ckb'
   const resolvedBg = cardBgColor || '#ffffff'
   const resolvedBorder = borderColor || '#e2e8f0'
-  const resolvedTextColor = boxBodyColor || '#fff'
+  const resolvedTextColor = boxBodyColor || bodyColor || textColor || '#0f172a'
 
   // Calculate track fill percentages for the dual slider appearance
   const minPercent = ((currentMin - minPrice) / (maxPrice - minPrice)) * 100
   const maxPercent = ((currentMax - minPrice) / (maxPrice - minPrice)) * 100
-
-  // Multi-language dictionary
 
   const t = translations[currentLocale as keyof typeof translations] || translations.en
 
@@ -81,13 +77,11 @@ export default function PriceFilter({
             width: 100%;
           }
 
-          /* ~2/3 screen real estate on desktop */
           .price-slider-section {
             flex: 2;
             min-width: 0;
           }
 
-          /* ~1/3 screen real estate on desktop */
           .price-sort-section {
             flex: 1;
             display: flex;
@@ -126,9 +120,9 @@ export default function PriceFilter({
           }
 
           .sort-chip-btn.active {
-            background-color: #2563eb;
-            color: #ffffff;
-            border-color: #2563eb;
+            background-color: #2563eb !important;
+            color: #ffffff !important;
+            border-color: #2563eb !important;
             font-weight: 600;
           }
 
@@ -170,7 +164,6 @@ export default function PriceFilter({
             border: 2px solid #ffffff;
           }
 
-          /* Mobile Responsive Adjustments */
           @media (max-width: 768px) {
             .price-filter-wrapper {
               flex-direction: column;
@@ -196,7 +189,6 @@ export default function PriceFilter({
       />
 
       <div className="price-filter-wrapper">
-        {/* Slider Section (~2/3 on Desktop) */}
         <div className="price-slider-section">
           <div
             style={{
@@ -206,22 +198,10 @@ export default function PriceFilter({
               marginBottom: '0.75rem',
             }}
           >
-            <span
-              style={{
-                fontSize: '14px',
-                fontWeight: '600',
-                color: 'inherit',
-              }}
-            >
+            <span style={{ fontSize: '14px', fontWeight: '600', color: 'inherit' }}>
               {t.filterTitle}
             </span>
-            <span
-              style={{
-                fontSize: '14px',
-                fontWeight: 'bold',
-                color: 'inherit',
-              }}
-            >
+            <span style={{ fontSize: '14px', fontWeight: 'bold', color: 'inherit' }}>
               {currencySymbol}
               {currentMin.toLocaleString()} – {currencySymbol}
               {currentMax.toLocaleString()}
@@ -231,7 +211,6 @@ export default function PriceFilter({
           <div
             style={{ position: 'relative', height: '24px', display: 'flex', alignItems: 'center' }}
           >
-            {/* Background Track */}
             <div
               style={{
                 position: 'absolute',
@@ -242,8 +221,6 @@ export default function PriceFilter({
                 zIndex: 0,
               }}
             />
-
-            {/* Highlighted Active Range Track */}
             <div
               style={{
                 position: 'absolute',
@@ -255,8 +232,6 @@ export default function PriceFilter({
                 zIndex: 1,
               }}
             />
-
-            {/* Min Range Input */}
             <input
               type="range"
               min={minPrice}
@@ -267,8 +242,6 @@ export default function PriceFilter({
               className="dual-range-input"
               style={{ zIndex: currentMin > maxPrice - 500 ? 3 : 2 }}
             />
-
-            {/* Max Range Input */}
             <input
               type="range"
               min={minPrice}
@@ -282,7 +255,6 @@ export default function PriceFilter({
           </div>
         </div>
 
-        {/* Quick Sort Chips Section (~1/3 on Desktop) */}
         <div className="price-sort-section">
           <span
             style={{
@@ -298,14 +270,14 @@ export default function PriceFilter({
             <button
               type="button"
               onClick={() => handleSortSelect('asc')}
-              className={`sort-chip-btn ${activeSort === 'asc' ? 'active' : ''}`}
+              className={`sort-chip-btn ${currentSort === 'asc' ? 'active' : ''}`}
             >
               {t.lowToHigh}
             </button>
             <button
               type="button"
               onClick={() => handleSortSelect('desc')}
-              className={`sort-chip-btn ${activeSort === 'desc' ? 'active' : ''}`}
+              className={`sort-chip-btn ${currentSort === 'desc' ? 'active' : ''}`}
             >
               {t.highToLow}
             </button>
