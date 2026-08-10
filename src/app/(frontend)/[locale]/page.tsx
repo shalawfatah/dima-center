@@ -107,6 +107,10 @@ export default async function StorefrontHome({ params, searchParams }: PageProps
         ? rawBgColor.value || rawBgColor.hex || undefined
         : undefined
 
+  const boxBodyColor = typography?.boxBodyColor || undefined
+  const bodyColor = typography?.bodyColor || undefined
+  const textColor = typography?.textColor || undefined
+
   const localeMap = {
     ckb: 'kurdish',
     ar: 'arabic',
@@ -318,6 +322,9 @@ export default async function StorefrontHome({ params, searchParams }: PageProps
         activeCategory={activeCategory}
         boxBorderColor={boxBorderColor}
         boxBgColor={boxBgColor}
+        boxBodyColor={boxBodyColor}
+        bodyColor={bodyColor}
+        textColor={textColor}
       />
     )
   }

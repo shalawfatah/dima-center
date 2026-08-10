@@ -1,6 +1,10 @@
+'use client'
+
+import { useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import LocalizedHeading from '@/components/LocalizedHeading'
+import PriceFilter from '@/components/PriceFilter'
 import '@/styles/home-page-styles/filtered-category-view.css'
 
 interface FilteredCategoryViewProps {
@@ -16,6 +20,9 @@ interface FilteredCategoryViewProps {
   activeCategory: string
   boxBorderColor?: string
   boxBgColor?: string
+  boxBodyColor?: string
+  bodyColor?: string
+  textColor?: string
 }
 
 export default function FilteredCategoryView({
@@ -30,7 +37,14 @@ export default function FilteredCategoryView({
   allProducts,
   boxBorderColor,
   boxBgColor,
+  boxBodyColor,
+  bodyColor,
+  textColor,
 }: FilteredCategoryViewProps) {
+  // 1. Track both minimum and maximum filter values
+  const [minPriceFilter, setMinPriceFilter] = useState<number>(0)
+  const [maxPriceFilter, setMaxPriceFilter] = useState<number>(7000)
+
   const discountLabel: Record<string, string> = {
     en: 'OFF',
     ar: 'خصم',
@@ -41,6 +55,12 @@ export default function FilteredCategoryView({
     const routeSegment = isCaseOffer ? 'case-offers' : 'products'
     return `/${currentLocale}/${routeSegment}/${id}`
   }
+
+  // 2. Filter products dynamically using both min and max boundaries
+  const filteredProducts = allProducts.filter((product: any) => {
+    const price = Number(product.price) || 0
+    return price >= minPriceFilter && price <= maxPriceFilter
+  })
 
   return (
     <>
@@ -83,18 +103,37 @@ export default function FilteredCategoryView({
             </Link>
           </div>
 
-          {allProducts.length === 0 ? (
+          {/* 3. Pass min and color props properly to PriceFilter */}
+          <PriceFilter
+            minPrice={0}
+            maxPrice={7000}
+            defaultMin={0}
+            defaultMax={7000}
+            currencySymbol="$"
+            currentLocale={currentLocale}
+            cardBgColor={boxBgColor}
+            borderColor={boxBorderColor}
+            boxBodyColor={boxBodyColor}
+            bodyColor={bodyColor}
+            textColor={textColor}
+            onFilterChange={(newMin, newMax) => {
+              setMinPriceFilter(newMin)
+              setMaxPriceFilter(newMax)
+            }}
+          />
+
+          {filteredProducts.length === 0 ? (
             <div className="emptyState" style={{ fontFamily: 'var(--filtered-body-font)' }}>
               📦{' '}
               {currentLocale === 'ar'
-                ? 'لا توجد منتجات في هذه الفئة حالياً.'
+                ? 'لا توجد منتجات مطابقة في هذه الفئة.'
                 : currentLocale === 'ckb'
-                  ? 'هیچ کاڵایەک لەم بەشەدا نییە.'
-                  : 'No products found in this category.'}
+                  ? 'هیچ کاڵایەکی گونجاو لەم بەشەدا نییە.'
+                  : 'No matching products found in this category.'}
             </div>
           ) : (
             <div className="productGrid">
-              {allProducts.map((product: any) => {
+              {filteredProducts.map((product: any) => {
                 const imgData = product.featuredImage || product.image
                 let imageUrl: string | null = null
 
