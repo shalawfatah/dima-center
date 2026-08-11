@@ -147,7 +147,7 @@ export default function BuildSummarySidebar({
             className={`${styles['pc-builder-submit-btn']} ${submitDisabled ? styles.disabled : ''}`}
             style={{
               fontFamily: fontFam,
-              color: submitDisabled ? textColor : '#ffffff',
+              color: submitDisabled ? textColor : '#000',
               backgroundColor: submitDisabled ? resolvedBorderColor : '#ffcb6b',
             }}
           >
