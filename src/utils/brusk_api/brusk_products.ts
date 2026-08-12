@@ -137,15 +137,16 @@ export async function syncProducts(
         createCount++
       }
     } catch (err: any) {
-      const detailedError = err?.data?.errors
+      const errorDetails = err?.data?.errors
         ? JSON.stringify(err.data.errors)
         : err?.message || String(err)
 
-      console.error(
-        `⚠️ Failed to create/update item "${item.name}" (ID: ${item._id}):`,
-        detailedError,
+      // Forces the exact database error straight into your production logs
+      payload.logger.error(
+        `❌ CRITICAL CREATE/UPDATE ERROR for item "${item.name}" (ID: ${item._id}): ${errorDetails}`,
       )
-      errors.push({ item: item.name, message: detailedError })
+
+      errors.push({ item: item.name, message: errorDetails })
     }
   }
 
