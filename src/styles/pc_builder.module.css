@@ -78,7 +78,7 @@
   flex-shrink: 0;
 }
 .pc-builder-slot-label {
-  font-size: 11px;
+  font-size: 16px;
   font-weight: bold;
   color: #64748b;
   text-transform: uppercase;
@@ -149,7 +149,7 @@
 }
 .pc-builder-summary-heading {
   margin: 0 0 1rem 0;
-  font-size: 18px;
+  font-size: 24px;
   font-weight: 700;
   color: #000;
 }
@@ -157,7 +157,7 @@
   margin-bottom: 1rem;
 }
 .pc-builder-input-label {
-  font-size: 12px;
+  font-size: 16px;
   color: #94a3b8;
   display: block;
   margin-bottom: 4px;
@@ -231,7 +231,7 @@
   border: 1px dashed rgba(37, 211, 102, 0.3);
   border-radius: 8px;
   padding: 0.75rem;
-  font-size: 16px;
+  font-size: 20px;
   color: #c04000;
   line-height: 1.4;
   margin-top: 1.25rem;
@@ -258,11 +258,12 @@
 .pc-builder-submit-btn {
   width: 100%;
   padding: 12px;
-  background: #25d366; /* WhatsApp brand green (was set via inline style) */
+  background: #25d366;
   color: #fff;
   border: none;
   border-radius: 6px;
   font-weight: 600;
+  font-size: 16px;
   cursor: pointer;
 }
 .pc-builder-submit-btn.disabled {
