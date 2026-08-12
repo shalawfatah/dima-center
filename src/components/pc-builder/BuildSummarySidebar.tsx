@@ -148,7 +148,7 @@ export default function BuildSummarySidebar({
             style={{
               fontFamily: fontFam,
               color: submitDisabled ? textColor : '#000',
-              backgroundColor: submitDisabled ? resolvedBorderColor : '#ffcb6b',
+              backgroundColor: submitDisabled ? resolvedBorderColor : '#25d366',
             }}
           >
             {submitLabel[currentLocale] || submitLabel.en}
