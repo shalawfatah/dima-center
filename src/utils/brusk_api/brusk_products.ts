@@ -2,6 +2,62 @@ import { ExternalItem } from '@/types/brusk_types'
 
 const DEFAULT_LOCALE = 'en'
 
+async function fetchAllItems(
+  payload: any,
+  baseUrl: string,
+  prefix: string,
+  branchId: string,
+  requestHeaders: Headers,
+): Promise<ExternalItem[]> {
+  const timestamp = Date.now()
+  const allItems: ExternalItem[] = []
+
+  let page = 1
+  const pageSize = 100 // adjust to match Bruska's actual page size if different
+
+  while (true) {
+    const url = `${baseUrl}${prefix}/items?branchId=${branchId}&t=${timestamp}&page=${page}&limit=${pageSize}`
+    const itemRes = await fetch(url, {
+      method: 'GET',
+      headers: requestHeaders,
+      cache: 'no-store',
+    })
+
+    if (!itemRes.ok) throw new Error(`Failed to retrieve items from endpoint (page ${page}).`)
+
+    const itemData = await itemRes.json()
+    const pageItems: ExternalItem[] = itemData.items || []
+
+    payload.logger.info(`📄 Fetched page ${page}: ${pageItems.length} items`)
+
+    allItems.push(...pageItems)
+
+    // Stop conditions, in order of preference:
+    // 1. API tells us explicitly whether there's more (hasMore / hasNextPage / total)
+    // 2. Otherwise fall back to: page came back short of pageSize -> no more pages
+    const hasMoreFlag =
+      itemData.hasMore ?? itemData.hasNextPage ?? itemData.pagination?.hasMore ?? undefined
+
+    if (hasMoreFlag !== undefined) {
+      if (!hasMoreFlag) break
+    } else if (pageItems.length < pageSize) {
+      break
+    }
+
+    // Safety valve so a misbehaving API can't loop forever
+    if (page > 200) {
+      payload.logger.warn('⚠️ Stopped pagination after 200 pages — check API response shape.')
+      break
+    }
+
+    page++
+  }
+
+  payload.logger.info(`📊 Total items fetched from Bruska: ${allItems.length}`)
+
+  return allItems
+}
+
 export async function syncProducts(
   payload: any,
   baseUrl: string,
@@ -12,19 +68,15 @@ export async function syncProducts(
   fallbackCategoryId: string | number,
   stockByBarcode: Record<string, number>,
 ) {
-  const timestamp = Date.now()
-
   payload.logger.info('📡 Fetching active Bruska catalog snapshot...')
-  const itemRes = await fetch(`${baseUrl}${prefix}/items?branchId=${branchId}&t=${timestamp}`, {
-    method: 'GET',
-    headers: requestHeaders,
-    cache: 'no-store',
-  })
 
-  if (!itemRes.ok) throw new Error('Failed to retrieve items from endpoint.')
-
-  const itemData = await itemRes.json()
-  const allItems: ExternalItem[] = itemData.items || []
+  const allItems: ExternalItem[] = await fetchAllItems(
+    payload,
+    baseUrl,
+    prefix,
+    branchId,
+    requestHeaders,
+  )
 
   const externalActiveIds = new Set<string>()
   let createCount = 0
@@ -114,7 +166,7 @@ export async function syncProducts(
           updateCount++
         }
       } else {
-        payload.logger.info(`✨ Creating product: ${item.name}`)
+        payload.logger.info(`✨ Creating product: ${item.name} (external ID: ${item._id})`)
 
         const productPayloadData = {
           title: item.name,
@@ -129,19 +181,31 @@ export async function syncProducts(
           hasDiscount: false,
         }
 
-        await payload.create({
-          collection: 'products',
-          data: productPayloadData,
-          locale: DEFAULT_LOCALE,
-        })
-        createCount++
+        try {
+          const created = await payload.create({
+            collection: 'products',
+            data: productPayloadData,
+            locale: DEFAULT_LOCALE,
+          })
+          payload.logger.info(`✅ Created product ID ${created.id} for "${item.name}"`)
+          createCount++
+        } catch (createErr: any) {
+          // Log the exact validation/db error instead of letting it get
+          // swallowed into a generic message below.
+          const createErrDetails = createErr?.data?.errors
+            ? JSON.stringify(createErr.data.errors)
+            : createErr?.message || String(createErr)
+          payload.logger.error(
+            `❌ CREATE FAILED for "${item.name}" (external ID: ${item._id}): ${createErrDetails}`,
+          )
+          throw createErr
+        }
       }
     } catch (err: any) {
       const errorDetails = err?.data?.errors
         ? JSON.stringify(err.data.errors)
         : err?.message || String(err)
 
-      // Forces the exact database error straight into your production logs
       payload.logger.error(
         `❌ CRITICAL CREATE/UPDATE ERROR for item "${item.name}" (ID: ${item._id}): ${errorDetails}`,
       )
