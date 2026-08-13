@@ -14,6 +14,7 @@ async function fetchAllItems(
 
   let page = 1
   const pageSize = 100 // adjust to match Bruska's actual page size if different
+  let previousPageIds: string | null = null
 
   while (true) {
     const url = `${baseUrl}${prefix}/items?branchId=${branchId}&t=${timestamp}&page=${page}&limit=${pageSize}`
@@ -30,7 +31,27 @@ async function fetchAllItems(
 
     payload.logger.info(`📄 Fetched page ${page}: ${pageItems.length} items`)
 
-    allItems.push(...pageItems)
+    // Detect an API that ignores page/limit and just returns the same full
+    // list every time. Compare the set of IDs against the previous page —
+    // if identical, we're not actually paginating, so stop immediately
+    // instead of accumulating duplicates.
+    const currentPageIds = pageItems
+      .map((i) => i._id)
+      .sort()
+      .join(',')
+
+    if (page === 1) {
+      allItems.push(...pageItems)
+    } else if (currentPageIds === previousPageIds) {
+      payload.logger.info(
+        `🛑 Page ${page} is identical to page ${page - 1} — API does not appear to paginate. Stopping.`,
+      )
+      break
+    } else {
+      allItems.push(...pageItems)
+    }
+
+    previousPageIds = currentPageIds
 
     // Stop conditions, in order of preference:
     // 1. API tells us explicitly whether there's more (hasMore / hasNextPage / total)
@@ -41,6 +62,8 @@ async function fetchAllItems(
     if (hasMoreFlag !== undefined) {
       if (!hasMoreFlag) break
     } else if (pageItems.length < pageSize) {
+      break
+    } else if (pageItems.length === 0) {
       break
     }
 
@@ -53,9 +76,15 @@ async function fetchAllItems(
     page++
   }
 
-  payload.logger.info(`📊 Total items fetched from Bruska: ${allItems.length}`)
+  // Final safety net: dedupe by _id in case the API paginates inconsistently
+  // (e.g. overlapping windows) rather than either fully repeating or fully advancing.
+  const deduped = Array.from(new Map(allItems.map((i) => [i._id, i])).values())
 
-  return allItems
+  payload.logger.info(
+    `📊 Total items fetched from Bruska: ${allItems.length} (${deduped.length} unique)`,
+  )
+
+  return deduped
 }
 
 export async function syncProducts(
