@@ -3,6 +3,7 @@ dotenv.config()
 import { getPayload } from 'payload'
 import config from '../payload.config'
 import { getBruskConfig } from '@/utils/brusk_api/brusk_client'
+import { syncCategories } from '@/utils/brusk_api/brusk_categories'
 import { ExternalItem } from '@/types/brusk_types'
 
 const DEFAULT_LOCALE = 'en'
@@ -69,6 +70,15 @@ export async function diagnoseMissingProducts() {
   const allItems = await fetchAllBruskaItems(baseUrl, prefix, branchId, requestHeaders)
   payload.logger.info(`📊 Bruska reports ${allItems.length} items`)
 
+  payload.logger.info('⏳ Syncing external categories (needed to resolve category on create)...')
+  const { categoryIdMap, fallbackCategoryId } = await syncCategories(
+    payload,
+    baseUrl,
+    prefix,
+    branchId,
+    requestHeaders,
+  )
+
   payload.logger.info('📚 Fetching all existing product codes...')
   const existingCodes = await fetchAllExistingCodes(payload)
   payload.logger.info(`📚 Found ${existingCodes.size} existing product codes in DB`)
@@ -124,6 +134,13 @@ export async function diagnoseMissingProducts() {
       // catch collection-level errors (required fields, hooks, access
       // control, unique constraints, etc.) without guessing.
       try {
+        // If your ExternalItem type has a category reference property, cast or adjust here.
+        // Falling back safely to fallbackCategoryId to satisfy the schema requirement.
+        const itemAny = item as any
+        const rawCategoryKey = itemAny.category || itemAny.categoryId
+        const resolvedCategory =
+          (rawCategoryKey && categoryIdMap.get(rawCategoryKey)) || fallbackCategoryId
+
         const created = await payload.create({
           collection: 'products',
           data: {
@@ -136,8 +153,10 @@ export async function diagnoseMissingProducts() {
             brand: item.brand || '',
             condition: 'new' as const,
             hasDiscount: false,
+            category: resolvedCategory,
           },
           locale: DEFAULT_LOCALE,
+          draft: false,
           // Roll it back immediately — this script is diagnostic only.
         })
 
