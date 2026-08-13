@@ -1,5 +1,6 @@
 // src/collections/Products.ts
 import { CollectionConfig } from 'payload'
+
 export const Products: CollectionConfig = {
   slug: 'products',
   admin: {
@@ -141,9 +142,18 @@ export const Products: CollectionConfig = {
       admin: {
         position: 'sidebar',
         components: {
-          // Use your tsconfig path alias to ensure the path-resolver always finds it
           Description: '@/components/FeaturedImagePreview#FeaturedImagePreview',
         },
+      },
+    },
+    // === 👁️ VISIBILITY SETTINGS ===
+    {
+      name: 'hideOnWebsite',
+      type: 'checkbox',
+      label: 'Hide On Website',
+      defaultValue: false,
+      admin: {
+        position: 'sidebar',
       },
     },
     {

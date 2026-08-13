@@ -88,11 +88,11 @@ export async function searchProducts(
 
   const searchData = await payload.find({
     collection: 'products',
-    // Query 'all' locales so Payload leaves the raw localized data structure intact.
     locale: 'all',
     where: {
       and: [
         { stock: { greater_than: 0 } }, // 👈 Exclude items with 0 stock
+        { hideOnWebsite: { not_equals: true } },
         {
           or: [
             { 'title.en': { contains: query } },

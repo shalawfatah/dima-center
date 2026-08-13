@@ -184,6 +184,7 @@ export interface Product {
       }[]
     | null;
   featuredImage?: (number | null) | Media;
+  hideOnWebsite?: boolean | null;
   imagesGallery?:
     | {
         image: number | Media;
@@ -496,6 +497,7 @@ export interface ProductsSelect<T extends boolean = true> {
         id?: T;
       };
   featuredImage?: T;
+  hideOnWebsite?: T;
   imagesGallery?:
     | T
     | {

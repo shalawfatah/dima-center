@@ -69,9 +69,13 @@ export default async function CategorySections({
         collection: 'products',
         depth: 1,
         locale: currentLocale as 'en' | 'ar' | 'ckb',
-        fallbackLocale: 'en', // 👈 Change from 'ckb' to 'en'
+        fallbackLocale: 'en',
         where: {
-          and: [{ 'category.slug': { in: allLeafSlugs } }, { stock: { greater_than: 0 } }],
+          and: [
+            { 'category.slug': { in: allLeafSlugs } },
+            { stock: { greater_than: 0 } },
+            { hideOnWebsite: { not_equals: true } },
+          ],
         },
         limit: 2000,
         sort: '-createdAt',
@@ -83,7 +87,7 @@ export default async function CategorySections({
         collection: 'ui-products',
         depth: 1,
         locale: currentLocale as 'en' | 'ar' | 'ckb',
-        fallbackLocale: 'en', // 👈 Change from 'ckb' to 'en'
+        fallbackLocale: 'en',
         where: {
           or: [
             { 'category.slug': { in: allLeafSlugs } },

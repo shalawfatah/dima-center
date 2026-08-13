@@ -76,6 +76,7 @@ export async function GET(request: Request) {
       where: {
         and: [
           { stock: { greater_than: 0 } },
+          { hideOnWebsite: { not_equals: true } },
           {
             or: [
               { 'title.en': { contains: query } },
@@ -107,6 +108,7 @@ export async function GET(request: Request) {
           where: {
             and: [
               { stock: { greater_than: 0 } },
+              { hideOnWebsite: { not_equals: true } },
               {
                 'category.slug': {
                   equals: detectedSlug,

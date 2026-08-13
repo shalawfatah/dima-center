@@ -237,7 +237,16 @@ export default async function StorefrontHome({ params, searchParams }: PageProps
             fallbackLocale: 'en',
             depth: 1,
             select: MINIMAL_PRODUCT_FIELDS,
-            where: productWhereCondition,
+            where: {
+              and: [
+                productWhereCondition,
+                {
+                  hideOnWebsite: {
+                    not_equals: true,
+                  },
+                },
+              ],
+            },
             limit: 100,
           })
           .catch((err) => {

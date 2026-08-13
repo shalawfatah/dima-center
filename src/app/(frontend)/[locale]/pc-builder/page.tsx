@@ -23,7 +23,7 @@ export default async function PcBuilderPage({ params }: PageProps) {
     payload.find({
       collection: 'products',
       where: {
-        stock: { greater_than: 0 },
+        and: [{ stock: { greater_than: 0 } }, { hideOnWebsite: { not_equals: true } }],
       },
       select: {
         id: true,
