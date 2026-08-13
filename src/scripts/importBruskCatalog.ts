@@ -35,7 +35,7 @@ export async function executeDifferentialSync() {
   )
 
   // 3 & 4. Fetch, Sync, & Purge Products
-  const { createCount, updateCount, deleteCount, errors } = await syncProducts(
+  const { createdIds, updatedIds, deletedIds, errors } = await syncProducts(
     payload,
     baseUrl,
     prefix,
@@ -47,21 +47,28 @@ export async function executeDifferentialSync() {
   )
 
   payload.logger.info(
-    `🏁 Sync Complete. Products Created: ${createCount}, Updated: ${updateCount}, Purged: ${deleteCount}, Categories Synced: ${syncedCatCount}, Errors: ${errors.length}`,
+    `🏁 Sync Complete. Products Created: ${createdIds.length}, Updated: ${updatedIds.length}, Purged: ${deletedIds.length}, Categories Synced: ${syncedCatCount}, Errors: ${errors.length}`,
   )
 
   return {
-    created: createCount,
-    updated: updateCount,
-    deleted: deleteCount,
+    success: true,
+    created: createdIds.length,
+    updated: updatedIds.length,
+    deleted: deletedIds.length,
     categoriesSynced: syncedCatCount,
+    createdIds,
+    updatedIds,
+    deletedIds,
     errors,
   }
 }
 
 if (process.argv[1]?.endsWith('importBruskCatalog.ts')) {
   executeDifferentialSync()
-    .then(() => process.exit(0))
+    .then((result) => {
+      console.log(JSON.stringify(result, null, 2))
+      process.exit(0)
+    })
     .catch((err) => {
       console.error(err)
       process.exit(1)

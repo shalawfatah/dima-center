@@ -9,7 +9,7 @@ export async function GET(request: Request) {
   }
   try {
     const summary = await executeDifferentialSync()
-    return NextResponse.json({ success: true, ...summary })
+    return NextResponse.json({ ...summary })
   } catch (error: any) {
     return NextResponse.json({ success: false, error: error.message }, { status: 500 })
   }

@@ -13,7 +13,7 @@ async function fetchAllItems(
   const allItems: ExternalItem[] = []
 
   let page = 1
-  const pageSize = 100 // adjust to match Bruska's actual page size if different
+  const pageSize = 100
   let previousPageIds: string | null = null
 
   while (true) {
@@ -31,10 +31,6 @@ async function fetchAllItems(
 
     payload.logger.info(`📄 Fetched page ${page}: ${pageItems.length} items`)
 
-    // Detect an API that ignores page/limit and just returns the same full
-    // list every time. Compare the set of IDs against the previous page —
-    // if identical, we're not actually paginating, so stop immediately
-    // instead of accumulating duplicates.
     const currentPageIds = pageItems
       .map((i) => i._id)
       .sort()
@@ -53,9 +49,6 @@ async function fetchAllItems(
 
     previousPageIds = currentPageIds
 
-    // Stop conditions, in order of preference:
-    // 1. API tells us explicitly whether there's more (hasMore / hasNextPage / total)
-    // 2. Otherwise fall back to: page came back short of pageSize -> no more pages
     const hasMoreFlag =
       itemData.hasMore ?? itemData.hasNextPage ?? itemData.pagination?.hasMore ?? undefined
 
@@ -67,7 +60,6 @@ async function fetchAllItems(
       break
     }
 
-    // Safety valve so a misbehaving API can't loop forever
     if (page > 200) {
       payload.logger.warn('⚠️ Stopped pagination after 200 pages — check API response shape.')
       break
@@ -76,8 +68,6 @@ async function fetchAllItems(
     page++
   }
 
-  // Final safety net: dedupe by _id in case the API paginates inconsistently
-  // (e.g. overlapping windows) rather than either fully repeating or fully advancing.
   const deduped = Array.from(new Map(allItems.map((i) => [i._id, i])).values())
 
   payload.logger.info(
@@ -108,8 +98,8 @@ export async function syncProducts(
   )
 
   const externalActiveIds = new Set<string>()
-  let createCount = 0
-  let updateCount = 0
+  const createdIds: (string | number)[] = []
+  const updatedIds: (string | number)[] = []
   const errors: { item: string; message: string }[] = []
 
   for (const item of allItems) {
@@ -150,18 +140,22 @@ export async function syncProducts(
         const dbCategory =
           typeof current.category === 'object' ? current.category?.id : current.category
 
+        const currentDefaultTitle =
+          typeof current.title === 'string' ? current.title : current.title?.en || ''
+
+        // If the CRM name changed, we update title. If content creators changed localizations
+        // on the website but CRM title is identical, we leave localized fields untouched.
+        const needsTitleUpdate = item.name && currentDefaultTitle !== item.name
         const needsCodeLinkUpdate = !current.code || current.code !== item._id
         const needsCategoryUpdate = dbCategory !== resolvedCategory
 
         if (
           dbPrice !== apiPrice ||
           dbStock !== apiStock ||
+          needsTitleUpdate ||
           needsCodeLinkUpdate ||
           needsCategoryUpdate
         ) {
-          const currentTitle =
-            typeof current.title === 'string' ? current.title : current.title?.en || item.name
-
           const safeSpecs = Array.isArray(current.technicalSpecs)
             ? current.technicalSpecs.map((spec: any) => ({
                 key: spec.key || '',
@@ -170,10 +164,13 @@ export async function syncProducts(
             : undefined
 
           const updateData: Record<string, any> = {
-            title: currentTitle,
             price: apiPrice,
             stock: apiStock,
             category: resolvedCategory,
+          }
+
+          if (needsTitleUpdate) {
+            updateData.title = item.name
           }
 
           if (safeSpecs) {
@@ -192,7 +189,8 @@ export async function syncProducts(
             data: updateData,
             locale: DEFAULT_LOCALE,
           })
-          updateCount++
+
+          updatedIds.push(current.id)
         }
       } else {
         payload.logger.info(`✨ Creating product: ${item.name} (external ID: ${item._id})`)
@@ -217,10 +215,8 @@ export async function syncProducts(
             locale: DEFAULT_LOCALE,
           })
           payload.logger.info(`✅ Created product ID ${created.id} for "${item.name}"`)
-          createCount++
+          createdIds.push(created.id)
         } catch (createErr: any) {
-          // Log the exact validation/db error instead of letting it get
-          // swallowed into a generic message below.
           const createErrDetails = createErr?.data?.errors
             ? JSON.stringify(createErr.data.errors)
             : createErr?.message || String(createErr)
@@ -251,7 +247,7 @@ export async function syncProducts(
     locale: DEFAULT_LOCALE,
   })
 
-  let deleteCount = 0
+  const deletedIds: (string | number)[] = []
   for (const prod of localProducts.docs as any[]) {
     if (prod.code && !externalActiveIds.has(prod.code)) {
       const logTitle =
@@ -263,9 +259,9 @@ export async function syncProducts(
         collection: 'products',
         id: prod.id,
       })
-      deleteCount++
+      deletedIds.push(prod.id)
     }
   }
 
-  return { createCount, updateCount, deleteCount, errors }
+  return { createdIds, updatedIds, deletedIds, errors }
 }
