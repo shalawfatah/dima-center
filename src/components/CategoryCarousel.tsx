@@ -19,9 +19,8 @@ export interface LanguageTypography {
   bodyFont?: FontMedia | string | null
 }
 
-// Use any for generalSettings to match Payload's actual type
 interface ComponentProps extends CategoryDropdownNavProps {
-  generalSettings?: any // Use any to avoid type mismatches
+  generalSettings?: any
 }
 
 export default function CategoryDropdownNav({
@@ -32,14 +31,16 @@ export default function CategoryDropdownNav({
   const router = useRouter()
   const [activeDropdown, setActiveDropdown] = useState<number | null>(null)
   const [isHamOpen, setIsHamOpen] = useState<boolean>(false)
-  const navRef = useRef<HTMLDivElement>(null)
+  const [expandedMobileCategories, setExpandedMobileCategories] = useState<
+    Record<string | number, boolean>
+  >({})
 
+  const navRef = useRef<HTMLDivElement>(null)
   const timeoutRef = useRef<NodeJS.Timeout | null>(null)
   const hamTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
   const isRtl = currentLocale === 'ar' || currentLocale === 'ckb'
 
-  // Correct Payload CMS key path matching your console output: generalSettings.typography.[language]
   const typographyConfig = generalSettings?.typography
   let selectedHeadingFont: FontMedia | string | null | undefined
 
@@ -51,18 +52,15 @@ export default function CategoryDropdownNav({
     selectedHeadingFont = typographyConfig?.english?.headingFont
   }
 
-  // Determine dynamic font family name & generate @font-face rule
   let customFontFamily = isRtl ? '"Rudaw", sans-serif' : 'system-ui, sans-serif'
   let dynamicFontFaceRule = ''
 
-  // Safely check if selectedHeadingFont is a Media object with a url
   if (
     selectedHeadingFont &&
     typeof selectedHeadingFont === 'object' &&
     'url' in selectedHeadingFont &&
     selectedHeadingFont.url
   ) {
-    // Unique font family name registered dynamically for this locale
     const fontName = `PayloadFont_${currentLocale}_Heading`
     customFontFamily = `"${fontName}", "Rudaw", sans-serif`
 
@@ -79,7 +77,6 @@ export default function CategoryDropdownNav({
 
   const titleFont = customFontFamily
 
-  // Extract Payload CMS values with fallbacks
   const navbarConfig = generalSettings?.navbar
   const navBg = navbarConfig?.backgroundColor || '#ffb83c'
   const navText = navbarConfig?.textColor || '#000000'
@@ -90,7 +87,6 @@ export default function CategoryDropdownNav({
 
     if (isHamOpen && isMobile) {
       const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth
-
       document.body.style.overflow = 'hidden'
       document.body.style.paddingRight = `${scrollbarWidth}px`
     } else {
@@ -141,9 +137,15 @@ export default function CategoryDropdownNav({
     setActiveDropdown((prev) => (prev === index ? null : index))
   }
 
+  const toggleMobileCategory = (catKey: string | number) => {
+    setExpandedMobileCategories((prev) => ({
+      ...prev,
+      [catKey]: !prev[catKey],
+    }))
+  }
+
   return (
     <>
-      {/* Dynamic @font-face injection so the browser can resolve /api/media/file/NizarNastaliqKurdish.ttf */}
       {dynamicFontFaceRule && <style dangerouslySetInnerHTML={{ __html: dynamicFontFaceRule }} />}
 
       <div
@@ -178,14 +180,19 @@ export default function CategoryDropdownNav({
               ☰
             </button>
 
-            {/* Floating Dropdown Panel */}
+            {/* Collapsible Mobile Dropdown Panel */}
             {isHamOpen && (
               <div className={styles['mobile-dropdown-panel']}>
                 {categories.map((category, index) => {
-                  if (!category.isContainer && category.slug) {
+                  const catKey = category.id || index
+                  const hasSub =
+                    Array.isArray(category.subCategories) && category.subCategories.length > 0
+                  const isExpanded = !!expandedMobileCategories[catKey]
+
+                  if (!category.isContainer && category.slug && !hasSub) {
                     return (
                       <Link
-                        key={category.id || index}
+                        key={catKey}
                         href={`/${currentLocale}?category=${category.slug}`}
                         className={styles['mobile-item-link']}
                         onClick={() => setIsHamOpen(false)}
@@ -196,18 +203,39 @@ export default function CategoryDropdownNav({
                   }
 
                   return (
-                    <div key={category.id || index} className={styles['mobile-group-section']}>
-                      <div className={styles['mobile-group-title']}>{category.title}</div>
-                      {category.subCategories?.map((sub, subIdx) => (
-                        <Link
-                          key={subIdx}
-                          href={`/${currentLocale}?category=${sub.slug}`}
-                          className={styles['mobile-sub-link']}
-                          onClick={() => setIsHamOpen(false)}
-                        >
-                          {sub.title}
-                        </Link>
-                      ))}
+                    <div key={catKey} className={styles['mobile-group-section']}>
+                      <button
+                        type="button"
+                        className={styles['mobile-group-title-btn']}
+                        onClick={() => toggleMobileCategory(catKey)}
+                      >
+                        <span>{category.title}</span>
+                        {hasSub && (
+                          <span
+                            className={styles['mobile-caret']}
+                            style={{
+                              transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)',
+                            }}
+                          >
+                            ▼
+                          </span>
+                        )}
+                      </button>
+
+                      {hasSub && isExpanded && (
+                        <div className={styles['mobile-sub-container']}>
+                          {category.subCategories?.map((sub, subIdx) => (
+                            <Link
+                              key={subIdx}
+                              href={`/${currentLocale}?category=${sub.slug}`}
+                              className={styles['mobile-sub-link']}
+                              onClick={() => setIsHamOpen(false)}
+                            >
+                              {sub.title}
+                            </Link>
+                          ))}
+                        </div>
+                      )}
                     </div>
                   )
                 })}

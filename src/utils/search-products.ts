@@ -7,24 +7,49 @@ export interface MatchedProduct {
   price: number
   condition?: string
   category: string
-  categorySlug: string // <-- Added categorySlug property
+  categorySlug: string
   featuredImage: any
   title: string
   descriptionSnippet: string
 }
 
-function resolveLocalizedField(field: any, currentLocale: string): string {
-  if (typeof field !== 'object' || field === null) {
-    return String(field ?? '')
+/**
+ * Resolves localized fields, including support for standard localized objects
+ * and Payload's internal `_locales` fallback array for complex field schemas.
+ */
+function resolveLocalizedField(field: any, currentLocale: string, fallbackDoc?: any): string {
+  // 1. Direct string/number output
+  if (typeof field === 'string' || typeof field === 'number') {
+    return String(field)
   }
-  return (
-    field[currentLocale] ||
-    field['ckb'] ||
-    field['en'] ||
-    field['ar'] ||
-    Object.values(field)[0] ||
-    ''
-  )
+
+  // 2. Standard localized object: { en: 'Title', ckb: '...', ar: '...' }
+  if (typeof field === 'object' && field !== null) {
+    const value =
+      field[currentLocale] ||
+      field['ckb'] ||
+      field['en'] ||
+      field['ar'] ||
+      Object.values(field).find((val) => typeof val === 'string' && val.trim().length > 0)
+
+    if (value) return String(value)
+  }
+
+  // 3. Fallback for Payload's internal _locales array (frequently used in complex blocks/specs)
+  if (fallbackDoc && Array.isArray(fallbackDoc._locales)) {
+    const localeEntry =
+      fallbackDoc._locales.find((l: any) => l._locale === currentLocale) ||
+      fallbackDoc._locales.find((l: any) => l._locale === 'ckb') ||
+      fallbackDoc._locales.find((l: any) => l._locale === 'en') ||
+      fallbackDoc._locales.find((l: any) => l._locale === 'ar') ||
+      fallbackDoc._locales[0]
+
+    if (localeEntry && localeEntry.title) {
+      return String(localeEntry.title)
+    }
+  }
+
+  return ''
 }
 
 function extractDescriptionSnippet(rawDescription: any): string {
@@ -38,7 +63,7 @@ function extractDescriptionSnippet(rawDescription: any): string {
         .join(' ')
     }
   } catch {
-    // fall through to empty string
+    // Fall back to empty string if parsing fails
   }
   return ''
 }
@@ -51,14 +76,13 @@ function resolveCategory(doc: any, currentLocale: string): string {
   }
 
   const rawCatTitle = doc.category.title || doc.category.name || ''
-  return resolveLocalizedField(rawCatTitle, currentLocale)
+  return resolveLocalizedField(rawCatTitle, currentLocale, doc.category)
 }
 
 function resolveCategorySlug(doc: any): string {
   if (!doc.category) return 'products'
 
   if (typeof doc.category === 'object' && doc.category !== null) {
-    // Resolve slug if localized or plain string
     if (typeof doc.category.slug === 'object' && doc.category.slug !== null) {
       return (
         doc.category.slug.en ||
@@ -75,8 +99,7 @@ function resolveCategorySlug(doc: any): string {
 }
 
 /**
- * Runs the cross-locale product search and maps the raw Payload docs into
- * the flat shape the search results page renders.
+ * Runs cross-locale product search and normalizes title resolution across all locales.
  */
 export async function searchProducts(
   query: string,
@@ -91,7 +114,7 @@ export async function searchProducts(
     locale: 'all',
     where: {
       and: [
-        { stock: { greater_than: 0 } }, // 👈 Exclude items with 0 stock
+        { stock: { greater_than: 0 } },
         { hideOnWebsite: { not_equals: true } },
         {
           or: [
@@ -118,28 +141,27 @@ export async function searchProducts(
   return searchData.docs
     .map((doc: any): MatchedProduct => {
       const rawTitle = doc.title || doc.name || ''
-      const displayTitle = resolveLocalizedField(rawTitle, currentLocale)
+      const displayTitle = resolveLocalizedField(rawTitle, currentLocale, doc)
 
       const rawDescription =
         typeof doc.description === 'object' && doc.description !== null
-          ? resolveLocalizedField(doc.description, currentLocale)
+          ? resolveLocalizedField(doc.description, currentLocale, doc)
           : doc.description || ''
 
-      // Extract product slug (or localized product slug if applicable)
       const productSlug =
         typeof doc.slug === 'object' && doc.slug !== null
-          ? resolveLocalizedField(doc.slug, currentLocale)
+          ? resolveLocalizedField(doc.slug, currentLocale, doc)
           : doc.slug || String(doc.id)
 
       return {
         id: doc.id,
-        slug: productSlug,
+        slug: productSlug || String(doc.id),
         price: doc.price,
         condition: doc.condition,
         category: resolveCategory(doc, currentLocale),
-        categorySlug: resolveCategorySlug(doc), // <-- Extracted category slug
+        categorySlug: resolveCategorySlug(doc),
         featuredImage: doc.featuredImage,
-        title: displayTitle,
+        title: displayTitle || 'Untitled Product',
         descriptionSnippet: extractDescriptionSnippet(rawDescription),
       }
     })

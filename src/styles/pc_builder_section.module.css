@@ -152,9 +152,37 @@
   opacity: 1;
 }
 
-/* 📱 Hide foreground image on mobile screens */
+/* 📱 Mobile Layout Optimization */
 @media (max-width: 768px) {
+  .wrapper {
+    flex-direction: column;
+    padding: 1.5rem 1rem;
+  }
+
+  .content {
+    padding: 0;
+    align-items: center;
+    text-align: center;
+  }
+
+  .metaRow {
+    justify-content: center;
+  }
+
   .visual {
-    display: none !important;
+    position: relative;
+    right: auto;
+    left: auto;
+    margin-bottom: 1rem;
+    height: 140px;
+  }
+
+  .section[dir='rtl'] .visual {
+    right: auto;
+    left: auto;
+  }
+
+  .fgImage {
+    max-height: 140px;
   }
 }

@@ -45,6 +45,10 @@ html {
   .slide {
     height: 280px;
   }
+  .section {
+    padding: 0 1.5rem;
+    padding-bottom: 0;
+  }
 }
 
 .promoWrapper {

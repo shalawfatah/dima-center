@@ -61,7 +61,7 @@
   width: auto !important;
   max-width: none !important;
   margin: 0 auto;
-  object-fit: contain;
+  object-fit: cover;
   object-position: center;
 }
 
