@@ -36,6 +36,61 @@ export function isMonitorCategory(product: ProductItem): boolean {
   return String(product.category).toLowerCase() === 'monitor'
 }
 
+/**
+ * 🎯 Helper to extract category or subcategory identifier for grouping
+ */
+function getCategoryKey(product: ProductItem): string {
+  if (typeof product.category === 'object' && product.category?.id) {
+    return String(product.category.id)
+  }
+  if (typeof product.uiCategory === 'object' && product.uiCategory?.id) {
+    return String(product.uiCategory.id)
+  }
+  if (typeof product.category === 'string') {
+    return product.category
+  }
+  return 'uncategorized'
+}
+
+/**
+ * 🎯 Round-Robin Interleaving
+ * Distributes items evenly across different subcategories/categories.
+ */
+function interleaveBySubcategory(products: ProductItem[]): ProductItem[] {
+  if (!products || products.length === 0) return []
+
+  // 1. Group products by their subcategory/category ID
+  const categoryGroups: Record<string, ProductItem[]> = {}
+  for (const product of products) {
+    const key = getCategoryKey(product)
+    if (!categoryGroups[key]) {
+      categoryGroups[key] = []
+    }
+    categoryGroups[key].push(product)
+  }
+
+  const groupKeys = Object.keys(categoryGroups)
+  if (groupKeys.length <= 1) return products // Only 1 subcategory exists, return as-is
+
+  const result: ProductItem[] = []
+  let addedAny = true
+  let index = 0
+
+  // 2. Round-Robin pick: 1 item from each category per loop iteration
+  while (addedAny) {
+    addedAny = false
+    for (const key of groupKeys) {
+      if (index < categoryGroups[key].length) {
+        result.push(categoryGroups[key][index])
+        addedAny = true
+      }
+    }
+    index++
+  }
+
+  return result
+}
+
 export function sortProductsForDisplay(products: ProductItem[]): ProductItem[] {
   if (!products || !Array.isArray(products)) return []
 
@@ -56,31 +111,14 @@ export function sortProductsForDisplay(products: ProductItem[]): ProductItem[] {
     }
   }
 
-  return [...manualOffers, ...discountedProducts, ...monitorProducts, ...defaultProducts]
+  // Interleave default products so no single subcategory takes over all slots
+  const interleavedDefault = interleaveBySubcategory(defaultProducts)
+  const interleavedDiscounted = interleaveBySubcategory(discountedProducts)
+
+  return [...manualOffers, ...interleavedDiscounted, ...monitorProducts, ...interleavedDefault]
 }
 
 type LocalizableField = 'title' | 'description'
-
-/**
- * Safe internal helper to ensure a value is a non-empty, non-whitespace string
- */
-function sanitizeString(val: any): string | null {
-  if (typeof val === 'string' && val.trim() !== '') {
-    return val.trim()
-  }
-  return null
-}
-
-/**
- * 🎯 Robust Localized & Fallback Text Extractor
- * Priority Order:
- * 1. Direct raw string on product[fieldType]
- * 2. Localized dictionary object: Requested Locale -> CKB -> EN -> AR -> First available string
- * 3. Rich Text / AST content (if present)
- * 4. Explicit fallback properties on root level (e.g. title_ckb, titleCkb, title_en)
- * 5. Candidate fallback fields (name, productName, label, slug)
- */
-// @/utils/product_helpers.ts
 
 export function getFallbackText(
   product: ProductItem | any,
@@ -89,22 +127,17 @@ export function getFallbackText(
 ): string {
   if (!product) return ''
 
-  // Safe internal string sanitizer
   const sanitize = (val: any): string | null => {
     if (typeof val === 'string' && val.trim() !== '') return val.trim()
     return null
   }
 
-  // 1. Get raw field from current product level
   const rawVal = product[fieldType]
 
-  // 2. Direct non-empty string
   const directStr = sanitize(rawVal)
   if (directStr) return directStr
 
-  // 3. Localized object or Lexical/Slate AST
   if (typeof rawVal === 'object' && rawVal !== null) {
-    // Rich Text AST check
     if (rawVal.root || Array.isArray(rawVal.children)) {
       try {
         const children = rawVal.root?.children || rawVal.children || []
@@ -118,7 +151,6 @@ export function getFallbackText(
       }
     }
 
-    // Localized dictionary resolution
     const objectMatch =
       sanitize(rawVal[currentLocale]) ||
       sanitize(rawVal.ckb) ||
@@ -131,7 +163,6 @@ export function getFallbackText(
     if (objectMatch) return objectMatch
   }
 
-  // 4. Flattened top-level properties (e.g. title_ar, titleAr)
   const topLevelMatch =
     sanitize(product[`${fieldType}_${currentLocale}`]) ||
     sanitize(product[`${fieldType}_ckb`]) ||
@@ -143,7 +174,6 @@ export function getFallbackText(
 
   if (topLevelMatch) return topLevelMatch
 
-  // 5. Check candidate fallbacks (name, label, slug)
   const fallbackCandidates =
     sanitize(product.name) ||
     sanitize(product.productName) ||
@@ -152,8 +182,6 @@ export function getFallbackText(
 
   if (fallbackCandidates) return fallbackCandidates
 
-  // 6. UI-PRODUCT FIX: If this is a ui-product/case offer wrapping a linked product,
-  // recursively search the linked product or uiCategory for the missing text!
   if (product.linkedProduct && typeof product.linkedProduct === 'object') {
     const linkedText = getFallbackText(product.linkedProduct, fieldType, currentLocale)
     if (linkedText) return linkedText
