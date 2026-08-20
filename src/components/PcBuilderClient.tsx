@@ -161,6 +161,13 @@ export default function PcBuilderClient({
 
   return (
     <>
+      <style>{`
+        html, body {
+          background-color: ${siteBackgroundColor} !important;
+          min-height: 100vh;
+        }
+      `}</style>
+
       {dynamicFontFaceCSS && <style dangerouslySetInnerHTML={{ __html: dynamicFontFaceCSS }} />}
 
       <div

@@ -14,38 +14,53 @@ export interface MatchedProduct {
 }
 
 /**
- * Resolves localized fields, including support for standard localized objects
- * and Payload's internal `_locales` fallback array for complex field schemas.
+ * Resolves localized fields with strict fallback: Requested -> EN -> CKB -> AR
  */
 function resolveLocalizedField(field: any, currentLocale: string, fallbackDoc?: any): string {
-  // 1. Direct string/number output
   if (typeof field === 'string' || typeof field === 'number') {
     return String(field)
   }
 
-  // 2. Standard localized object: { en: 'Title', ckb: '...', ar: '...' }
+  // 1. Standard localized object resolution
   if (typeof field === 'object' && field !== null) {
-    const value =
-      field[currentLocale] ||
-      field['ckb'] ||
-      field['en'] ||
-      field['ar'] ||
-      Object.values(field).find((val) => typeof val === 'string' && val.trim().length > 0)
+    const requested = field[currentLocale]
+    if (requested && typeof requested === 'string' && requested.trim().length > 0) {
+      return String(requested)
+    }
 
-    if (value) return String(value)
+    // Fallback hierarchy: EN -> CKB -> AR
+    const en = field['en']
+    if (en && typeof en === 'string' && en.trim().length > 0) return String(en)
+
+    const ckb = field['ckb'] || field['ku']
+    if (ckb && typeof ckb === 'string' && ckb.trim().length > 0) return String(ckb)
+
+    const ar = field['ar']
+    if (ar && typeof ar === 'string' && ar.trim().length > 0) return String(ar)
+
+    const anyVal = Object.values(field).find(
+      (val) => typeof val === 'string' && val.trim().length > 0,
+    )
+    if (anyVal) return String(anyVal)
   }
 
-  // 3. Fallback for Payload's internal _locales array (frequently used in complex blocks/specs)
+  // 2. Payload _locales array fallback
   if (fallbackDoc && Array.isArray(fallbackDoc._locales)) {
-    const localeEntry =
-      fallbackDoc._locales.find((l: any) => l._locale === currentLocale) ||
-      fallbackDoc._locales.find((l: any) => l._locale === 'ckb') ||
-      fallbackDoc._locales.find((l: any) => l._locale === 'en') ||
-      fallbackDoc._locales.find((l: any) => l._locale === 'ar') ||
+    const findLocale = (loc: string) =>
+      fallbackDoc._locales.find(
+        (l: any) => l._locale === loc && l.title && String(l.title).trim() !== '',
+      )
+
+    const entry =
+      findLocale(currentLocale) ||
+      findLocale('en') ||
+      findLocale('ckb') ||
+      findLocale('ku') ||
+      findLocale('ar') ||
       fallbackDoc._locales[0]
 
-    if (localeEntry && localeEntry.title) {
-      return String(localeEntry.title)
+    if (entry && entry.title) {
+      return String(entry.title)
     }
   }
 
@@ -63,17 +78,14 @@ function extractDescriptionSnippet(rawDescription: any): string {
         .join(' ')
     }
   } catch {
-    // Fall back to empty string if parsing fails
+    // Return empty on parse error
   }
   return ''
 }
 
 function resolveCategory(doc: any, currentLocale: string): string {
   if (!doc.category) return ''
-
-  if (typeof doc.category !== 'object') {
-    return String(doc.category)
-  }
+  if (typeof doc.category !== 'object') return String(doc.category)
 
   const rawCatTitle = doc.category.title || doc.category.name || ''
   return resolveLocalizedField(rawCatTitle, currentLocale, doc.category)
@@ -98,9 +110,6 @@ function resolveCategorySlug(doc: any): string {
   return 'products'
 }
 
-/**
- * Runs cross-locale product search and normalizes title resolution across all locales.
- */
 export async function searchProducts(
   query: string,
   currentLocale: string,
