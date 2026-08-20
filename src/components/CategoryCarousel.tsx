@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
+import { motion, AnimatePresence } from 'framer-motion'
 import styles from '@/styles/category_carousel.module.css'
 import { CategoryDropdownNavProps } from '@/types/types'
 
@@ -41,13 +42,8 @@ export default function CategoryDropdownNav({
 
   const isRtl = currentLocale === 'ar' || currentLocale === 'ckb'
 
-  const handleCloseHam = () => {
-    setIsHamOpen(false)
-  }
-
-  const handleToggleHam = () => {
-    setIsHamOpen((prev) => !prev)
-  }
+  const handleCloseHam = () => setIsHamOpen(false)
+  const handleToggleHam = () => setIsHamOpen((prev) => !prev)
 
   const typographyConfig = generalSettings?.typography
   let selectedHeadingFont: FontMedia | string | null | undefined
@@ -84,25 +80,12 @@ export default function CategoryDropdownNav({
   }
 
   const titleFont = customFontFamily
-
   const navbarConfig = generalSettings?.navbar
   const navBg = navbarConfig?.backgroundColor || '#ffb83c'
   const navText = navbarConfig?.textColor || '#000000'
   const isFitContent = navbarConfig?.width === 'fit-content'
 
-  // Standard scroll lock without scrollbar padding shifts
-  useEffect(() => {
-    if (isHamOpen) {
-      document.body.style.overflow = 'hidden'
-    } else {
-      document.body.style.overflow = ''
-    }
-
-    return () => {
-      document.body.style.overflow = ''
-    }
-  }, [isHamOpen])
-
+  // Fixed: Removed body overflow toggle to stop browser scrollbar layout shift/jitter
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (navRef.current && !navRef.current.contains(event.target as Node)) {
@@ -120,9 +103,7 @@ export default function CategoryDropdownNav({
   }
 
   const handleMouseLeave = () => {
-    timeoutRef.current = setTimeout(() => {
-      setActiveDropdown(null)
-    }, 150)
+    timeoutRef.current = setTimeout(() => setActiveDropdown(null), 150)
   }
 
   const handleHamMouseEnter = () => {
@@ -131,9 +112,7 @@ export default function CategoryDropdownNav({
   }
 
   const handleHamMouseLeave = () => {
-    hamTimeoutRef.current = setTimeout(() => {
-      handleCloseHam()
-    }, 150)
+    hamTimeoutRef.current = setTimeout(() => handleCloseHam(), 150)
   }
 
   const handleToggleDropdown = (index: number) => {
@@ -183,74 +162,81 @@ export default function CategoryDropdownNav({
               ☰
             </button>
 
-            <div
-              className={`${styles['mobile-dropdown-panel']} ${
-                isHamOpen ? styles['panel-open'] : styles['panel-closed']
-              }`}
-            >
-              {categories.map((category, index) => {
-                const catKey = category.id || index
-                const hasSub =
-                  Array.isArray(category.subCategories) && category.subCategories.length > 0
-                const isExpanded = !!expandedMobileCategories[catKey]
+            <AnimatePresence>
+              {isHamOpen && (
+                <motion.div
+                  className={styles['mobile-dropdown-panel']}
+                  initial={{ opacity: 0, x: 20, scale: 0.98 }}
+                  animate={{ opacity: 1, x: 0, scale: 1 }}
+                  exit={{ opacity: 0, x: 20, scale: 0.98 }}
+                  transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+                >
+                  {categories.map((category, index) => {
+                    const catKey = category.id || index
+                    const hasSub =
+                      Array.isArray(category.subCategories) && category.subCategories.length > 0
+                    const isExpanded = !!expandedMobileCategories[catKey]
 
-                if (!category.isContainer && category.slug && !hasSub) {
-                  return (
-                    <Link
-                      key={catKey}
-                      href={`/${currentLocale}?category=${category.slug}`}
-                      className={styles['mobile-item-link']}
-                      onClick={handleCloseHam}
-                    >
-                      {category.title}
-                    </Link>
-                  )
-                }
-
-                return (
-                  <div key={catKey} className={styles['mobile-group-section']}>
-                    <button
-                      type="button"
-                      className={styles['mobile-group-title-btn']}
-                      onClick={() => toggleMobileCategory(catKey)}
-                    >
-                      <span>{category.title}</span>
-                      {hasSub && (
-                        <span
-                          className={styles['mobile-caret']}
-                          style={{
-                            transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)',
-                          }}
+                    if (!category.isContainer && category.slug && !hasSub) {
+                      return (
+                        <Link
+                          key={catKey}
+                          href={`/${currentLocale}?category=${category.slug}`}
+                          className={styles['mobile-item-link']}
+                          onClick={handleCloseHam}
                         >
-                          ▼
-                        </span>
-                      )}
-                    </button>
+                          {category.title}
+                        </Link>
+                      )
+                    }
 
-                    {hasSub && isExpanded && (
-                      <div className={styles['mobile-sub-container']}>
-                        {category.subCategories?.map((sub, subIdx) => (
-                          <Link
-                            key={subIdx}
-                            href={`/${currentLocale}?category=${sub.slug}`}
-                            className={styles['mobile-sub-link']}
-                            onClick={handleCloseHam}
-                          >
-                            {sub.title}
-                          </Link>
-                        ))}
+                    return (
+                      <div key={catKey} className={styles['mobile-group-section']}>
+                        <button
+                          type="button"
+                          className={styles['mobile-group-title-btn']}
+                          onClick={() => toggleMobileCategory(catKey)}
+                        >
+                          <span>{category.title}</span>
+                          {hasSub && (
+                            <span
+                              className={styles['mobile-caret']}
+                              style={{
+                                transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)',
+                              }}
+                            >
+                              ▼
+                            </span>
+                          )}
+                        </button>
+
+                        {hasSub && isExpanded && (
+                          <div className={styles['mobile-sub-container']}>
+                            {category.subCategories?.map((sub, subIdx) => (
+                              <Link
+                                key={subIdx}
+                                href={`/${currentLocale}?category=${sub.slug}`}
+                                className={styles['mobile-sub-link']}
+                                onClick={handleCloseHam}
+                              >
+                                {sub.title}
+                              </Link>
+                            ))}
+                          </div>
+                        )}
                       </div>
-                    )}
-                  </div>
-                )
-              })}
-            </div>
+                    )
+                  })}
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
 
-          {/* Desktop Navigation Items Wrapper */}
+          {/* Desktop Navigation Items */}
           <div className={styles['desktop-nav-items']}>
             {categories.map((category, index) => {
               const isIndependent = !category.isContainer && !!category.slug
+              const isLastItem = index === categories.length - 1
 
               if (isIndependent) {
                 return (
@@ -287,7 +273,11 @@ export default function CategoryDropdownNav({
                   </button>
 
                   {isOpen && category.subCategories && (
-                    <div className={styles['dropdown-menu']}>
+                    <div
+                      className={`${styles['dropdown-menu']} ${
+                        isLastItem ? styles['dropdown-menu-end'] : ''
+                      }`}
+                    >
                       {category.subCategories.map((sub, subIdx) => (
                         <Link
                           key={subIdx}
