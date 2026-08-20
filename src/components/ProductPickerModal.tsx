@@ -44,20 +44,10 @@ export default function ProductPickerModal({
         const pCatAlt = getCatValue(p.cat).toLowerCase()
         const targetSlug = slot.categorySlug.toLowerCase()
 
-        // Special fallback rule for storage slot to catch m.2, ssd, hdd, storage variations
+        // Special case for storage - ONLY include ssd, hdd, m2
         if (activeModalSlot === 'm-2') {
-          return (
-            pCat.includes('storage') ||
-            pCat.includes('ssd') ||
-            pCat.includes('hdd') ||
-            pCat.includes('m.2') ||
-            pCat.includes('m-2') ||
-            pCatAlt.includes('storage') ||
-            pCatAlt.includes('ssd') ||
-            pCatAlt.includes('hdd') ||
-            pCatAlt.includes('m.2') ||
-            pCatAlt.includes('m-2')
-          )
+          const allowedStorageCategories = ['ssd', 'hdd', 'm2']
+          return allowedStorageCategories.some((allowed) => pCat === allowed || pCatAlt === allowed)
         }
 
         return pCat === targetSlug || pCatAlt === targetSlug
