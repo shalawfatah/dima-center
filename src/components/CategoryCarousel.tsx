@@ -41,6 +41,14 @@ export default function CategoryDropdownNav({
 
   const isRtl = currentLocale === 'ar' || currentLocale === 'ckb'
 
+  const handleCloseHam = () => {
+    setIsHamOpen(false)
+  }
+
+  const handleToggleHam = () => {
+    setIsHamOpen((prev) => !prev)
+  }
+
   const typographyConfig = generalSettings?.typography
   let selectedHeadingFont: FontMedia | string | null | undefined
 
@@ -82,21 +90,16 @@ export default function CategoryDropdownNav({
   const navText = navbarConfig?.textColor || '#000000'
   const isFitContent = navbarConfig?.width === 'fit-content'
 
+  // Standard scroll lock without scrollbar padding shifts
   useEffect(() => {
-    const isMobile = window.innerWidth <= 900
-
-    if (isHamOpen && isMobile) {
-      const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth
+    if (isHamOpen) {
       document.body.style.overflow = 'hidden'
-      document.body.style.paddingRight = `${scrollbarWidth}px`
     } else {
       document.body.style.overflow = ''
-      document.body.style.paddingRight = ''
     }
 
     return () => {
       document.body.style.overflow = ''
-      document.body.style.paddingRight = ''
     }
   }, [isHamOpen])
 
@@ -104,7 +107,7 @@ export default function CategoryDropdownNav({
     function handleClickOutside(event: MouseEvent) {
       if (navRef.current && !navRef.current.contains(event.target as Node)) {
         setActiveDropdown(null)
-        setIsHamOpen(false)
+        handleCloseHam()
       }
     }
     document.addEventListener('mousedown', handleClickOutside)
@@ -129,7 +132,7 @@ export default function CategoryDropdownNav({
 
   const handleHamMouseLeave = () => {
     hamTimeoutRef.current = setTimeout(() => {
-      setIsHamOpen(false)
+      handleCloseHam()
     }, 150)
   }
 
@@ -174,73 +177,74 @@ export default function CategoryDropdownNav({
             <button
               type="button"
               className={styles['ham-menu-btn']}
-              onClick={() => setIsHamOpen((prev) => !prev)}
+              onClick={handleToggleHam}
               aria-label="Toggle navigation menu"
             >
               ☰
             </button>
 
-            {/* Collapsible Mobile Dropdown Panel */}
-            {isHamOpen && (
-              <div className={styles['mobile-dropdown-panel']}>
-                {categories.map((category, index) => {
-                  const catKey = category.id || index
-                  const hasSub =
-                    Array.isArray(category.subCategories) && category.subCategories.length > 0
-                  const isExpanded = !!expandedMobileCategories[catKey]
+            <div
+              className={`${styles['mobile-dropdown-panel']} ${
+                isHamOpen ? styles['panel-open'] : styles['panel-closed']
+              }`}
+            >
+              {categories.map((category, index) => {
+                const catKey = category.id || index
+                const hasSub =
+                  Array.isArray(category.subCategories) && category.subCategories.length > 0
+                const isExpanded = !!expandedMobileCategories[catKey]
 
-                  if (!category.isContainer && category.slug && !hasSub) {
-                    return (
-                      <Link
-                        key={catKey}
-                        href={`/${currentLocale}?category=${category.slug}`}
-                        className={styles['mobile-item-link']}
-                        onClick={() => setIsHamOpen(false)}
-                      >
-                        {category.title}
-                      </Link>
-                    )
-                  }
-
+                if (!category.isContainer && category.slug && !hasSub) {
                   return (
-                    <div key={catKey} className={styles['mobile-group-section']}>
-                      <button
-                        type="button"
-                        className={styles['mobile-group-title-btn']}
-                        onClick={() => toggleMobileCategory(catKey)}
-                      >
-                        <span>{category.title}</span>
-                        {hasSub && (
-                          <span
-                            className={styles['mobile-caret']}
-                            style={{
-                              transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)',
-                            }}
-                          >
-                            ▼
-                          </span>
-                        )}
-                      </button>
-
-                      {hasSub && isExpanded && (
-                        <div className={styles['mobile-sub-container']}>
-                          {category.subCategories?.map((sub, subIdx) => (
-                            <Link
-                              key={subIdx}
-                              href={`/${currentLocale}?category=${sub.slug}`}
-                              className={styles['mobile-sub-link']}
-                              onClick={() => setIsHamOpen(false)}
-                            >
-                              {sub.title}
-                            </Link>
-                          ))}
-                        </div>
-                      )}
-                    </div>
+                    <Link
+                      key={catKey}
+                      href={`/${currentLocale}?category=${category.slug}`}
+                      className={styles['mobile-item-link']}
+                      onClick={handleCloseHam}
+                    >
+                      {category.title}
+                    </Link>
                   )
-                })}
-              </div>
-            )}
+                }
+
+                return (
+                  <div key={catKey} className={styles['mobile-group-section']}>
+                    <button
+                      type="button"
+                      className={styles['mobile-group-title-btn']}
+                      onClick={() => toggleMobileCategory(catKey)}
+                    >
+                      <span>{category.title}</span>
+                      {hasSub && (
+                        <span
+                          className={styles['mobile-caret']}
+                          style={{
+                            transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)',
+                          }}
+                        >
+                          ▼
+                        </span>
+                      )}
+                    </button>
+
+                    {hasSub && isExpanded && (
+                      <div className={styles['mobile-sub-container']}>
+                        {category.subCategories?.map((sub, subIdx) => (
+                          <Link
+                            key={subIdx}
+                            href={`/${currentLocale}?category=${sub.slug}`}
+                            className={styles['mobile-sub-link']}
+                            onClick={handleCloseHam}
+                          >
+                            {sub.title}
+                          </Link>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )
+              })}
+            </div>
           </div>
 
           {/* Desktop Navigation Items Wrapper */}

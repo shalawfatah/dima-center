@@ -8,6 +8,7 @@ import FullNavbar from '@/components/FullNavbar'
 import { EventBanner } from '@/components/EventBanner'
 import { fetchActiveEvent } from '@/utils/fetch_active_events'
 import { WhatsappComponent } from '@/components/WhatsappComponent'
+import CategoryDropdownNav from '@/components/CategoryCarousel'
 
 interface LayoutProps {
   children: React.ReactNode
@@ -120,6 +121,27 @@ export default async function LocalizedLayout({ children, params }: LayoutProps)
 
   const phoneNumber = generalSettings?.phone || '9647701414269'
 
+  const [categoriesRes] = await Promise.all([
+    payload.find({
+      collection: 'ui-categories',
+      locale: currentLocale as 'en' | 'ar' | 'ckb',
+      fallbackLocale: 'en',
+      sort: 'order',
+      where: {
+        hideInCarousel: { equals: false },
+      },
+      limit: 100,
+    }),
+  ])
+
+  const categories = categoriesRes.docs.map((doc: any) => ({
+    id: doc.id,
+    title: doc.title,
+    slug: doc.slug,
+    isContainer: doc.isContainer,
+    subCategories: doc.subCategories || [],
+  }))
+
   return (
     <div>
       {/* Dynamic Font & Variable Injection */}
@@ -150,6 +172,12 @@ export default async function LocalizedLayout({ children, params }: LayoutProps)
       />
 
       <FullNavbar currentLocale={currentLocale} />
+      <CategoryDropdownNav
+        currentLocale={currentLocale}
+        categories={categories}
+        generalSettings={generalSettings}
+      />
+
       <EventBanner
         bannerData={activeEvent}
         currentLocale={currentLocale}

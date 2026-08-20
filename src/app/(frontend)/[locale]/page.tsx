@@ -14,7 +14,6 @@ import type { Metadata } from 'next'
 import { getStorefrontMetadata } from '@/utils/seo'
 import SectionSkeleton from '@/components/SectionSkeleton'
 import { MINIMAL_PRODUCT_FIELDS } from '@/utils/homepage-helpers'
-import CategoryDropdownNav from '@/components/CategoryCarousel'
 import FilteredCategoryView from '@/components/FilteredCategoryView'
 
 const PCBuilderSection = dynamic(() => import('@/components/PCBuilderSection'), {
@@ -338,28 +337,6 @@ export default async function StorefrontHome({ params, searchParams }: PageProps
     )
   }
 
-  // Default Home View
-  const [categoriesRes] = await Promise.all([
-    payload.find({
-      collection: 'ui-categories',
-      locale: currentLocale as 'en' | 'ar' | 'ckb',
-      fallbackLocale: 'en',
-      sort: 'order',
-      where: {
-        hideInCarousel: { equals: false },
-      },
-      limit: 100,
-    }),
-  ])
-
-  const categories = categoriesRes.docs.map((doc: any) => ({
-    id: doc.id,
-    title: doc.title,
-    slug: doc.slug,
-    isContainer: doc.isContainer,
-    subCategories: doc.subCategories || [],
-  }))
-
   const pcBuilderBg = generalSettings?.pcBuilder?.backgroundImage
   const pcBuilderFg = generalSettings?.pcBuilder?.foregroundImage
 
@@ -368,12 +345,6 @@ export default async function StorefrontHome({ params, searchParams }: PageProps
       {dynamicFontFaceCSS && <style dangerouslySetInnerHTML={{ __html: dynamicFontFaceCSS }} />}
 
       <div className={`${styles.pageWrapper} ${styles.pageWrapperDefault} ${dirClass}`}>
-        <CategoryDropdownNav
-          currentLocale={currentLocale}
-          categories={categories}
-          generalSettings={generalSettings}
-        />
-
         <div className={styles.promoWrapper}>
           <div className={styles.promoLeft}>
             <PCBuilderSection
