@@ -1,4 +1,3 @@
-import { validateCrossCollectionSlug } from '@/utils/validate_cross_colletion_slug'
 import { CollectionConfig } from 'payload'
 
 export const UICategories: CollectionConfig = {
@@ -18,7 +17,7 @@ export const UICategories: CollectionConfig = {
       name: 'slug',
       type: 'text',
       required: false,
-      validate: validateCrossCollectionSlug('categories'),
+      // ❌ Removed: validate: validateCrossCollectionSlug('categories')
       admin: {
         description:
           'Used for direct links (e.g., laptop, monitor). Leave empty if this is a main container.',
