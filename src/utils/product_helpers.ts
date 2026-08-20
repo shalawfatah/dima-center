@@ -1,5 +1,3 @@
-// @/utils/product_helpers.ts
-
 import { ProductItem } from '@/types/types'
 
 export function getNumericalPrice(price: number | string | null | undefined): number {
@@ -37,14 +35,18 @@ export function isMonitorCategory(product: ProductItem): boolean {
 }
 
 /**
- * 🎯 Helper to extract category or subcategory identifier for grouping
+ * 🎯 Helper to extract specific leaf subcategory key for accurate interleaving
  */
 function getCategoryKey(product: ProductItem): string {
-  if (typeof product.category === 'object' && product.category?.id) {
-    return String(product.category.id)
+  if (typeof product.category === 'object' && product.category !== null) {
+    const cat = product.category as any
+    if (cat.slug) return String(cat.slug)
+    if (cat.id) return String(cat.id)
   }
-  if (typeof product.uiCategory === 'object' && product.uiCategory?.id) {
-    return String(product.uiCategory.id)
+  if (typeof product.uiCategory === 'object' && product.uiCategory !== null) {
+    const uiCat = product.uiCategory as any
+    if (uiCat.slug) return String(uiCat.slug)
+    if (uiCat.id) return String(uiCat.id)
   }
   if (typeof product.category === 'string') {
     return product.category
@@ -59,7 +61,6 @@ function getCategoryKey(product: ProductItem): string {
 function interleaveBySubcategory(products: ProductItem[]): ProductItem[] {
   if (!products || products.length === 0) return []
 
-  // 1. Group products by their subcategory/category ID
   const categoryGroups: Record<string, ProductItem[]> = {}
   for (const product of products) {
     const key = getCategoryKey(product)
@@ -70,13 +71,12 @@ function interleaveBySubcategory(products: ProductItem[]): ProductItem[] {
   }
 
   const groupKeys = Object.keys(categoryGroups)
-  if (groupKeys.length <= 1) return products // Only 1 subcategory exists, return as-is
+  if (groupKeys.length <= 1) return products
 
   const result: ProductItem[] = []
   let addedAny = true
   let index = 0
 
-  // 2. Round-Robin pick: 1 item from each category per loop iteration
   while (addedAny) {
     addedAny = false
     for (const key of groupKeys) {
@@ -111,7 +111,6 @@ export function sortProductsForDisplay(products: ProductItem[]): ProductItem[] {
     }
   }
 
-  // Interleave default products so no single subcategory takes over all slots
   const interleavedDefault = interleaveBySubcategory(defaultProducts)
   const interleavedDiscounted = interleaveBySubcategory(discountedProducts)
 
