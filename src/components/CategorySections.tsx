@@ -17,6 +17,15 @@ const SEE_ALL_TEXT: Record<string, string> = {
 }
 
 /**
+ * Helper to get string slug regardless of whether Payload returns an object or raw string ID
+ */
+function getSlugValue(rel: any): string | undefined {
+  if (!rel) return undefined
+  if (typeof rel === 'string') return rel // If unpopulated ID or string slug
+  return rel.slug || rel.id || undefined
+}
+
+/**
  * Helper to interleave products across subcategories round-robin
  * so that no single subcategory hogs the section capacity.
  */
@@ -74,6 +83,7 @@ export default async function CategorySections({
   const uiCategoriesResult = await payload
     .find({
       collection: 'ui-categories',
+      depth: 1,
       limit: 100,
       sort: 'order',
       locale: currentLocale as 'en' | 'ckb' | 'ar',
@@ -139,7 +149,7 @@ export default async function CategorySections({
   const allDocs = [...productsBulk.docs, ...uiProductsBulk.docs]
 
   for (const p of allDocs) {
-    const slug = (p as any).category?.slug || (p as any).uiCategory?.slug
+    const slug = getSlugValue((p as any).category) || getSlugValue((p as any).uiCategory)
     if (!slug) continue
     if (!bySlug[slug]) bySlug[slug] = []
     bySlug[slug].push(p)
@@ -147,34 +157,34 @@ export default async function CategorySections({
 
   const homepageSections = sectionMetaMapping
     .map((meta) => {
-      // 1. Interleave subcategories evenly (1 from catA, 1 from catB, etc.)
       const interleavedDocs = interleaveSubcategories(bySlug, meta.leafSlugs)
 
-      // 2. Format products
       const formattedProducts = interleavedDocs
         .map((p: any) => formatProductForCarousel(p, currentLocale))
         .filter((p): p is ProductItem => Boolean(p))
 
-      // 3. Limit to 20 items max per homepage section
       return { ...meta, products: formattedProducts.slice(0, PER_SECTION_LIMIT) }
     })
     .filter((s) => s.products.length > 0)
 
   if (homepageSections.length === 0) return null
 
-  // Fallback to English if current locale is missing from text map
   const seeAllText = SEE_ALL_TEXT[currentLocale] || SEE_ALL_TEXT.en
 
   return (
     <>
       {dynamicFontFaceCSS && <style dangerouslySetInnerHTML={{ __html: dynamicFontFaceCSS }} />}
 
-      {homepageSections.map((cat) => {
-        // Formats destination as /products?category=psu
-        const targetUrl = `?category=${encodeURIComponent(cat.slug)}`
+      {homepageSections.map((cat, idx) => {
+        const rawSlug = typeof cat.slug === 'object' ? (cat.slug as any)?.slug : cat.slug
+        const categorySlug = String(rawSlug || `section-${idx}`)
+        const targetUrl = `?category=${encodeURIComponent(categorySlug)}`
+
+        // Key combines the category slug with loop index to guarantee uniqueness
+        const sectionKey = `${categorySlug}-${idx}`
 
         return (
-          <section key={cat.slug} className={styles.section}>
+          <section key={sectionKey} className={styles.section}>
             <div
               style={{
                 display: 'flex',
@@ -194,9 +204,11 @@ export default async function CategorySections({
                   marginBottom: '0.5rem',
                 }}
               />
-              <Link href={targetUrl} style={{ fontFamily: headingFont }}>
-                {seeAllText}
-              </Link>
+              {cat.slug.length > 2 && (
+                <Link href={targetUrl} style={{ fontFamily: headingFont }}>
+                  {seeAllText}
+                </Link>
+              )}
             </div>
             <ProductCarousel
               isRtl={isRtl}

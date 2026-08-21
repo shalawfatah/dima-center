@@ -182,7 +182,7 @@ export function buildDynamicSectionMetaMapping(uiCategoryDocs: any[]): SectionMe
       const subSlugs = group.subCategories.map((sub: any) => sub.slug).filter(Boolean)
       if (subSlugs.length > 0) {
         sectionMetaMapping.push({
-          slug: group.id || `group-${group.slug || 'container'}`,
+          slug: group.slug,
           leafSlugs: subSlugs,
           title: groupTitles,
         })
