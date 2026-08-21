@@ -5,8 +5,16 @@ import LocalizedHeading from '@/components/LocalizedHeading'
 import { formatProductForCarousel, buildDynamicSectionMetaMapping } from '@/utils/homepage-helpers'
 import { ProductItem } from '@/types/types'
 import styles from '@/styles/homepage.module.css'
+import Link from 'next/link'
 
 const PER_SECTION_LIMIT = 20
+
+// Localized "See All" button text mapping
+const SEE_ALL_TEXT: Record<string, string> = {
+  ckb: 'هەموویان ببینە',
+  ar: 'عرض الكل',
+  en: 'See All',
+}
 
 /**
  * Helper to interleave products across subcategories round-robin
@@ -154,39 +162,59 @@ export default async function CategorySections({
 
   if (homepageSections.length === 0) return null
 
+  // Fallback to English if current locale is missing from text map
+  const seeAllText = SEE_ALL_TEXT[currentLocale] || SEE_ALL_TEXT.en
+
   return (
     <>
       {dynamicFontFaceCSS && <style dangerouslySetInnerHTML={{ __html: dynamicFontFaceCSS }} />}
 
-      {homepageSections.map((cat) => (
-        <section key={cat.slug} className={styles.section}>
-          <LocalizedHeading
-            currentLocale={currentLocale}
-            en={cat.title.en}
-            ar={cat.title.ar}
-            ckb={cat.title.ckb}
-            headingFont={headingFont}
-            style={{
-              fontSize: '1.4rem',
-              marginBottom: '0.5rem',
-            }}
-          />
-          <ProductCarousel
-            isRtl={isRtl}
-            currentLocale={currentLocale}
-            products={cat.products}
-            cardBgColor={boxBgColor}
-            headingFont={headingFont}
-            bodyFont={bodyFont}
-            boxBorderColor={generalSettings?.typography?.boxBorderColor}
-            titleColor={titleColor}
-            bodyColor={bodyColor}
-            boxTitleColor={resolvedBoxTitleColor}
-            boxBodyColor={resolvedBoxBodyColor}
-            boxPriceColor={resolvedBoxPriceColor}
-          />
-        </section>
-      ))}
+      {homepageSections.map((cat) => {
+        // Formats destination as /products?category=psu
+        const targetUrl = `?category=${encodeURIComponent(cat.slug)}`
+
+        return (
+          <section key={cat.slug} className={styles.section}>
+            <div
+              style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                flexDirection: isRtl ? 'row-reverse' : 'row',
+                alignItems: 'center',
+              }}
+            >
+              <LocalizedHeading
+                currentLocale={currentLocale}
+                en={cat.title.en}
+                ar={cat.title.ar}
+                ckb={cat.title.ckb}
+                headingFont={headingFont}
+                style={{
+                  fontSize: '1.4rem',
+                  marginBottom: '0.5rem',
+                }}
+              />
+              <Link href={targetUrl} style={{ fontFamily: headingFont }}>
+                {seeAllText}
+              </Link>
+            </div>
+            <ProductCarousel
+              isRtl={isRtl}
+              currentLocale={currentLocale}
+              products={cat.products}
+              cardBgColor={boxBgColor}
+              headingFont={headingFont}
+              bodyFont={bodyFont}
+              boxBorderColor={generalSettings?.typography?.boxBorderColor}
+              titleColor={titleColor}
+              bodyColor={bodyColor}
+              boxTitleColor={resolvedBoxTitleColor}
+              boxBodyColor={resolvedBoxBodyColor}
+              boxPriceColor={resolvedBoxPriceColor}
+            />
+          </section>
+        )
+      })}
     </>
   )
 }
