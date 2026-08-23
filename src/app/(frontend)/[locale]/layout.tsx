@@ -18,6 +18,18 @@ interface LayoutProps {
 type FontMedia = {
   url?: string
   filename?: string
+  mimeType?: string
+}
+
+// Best-effort guess at the font MIME/type from filename/url, since
+// <link rel="preload" as="font"> needs a `type` to be effective in most browsers.
+function guessFontType(fontObj?: FontMedia): string {
+  const src = fontObj?.mimeType || fontObj?.filename || fontObj?.url || ''
+  if (src.includes('woff2')) return 'font/woff2'
+  if (src.includes('woff')) return 'font/woff'
+  if (src.includes('.otf')) return 'font/otf'
+  if (src.includes('.ttf')) return 'font/ttf'
+  return 'font/woff2' // sane default; most modern exports are woff2
 }
 
 export async function generateMetadata({
@@ -83,7 +95,13 @@ export default async function LocalizedLayout({ children, params }: LayoutProps)
   const headingFontUrl = headingFontObj?.url
   const bodyFontUrl = bodyFontObj?.url
 
+  const headingFontType = guessFontType(headingFontObj)
+  const bodyFontType = guessFontType(bodyFontObj)
+
   // 6. Build dynamic CSS rules with default fallbacks
+  // font-display: optional -> if the font is already cached (returning visits),
+  // it renders immediately with no flash. If not cached yet, the browser uses
+  // the fallback for that paint and does NOT swap mid-render, avoiding the jitter.
   let fontFaceCSS = ''
 
   if (headingFontUrl) {
@@ -91,7 +109,7 @@ export default async function LocalizedLayout({ children, params }: LayoutProps)
       @font-face {
         font-family: 'CustomHeadingFont';
         src: url('${headingFontUrl}');
-        font-display: swap;
+        font-display: optional;
       }
     `
   }
@@ -101,7 +119,7 @@ export default async function LocalizedLayout({ children, params }: LayoutProps)
       @font-face {
         font-family: 'CustomBodyFont';
         src: url('${bodyFontUrl}');
-        font-display: swap;
+        font-display: optional;
       }
     `
   }
@@ -144,6 +162,28 @@ export default async function LocalizedLayout({ children, params }: LayoutProps)
 
   return (
     <div>
+      {/* Preload font files so the browser starts fetching them immediately,
+          instead of discovering them only after parsing the <style> block below.
+          Next.js App Router automatically hoists these <link> tags into <head>. */}
+      {headingFontUrl && (
+        <link
+          rel="preload"
+          href={headingFontUrl}
+          as="font"
+          type={headingFontType}
+          crossOrigin="anonymous"
+        />
+      )}
+      {bodyFontUrl && bodyFontUrl !== headingFontUrl && (
+        <link
+          rel="preload"
+          href={bodyFontUrl}
+          as="font"
+          type={bodyFontType}
+          crossOrigin="anonymous"
+        />
+      )}
+
       {/* Dynamic Font & Variable Injection */}
       <style
         dangerouslySetInnerHTML={{

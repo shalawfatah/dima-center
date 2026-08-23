@@ -167,10 +167,11 @@
   padding: 10px 12px;
   border-radius: 6px;
   border: 1px solid var(--pc-border-color, #cbd5e1);
-  background: var(--pc-box-bg, #ffffff);
-  color: var(--pc-body-color, #000000);
-  font-size: 14px;
+  background: var(--pc-box-bg);
+  color: var(--pc-body-color);
+  font-size: 16px; /* was 14px — under 16px triggers iOS auto-zoom on focus */
   font-family: var(--font-family);
+  touch-action: manipulation; /* removes the 300ms tap delay / accidental double-tap zoom */
 }
 
 .pc-builder-phone-input:focus {
