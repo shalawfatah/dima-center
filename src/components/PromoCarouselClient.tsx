@@ -192,14 +192,6 @@ export default function PromoCarouselClient({
                         {title}
                       </h2>
                     )}
-                    {description && (
-                      <p
-                        className={styles.description}
-                        style={{ fontFamily: 'var(--promo-body-font)' }}
-                      >
-                        {description}
-                      </p>
-                    )}
                   </div>
                 </div>
               )

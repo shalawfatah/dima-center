@@ -65,6 +65,7 @@ export default function TechnicalSpecsTable({
       </h3>
       {specs && specs.length > 0 ? (
         <table
+          dir="ltr"
           style={{
             width: '100%',
             borderCollapse: 'collapse',
@@ -94,6 +95,7 @@ export default function TechnicalSpecsTable({
                     borderBottom: `1px solid ${resolvedBorderColor}`,
                     color: textColor,
                     fontFamily: bodyFontFamily,
+                    textAlign: 'left',
                   }}
                 >
                   {spec.key}
@@ -104,6 +106,7 @@ export default function TechnicalSpecsTable({
                     borderBottom: `1px solid ${resolvedBorderColor}`,
                     color: textColor,
                     fontFamily: bodyFontFamily,
+                    textAlign: 'left',
                   }}
                 >
                   {spec.value}

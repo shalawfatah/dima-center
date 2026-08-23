@@ -134,11 +134,17 @@ export default function BuildSummarySidebar({
             required
             className={styles['pc-builder-phone-input']}
             aria-label={pickLocale(phoneAriaLabel, currentLocale)}
-            style={{
-              color: textColor,
-              borderColor: resolvedBorderColor,
-              backgroundColor: resolvedBoxBg,
-            }}
+            style={
+              {
+                borderColor: resolvedBorderColor,
+                backgroundColor: resolvedBoxBg,
+                // Custom properties so the CSS module's :-webkit-autofill rules
+                // (which can't read inline `color`/`backgroundColor`) can still
+                // pick up the right colors and stop iOS/WebKit forcing black text.
+                '--pc-input-text': textColor,
+                '--pc-input-bg': resolvedBoxBg,
+              } as React.CSSProperties
+            }
             placeholder={t.phonePlaceholder || 'Phone Number'}
           />
           <button
