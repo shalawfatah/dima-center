@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useLayoutEffect } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -30,17 +30,28 @@ export default function CategoryDropdownNav({
   generalSettings,
 }: ComponentProps) {
   const router = useRouter()
-  const [activeDropdown, setActiveDropdown] = useState<number | null>(null)
+  const [activeDropdown, setActiveDropdown] = useState<number | string | null>(null)
   const [isHamOpen, setIsHamOpen] = useState<boolean>(false)
   const [expandedMobileCategories, setExpandedMobileCategories] = useState<
     Record<string | number, boolean>
   >({})
 
+  // Track visible categories count for dynamic desktop overflow
+  const [visibleCount, setVisibleCount] = useState<number>(categories.length)
+
   const navRef = useRef<HTMLDivElement>(null)
+  const desktopNavRef = useRef<HTMLDivElement>(null)
   const timeoutRef = useRef<NodeJS.Timeout | null>(null)
   const hamTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
   const isRtl = currentLocale === 'ar' || currentLocale === 'ckb'
+
+  // Locale-aware translation for the "More" dropdown button
+  const getMoreLabel = () => {
+    if (currentLocale === 'ckb') return 'ئەوانیتر'
+    if (currentLocale === 'ar') return 'المزيد'
+    return 'More'
+  }
 
   const handleCloseHam = () => setIsHamOpen(false)
   const handleToggleHam = () => setIsHamOpen((prev) => !prev)
@@ -85,7 +96,50 @@ export default function CategoryDropdownNav({
   const navText = navbarConfig?.textColor || '#000000'
   const isFitContent = navbarConfig?.width === 'fit-content'
 
-  // Fixed: Removed body overflow toggle to stop browser scrollbar layout shift/jitter
+  // Dynamic calculation for Desktop "More" dropdown
+  const calculateVisibleItems = () => {
+    if (!desktopNavRef.current) return
+    const container = desktopNavRef.current
+    const containerWidth = container.clientWidth
+    const children = Array.from(container.children) as HTMLElement[]
+
+    if (children.length === 0) return
+
+    const MORE_BTN_WIDTH = 90
+    let currentWidth = 0
+    let fitCount = 0
+
+    for (let i = 0; i < categories.length; i++) {
+      const child = children[i]
+      if (!child) break
+
+      const itemWidth = child.offsetWidth
+      if (currentWidth + itemWidth > containerWidth - MORE_BTN_WIDTH) {
+        break
+      }
+      currentWidth += itemWidth
+      fitCount++
+    }
+
+    setVisibleCount(Math.max(1, fitCount))
+  }
+
+  useLayoutEffect(() => {
+    calculateVisibleItems()
+  }, [categories])
+
+  useEffect(() => {
+    const container = desktopNavRef.current
+    if (!container) return
+
+    const observer = new ResizeObserver(() => {
+      calculateVisibleItems()
+    })
+    observer.observe(container)
+
+    return () => observer.disconnect()
+  }, [categories])
+
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (navRef.current && !navRef.current.contains(event.target as Node)) {
@@ -97,9 +151,9 @@ export default function CategoryDropdownNav({
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [])
 
-  const handleMouseEnter = (index: number) => {
+  const handleMouseEnter = (key: number | string) => {
     if (timeoutRef.current) clearTimeout(timeoutRef.current)
-    setActiveDropdown(index)
+    setActiveDropdown(key)
   }
 
   const handleMouseLeave = () => {
@@ -115,8 +169,8 @@ export default function CategoryDropdownNav({
     hamTimeoutRef.current = setTimeout(() => handleCloseHam(), 150)
   }
 
-  const handleToggleDropdown = (index: number) => {
-    setActiveDropdown((prev) => (prev === index ? null : index))
+  const handleToggleDropdown = (key: number | string) => {
+    setActiveDropdown((prev) => (prev === key ? null : key))
   }
 
   const toggleMobileCategory = (catKey: string | number) => {
@@ -125,6 +179,9 @@ export default function CategoryDropdownNav({
       [catKey]: !prev[catKey],
     }))
   }
+
+  const visibleCategories = categories.slice(0, visibleCount)
+  const overflowCategories = categories.slice(visibleCount)
 
   return (
     <>
@@ -147,7 +204,7 @@ export default function CategoryDropdownNav({
         ref={navRef}
       >
         <div className={styles['nav-container']}>
-          {/* Hamburger Menu Wrapper */}
+          {/* Hamburger Menu Wrapper (Left on LTR desktop, Right on RTL desktop, ALWAYS Right on mobile) */}
           <div
             className={styles['ham-wrapper']}
             onMouseEnter={handleHamMouseEnter}
@@ -166,9 +223,9 @@ export default function CategoryDropdownNav({
               {isHamOpen && (
                 <motion.div
                   className={styles['mobile-dropdown-panel']}
-                  initial={{ opacity: 0, x: 20, scale: 0.98 }}
-                  animate={{ opacity: 1, x: 0, scale: 1 }}
-                  exit={{ opacity: 0, x: 20, scale: 0.98 }}
+                  initial={{ opacity: 0, y: 5, scale: 0.98 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: 5, scale: 0.98 }}
                   transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
                 >
                   {categories.map((category, index) => {
@@ -232,15 +289,15 @@ export default function CategoryDropdownNav({
             </AnimatePresence>
           </div>
 
-          {/* Desktop Navigation Items */}
-          <div className={styles['desktop-nav-items']}>
-            {categories.map((category, index) => {
+          {/* Desktop Navigation Container */}
+          <div className={styles['desktop-nav-items']} ref={desktopNavRef}>
+            {visibleCategories.map((category, index) => {
+              const catKey = category.id || index
               const isIndependent = !category.isContainer && !!category.slug
-              const isLastItem = index === categories.length - 1
 
               if (isIndependent) {
                 return (
-                  <div key={category.id || index} className={styles['nav-item-wrapper']}>
+                  <div key={catKey} className={styles['nav-item-wrapper']}>
                     <button
                       type="button"
                       onClick={() => router.push(`/${currentLocale}?category=${category.slug}`)}
@@ -252,18 +309,18 @@ export default function CategoryDropdownNav({
                 )
               }
 
-              const isOpen = activeDropdown === index
+              const isOpen = activeDropdown === catKey
 
               return (
                 <div
-                  key={category.id || index}
+                  key={catKey}
                   className={styles['nav-item-wrapper']}
-                  onMouseEnter={() => handleMouseEnter(index)}
+                  onMouseEnter={() => handleMouseEnter(catKey)}
                   onMouseLeave={handleMouseLeave}
                 >
                   <button
                     type="button"
-                    onClick={() => handleToggleDropdown(index)}
+                    onClick={() => handleToggleDropdown(catKey)}
                     className={`${styles['dropdown-trigger-btn']} ${
                       isOpen ? styles['active-trigger'] : ''
                     }`}
@@ -273,11 +330,7 @@ export default function CategoryDropdownNav({
                   </button>
 
                   {isOpen && category.subCategories && (
-                    <div
-                      className={`${styles['dropdown-menu']} ${
-                        isLastItem ? styles['dropdown-menu-end'] : ''
-                      }`}
-                    >
+                    <div className={styles['dropdown-menu']}>
                       {category.subCategories.map((sub, subIdx) => (
                         <Link
                           key={subIdx}
@@ -293,6 +346,64 @@ export default function CategoryDropdownNav({
                 </div>
               )
             })}
+
+            {/* Dynamic "More" Dropdown Trigger */}
+            {overflowCategories.length > 0 && (
+              <div
+                className={styles['nav-item-wrapper']}
+                onMouseEnter={() => handleMouseEnter('more_overflow')}
+                onMouseLeave={handleMouseLeave}
+              >
+                <button
+                  type="button"
+                  onClick={() => handleToggleDropdown('more_overflow')}
+                  className={`${styles['dropdown-trigger-btn']} ${
+                    activeDropdown === 'more_overflow' ? styles['active-trigger'] : ''
+                  }`}
+                >
+                  {getMoreLabel()}
+                  <span className={styles['dropdown-caret']}>▼</span>
+                </button>
+
+                {activeDropdown === 'more_overflow' && (
+                  <div className={`${styles['dropdown-menu']} ${styles['dropdown-menu-end']}`}>
+                    {overflowCategories.map((category, idx) => {
+                      const hasSub =
+                        Array.isArray(category.subCategories) && category.subCategories.length > 0
+
+                      if (hasSub) {
+                        return (
+                          <div key={category.id || idx} className={styles['overflow-group']}>
+                            <div className={styles['dropdown-group-title']}>{category.title}</div>
+                            {category.subCategories?.map((sub, subIdx) => (
+                              <Link
+                                key={subIdx}
+                                href={`/${currentLocale}?category=${sub.slug}`}
+                                className={`${styles['dropdown-item-link']} ${styles['nested-link']}`}
+                                onClick={() => setActiveDropdown(null)}
+                              >
+                                {sub.title}
+                              </Link>
+                            ))}
+                          </div>
+                        )
+                      }
+
+                      return (
+                        <Link
+                          key={category.id || idx}
+                          href={`/${currentLocale}?category=${category.slug}`}
+                          className={styles['dropdown-item-link']}
+                          onClick={() => setActiveDropdown(null)}
+                        >
+                          {category.title}
+                        </Link>
+                      )
+                    })}
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         </div>
       </div>

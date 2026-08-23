@@ -24,10 +24,11 @@
   border-radius: 999px;
 }
 
+/* On Desktop: Natural Flex Alignment according to LTR/RTL document order */
 .nav-container {
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
   gap: 1rem;
   width: 100%;
 }
@@ -35,6 +36,7 @@
 .ham-wrapper {
   position: relative;
   display: inline-block;
+  flex-shrink: 0;
 }
 
 .ham-menu-btn {
@@ -49,7 +51,7 @@
   justify-content: center;
 }
 
-/* Base Dropdown Panel Styling */
+/* Base Dropdown Panel Styling (Desktop locale-aware positioning) */
 .mobile-dropdown-panel {
   display: flex;
   flex-direction: column;
@@ -79,13 +81,16 @@
   display: flex;
   flex-direction: row;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
   gap: 1.5rem;
-  flex-grow: 0;
+  flex-grow: 1;
+  min-width: 0;
+  overflow: visible;
 }
 
 .nav-item-wrapper {
   position: relative;
+  flex-shrink: 0;
 }
 
 .direct-link-btn,
@@ -144,6 +149,8 @@
     0 10px 15px -3px rgba(0, 0, 0, 0.1),
     0 4px 6px -2px rgba(0, 0, 0, 0.05);
   min-width: 190px;
+  max-height: 70vh;
+  overflow-y: auto;
   padding: 6px 0;
   z-index: 1000;
   display: flex !important;
@@ -174,6 +181,7 @@
   font-weight: 500;
   text-align: start;
   display: block;
+  white-space: nowrap;
   transition:
     background-color 0.15s ease,
     color 0.15s ease;
@@ -182,6 +190,42 @@
 .dropdown-item-link:hover {
   background-color: #f1f5f9;
   color: var(--brand-primary, #0070f3);
+}
+
+/* Grouping inside Overflow Dropdown */
+.overflow-group {
+  display: flex;
+  flex-direction: column;
+  border-bottom: 1px solid #f1f5f9;
+  padding-bottom: 4px;
+  margin-bottom: 4px;
+}
+
+.overflow-group:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
+  padding-bottom: 0;
+}
+
+.dropdown-group-title {
+  font-family: var(--navbar-font, inherit);
+  font-size: 11px;
+  font-weight: 700;
+  color: #64748b;
+  padding: 8px 16px 4px 16px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  text-align: start;
+}
+
+.nested-link {
+  padding-left: 24px;
+  font-size: 13px;
+}
+
+[dir='rtl'] .nested-link {
+  padding-left: 16px;
+  padding-right: 24px;
 }
 
 .mobile-group-section {
@@ -267,9 +311,10 @@
     margin: 0;
   }
 
-  /* Keep container right-aligned on mobile regardless of locale */
+  /* Force container layout to reverse on mobile so Ham button is always on the right */
   .nav-container {
-    justify-content: right;
+    justify-content: flex-end !important;
+    flex-direction: row-reverse !important;
   }
 
   .desktop-nav-items {
@@ -278,9 +323,10 @@
 
   .ham-wrapper {
     position: relative;
+    margin: 0 !important;
   }
 
-  /* Force hamburger dropdown menu to stay anchored to the right edge on mobile for ALL locales */
+  /* Force mobile dropdown panel to align to the right side on screen */
   .mobile-dropdown-panel,
   [dir='rtl'] .mobile-dropdown-panel {
     right: 0 !important;
