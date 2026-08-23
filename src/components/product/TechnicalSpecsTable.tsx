@@ -7,7 +7,6 @@ interface TechSpec {
 interface TechnicalSpecsTableProps {
   specs?: TechSpec[]
   currentLocale: string
-  isRtl: boolean
   headingFont?: string
   bodyFont?: string
   titleColor?: string
@@ -31,7 +30,6 @@ const emptyLabel: Record<string, string> = {
 export default function TechnicalSpecsTable({
   specs,
   currentLocale,
-  isRtl,
   headingFont,
   bodyFont,
   titleColor,
@@ -71,7 +69,7 @@ export default function TechnicalSpecsTable({
             width: '100%',
             borderCollapse: 'collapse',
             fontSize: '14px',
-            textAlign: isRtl ? 'right' : 'left',
+            textAlign: 'left',
             fontFamily: bodyFontFamily,
             color: textColor,
             background: resolvedBgColor,

@@ -60,7 +60,6 @@ export default function ProductMediaColumn({
       <TechnicalSpecsTable
         specs={technicalSpecs}
         currentLocale={currentLocale}
-        isRtl={isRtl}
         headingFont={headingFont}
         bodyFont={bodyFont}
         titleColor={titleColor}

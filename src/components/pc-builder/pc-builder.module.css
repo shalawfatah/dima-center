@@ -169,9 +169,20 @@
   border: 1px solid var(--pc-border-color, #cbd5e1);
   background: var(--pc-box-bg);
   color: var(--pc-body-color);
-  font-size: 16px; /* was 14px — under 16px triggers iOS auto-zoom on focus */
+  font-size: 16px;
   font-family: var(--font-family);
-  touch-action: manipulation; /* removes the 300ms tap delay / accidental double-tap zoom */
+  touch-action: manipulation;
+  caret-color: var(--pc-body-color, #333333);
+  color-scheme: light;
+}
+
+.pc-builder-phone-input:-webkit-autofill,
+.pc-builder-phone-input:-webkit-autofill:hover,
+.pc-builder-phone-input:-webkit-autofill:focus,
+.pc-builder-phone-input:-webkit-autofill:active {
+  -webkit-text-fill-color: var(--pc-body-color, #333333) !important;
+  -webkit-box-shadow: 0 0 0px 1000px var(--pc-box-bg, #ffffff) inset !important;
+  transition: background-color 5000s ease-in-out 0s;
 }
 
 .pc-builder-phone-input:focus {
