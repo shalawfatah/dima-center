@@ -13,6 +13,7 @@ interface TechnicalSpecsTableProps {
   titleColor?: string
   bodyColor?: string
   borderColor?: string
+  cardBgColor?: string
 }
 
 const headingLabel: Record<string, string> = {
@@ -36,6 +37,7 @@ export default function TechnicalSpecsTable({
   titleColor,
   bodyColor,
   borderColor,
+  cardBgColor,
 }: TechnicalSpecsTableProps) {
   const isRegionalLocale = ['ar', 'ku', 'ckb'].includes(currentLocale)
   const titleFont = headingFont || (isRegionalLocale ? '"Rudaw", sans-serif' : 'inherit')
@@ -45,9 +47,10 @@ export default function TechnicalSpecsTable({
   const headingColor = titleColor || '#1e293b'
   const textColor = bodyColor || '#333333'
   const resolvedBorderColor = borderColor || '#eee'
+  const resolvedBgColor = cardBgColor || '#fff'
 
   return (
-    <div style={{ marginTop: '3rem' }}>
+    <div style={{ marginTop: '3rem', background: resolvedBgColor }}>
       <h3
         style={{
           fontFamily: titleFont,
@@ -70,11 +73,20 @@ export default function TechnicalSpecsTable({
             textAlign: isRtl ? 'right' : 'left',
             fontFamily: bodyFontFamily,
             color: textColor,
+            background: resolvedBgColor,
           }}
         >
           <tbody>
             {specs.map((spec, idx) => (
-              <tr key={spec.id || idx} style={{ background: idx % 2 === 0 ? '#f9f9f9' : '#fff' }}>
+              <tr
+                key={spec.id || idx}
+                style={{
+                  background:
+                    idx % 2 === 0
+                      ? resolvedBgColor
+                      : 'color-mix(in srgb, currentColor 4%, transparent)',
+                }}
+              >
                 <td
                   style={{
                     padding: '0.75rem 1rem',

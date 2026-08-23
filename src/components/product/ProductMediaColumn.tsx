@@ -66,6 +66,7 @@ export default function ProductMediaColumn({
         titleColor={titleColor}
         bodyColor={bodyColor}
         borderColor={borderColor}
+        cardBgColor={cardBgColor} // NEW
       />
     </div>
   )
