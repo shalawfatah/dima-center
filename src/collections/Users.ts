@@ -2,7 +2,9 @@ import type { CollectionConfig } from 'payload'
 
 export const Users: CollectionConfig = {
   slug: 'users',
-  auth: true,
+  auth: {
+    useAPIKey: true,
+  },
   admin: {
     useAsTitle: 'email',
     // 🔒 Hide the Users collection from non-super-admins in the sidebar

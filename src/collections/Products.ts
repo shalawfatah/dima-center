@@ -1,4 +1,3 @@
-// src/collections/Products.ts
 import { CollectionConfig } from 'payload'
 
 export const Products: CollectionConfig = {
