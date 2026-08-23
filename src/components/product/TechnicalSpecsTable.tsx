@@ -118,7 +118,7 @@ export default function TechnicalSpecsTable({
         <p
           style={{
             fontSize: '14px',
-            padding: '1rem 0',
+            padding: '1rem',
             fontFamily: bodyFontFamily,
             color: textColor,
           }}
