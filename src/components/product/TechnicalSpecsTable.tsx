@@ -60,6 +60,7 @@ export default function TechnicalSpecsTable({
           marginBottom: '1rem',
           fontSize: '1.25rem',
           fontWeight: 'bold',
+          padding: '1rem',
         }}
       >
         {headingLabel[currentLocale] || headingLabel.en}
