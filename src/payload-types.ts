@@ -282,6 +282,9 @@ export interface UiProduct {
    * Optional direct price for this UI banner/offer card.
    */
   price?: number | null;
+  hasDiscount?: boolean | null;
+  discountType?: ('fixed' | 'percentage') | null;
+  discountValue?: number | null;
   description?: string | null;
   image?: (number | null) | Media;
   /**
@@ -570,6 +573,9 @@ export interface UiProductsSelect<T extends boolean = true> {
   title?: T;
   slug?: T;
   price?: T;
+  hasDiscount?: T;
+  discountType?: T;
+  discountValue?: T;
   description?: T;
   image?: T;
   uiCategory?: T;

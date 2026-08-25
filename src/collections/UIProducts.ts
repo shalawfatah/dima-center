@@ -33,6 +33,42 @@ export const UIProducts: CollectionConfig = {
         description: 'Optional direct price for this UI banner/offer card.',
       },
     },
+    // === 🏷️ DISCOUNT CONFIGURATION BLOCK ===
+    {
+      name: 'hasDiscount',
+      type: 'checkbox',
+      label: 'Apply Discount to this Product',
+      defaultValue: false,
+    },
+    {
+      type: 'row',
+      fields: [
+        {
+          name: 'discountType',
+          type: 'select',
+          label: 'Discount Type',
+          defaultValue: 'fixed',
+          options: [
+            { label: 'Fixed Amount ($)', value: 'fixed' },
+            { label: 'Percentage (%)', value: 'percentage' },
+          ],
+          admin: {
+            condition: (data) => data?.hasDiscount,
+            width: '50%',
+          },
+        },
+        {
+          name: 'discountValue',
+          type: 'number',
+          label: 'Discount Value',
+          min: 0,
+          admin: {
+            condition: (data) => data?.hasDiscount,
+            width: '50%',
+          },
+        },
+      ],
+    },
     {
       name: 'description',
       type: 'textarea',

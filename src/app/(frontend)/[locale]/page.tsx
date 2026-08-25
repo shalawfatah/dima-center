@@ -147,7 +147,10 @@ export default async function StorefrontHome({ params, searchParams }: PageProps
   }
 
   if (activeCategory) {
-    const isDiscountsCategory = activeCategory === 'discounts'
+    // Normalizes check to capture 'discounts' or 'discount' regardless of casing
+    const activeCategoryNormalized = activeCategory.toLowerCase().trim()
+    const isDiscountsCategory =
+      activeCategoryNormalized === 'discounts' || activeCategoryNormalized === 'discount'
 
     let validUiCategoryId: string | number | null = null
     if (!isDiscountsCategory) {
