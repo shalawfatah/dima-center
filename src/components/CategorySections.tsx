@@ -26,6 +26,18 @@ function getSlugValue(rel: any): string | undefined {
 }
 
 /**
+ * Helper to check if a section is designated as a Discount section
+ */
+function isDiscountSection(meta: any): boolean {
+  const slug = (typeof meta.slug === 'object' ? meta.slug?.slug : meta.slug) || ''
+  const normalizedSlug = String(slug).toLowerCase()
+  return (
+    meta.isDiscountSection === true ||
+    ['discount', 'discounts', 'offers', 'sale', 'sales'].includes(normalizedSlug)
+  )
+}
+
+/**
  * Helper to interleave products across subcategories round-robin
  * so that no single subcategory hogs the section capacity.
  */
@@ -108,43 +120,83 @@ export default async function CategorySections({
 
   if (allLeafSlugs.length === 0) return null
 
-  const [productsBulk, uiProductsBulk] = await Promise.all([
-    payload
-      .find({
-        collection: 'products',
-        depth: 1,
-        locale: currentLocale as 'en' | 'ar' | 'ckb',
-        fallbackLocale: 'en',
-        where: {
-          and: [
-            { 'category.slug': { in: allLeafSlugs } },
-            { stock: { greater_than: 0 } },
-            { hideOnWebsite: { not_equals: true } },
-          ],
-        },
-        limit: 2000,
-        sort: '-createdAt',
-      })
-      .catch(() => ({ docs: [] as any[] })),
+  // Fetch standard category-based products and globally discounted products in parallel
+  const [productsBulk, uiProductsBulk, discountedProducts, discountedUIProducts] =
+    await Promise.all([
+      // 1. Regular Products by Category
+      payload
+        .find({
+          collection: 'products',
+          depth: 1,
+          locale: currentLocale as 'en' | 'ar' | 'ckb',
+          fallbackLocale: 'en',
+          where: {
+            and: [
+              { 'category.slug': { in: allLeafSlugs } },
+              { stock: { greater_than: 0 } },
+              { hideOnWebsite: { not_equals: true } },
+            ],
+          },
+          limit: 2000,
+          sort: '-createdAt',
+        })
+        .catch(() => ({ docs: [] as any[] })),
 
-    payload
-      .find({
-        collection: 'ui-products',
-        depth: 1,
-        locale: currentLocale as 'en' | 'ar' | 'ckb',
-        fallbackLocale: 'en',
-        where: {
-          or: [
-            { 'category.slug': { in: allLeafSlugs } },
-            { 'uiCategory.slug': { in: allLeafSlugs } },
-          ],
-        },
-        limit: 2000,
-        sort: '-createdAt',
-      })
-      .catch(() => ({ docs: [] as any[] })),
-  ])
+      // 2. Regular UI Products by Category
+      payload
+        .find({
+          collection: 'ui-products',
+          depth: 1,
+          locale: currentLocale as 'en' | 'ar' | 'ckb',
+          fallbackLocale: 'en',
+          where: {
+            or: [
+              { 'category.slug': { in: allLeafSlugs } },
+              { 'uiCategory.slug': { in: allLeafSlugs } },
+            ],
+          },
+          limit: 2000,
+          sort: '-createdAt',
+        })
+        .catch(() => ({ docs: [] as any[] })),
 
+      // 3. ALL Discounted Products across all categories
+      payload
+        .find({
+          collection: 'products',
+          depth: 1,
+          locale: currentLocale as 'en' | 'ar' | 'ckb',
+          fallbackLocale: 'en',
+          where: {
+            and: [
+              { hasDiscount: { equals: true } },
+              { discountValue: { greater_than: 0 } },
+              { stock: { greater_than: 0 } },
+              { hideOnWebsite: { not_equals: true } },
+            ],
+          },
+          limit: 200,
+          sort: '-createdAt',
+        })
+        .catch(() => ({ docs: [] as any[] })),
+
+      // 4. ALL Discounted UI Products across all categories
+      payload
+        .find({
+          collection: 'ui-products',
+          depth: 1,
+          locale: currentLocale as 'en' | 'ar' | 'ckb',
+          fallbackLocale: 'en',
+          where: {
+            and: [{ hasDiscount: { equals: true } }, { discountValue: { greater_than: 0 } }],
+          },
+          limit: 200,
+          sort: '-createdAt',
+        })
+        .catch(() => ({ docs: [] as any[] })),
+    ])
+
+  // Group normal products by category slug
   const bySlug: Record<string, any[]> = {}
   const allDocs = [...productsBulk.docs, ...uiProductsBulk.docs]
 
@@ -155,11 +207,22 @@ export default async function CategorySections({
     bySlug[slug].push(p)
   }
 
+  // Combine discounted products into one pool
+  const allDiscountedDocs = [...discountedProducts.docs, ...discountedUIProducts.docs]
+
   const homepageSections = sectionMetaMapping
     .map((meta) => {
-      const interleavedDocs = interleaveSubcategories(bySlug, meta.leafSlugs)
+      let rawDocs: any[] = []
 
-      const formattedProducts = interleavedDocs
+      if (isDiscountSection(meta)) {
+        // Use all discounted products regardless of category
+        rawDocs = allDiscountedDocs
+      } else {
+        // Interleave by subcategories for standard sections
+        rawDocs = interleaveSubcategories(bySlug, meta.leafSlugs)
+      }
+
+      const formattedProducts = rawDocs
         .map((p: any) => formatProductForCarousel(p, currentLocale))
         .filter((p): p is ProductItem => Boolean(p))
 
@@ -179,8 +242,6 @@ export default async function CategorySections({
         const rawSlug = typeof cat.slug === 'object' ? (cat.slug as any)?.slug : cat.slug
         const categorySlug = String(rawSlug || `section-${idx}`)
         const targetUrl = `?category=${encodeURIComponent(categorySlug)}`
-
-        // Key combines the category slug with loop index to guarantee uniqueness
         const sectionKey = `${categorySlug}-${idx}`
 
         return (
