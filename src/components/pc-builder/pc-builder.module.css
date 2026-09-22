@@ -6,7 +6,12 @@
   background-color: var(--pc-background-color, transparent);
   color: var(--pc-body-color, #333333);
 }
-
+.pc-builder-bundle-badge {
+  font-size: 0.85rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  letter-spacing: 0.01em;
+}
 .pc-builder-header {
   margin-bottom: 2rem;
   border-bottom: 1px solid var(--pc-border-color);

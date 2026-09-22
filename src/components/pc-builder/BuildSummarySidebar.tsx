@@ -15,6 +15,8 @@ export default function BuildSummarySidebar({
   hasSelections,
   onSubmit,
   fontFam,
+  bundleActive,
+  bundleLoading,
   titleColor,
   bodyColor,
   boxTitleColor,
@@ -49,6 +51,31 @@ export default function BuildSummarySidebar({
         >
           {t.summary}
         </h3>
+
+        {bundleLoading && (
+          <div
+            className={styles['pc-builder-bundle-badge']}
+            style={{
+              color: textColor,
+              fontFamily: fontFam,
+              opacity: 0.75,
+            }}
+          >
+            ⏳ Checking bundle price…
+          </div>
+        )}
+
+        {!bundleLoading && bundleActive && (
+          <div
+            className={styles['pc-builder-bundle-badge']}
+            style={{
+              color: textColor,
+              fontFamily: fontFam,
+            }}
+          >
+            ✅ Bundle pricing applied
+          </div>
+        )}
 
         <div
           className={styles['pc-builder-price-row']}

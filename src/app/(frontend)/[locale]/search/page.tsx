@@ -128,7 +128,7 @@ export default async function SearchResultsPage({ params, searchParams }: Search
             }}
           >
             {HEADINGS[currentLocale] || HEADINGS.en}{' '}
-            <span className={styles.highlight}>"{query}"</span>
+            <span className={styles.highlight}>{`"${query}"`}</span>
           </h1>
 
           {matchedProducts.length === 0 ? (

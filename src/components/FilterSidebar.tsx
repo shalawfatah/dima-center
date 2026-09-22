@@ -1,7 +1,7 @@
 'use client'
 
 import { useRouter, useSearchParams, usePathname } from 'next/navigation'
-import { useState, useTransition, useEffect } from 'react'
+import { useMemo, useState, useTransition } from 'react'
 
 interface FilterSidebarProps {
   locale: string
@@ -16,30 +16,43 @@ interface FilterSidebarProps {
 export default function FilterSidebar({ locale, facets }: FilterSidebarProps) {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const pathname = usePathname() // 🛠️ Automatically matches your active route
+  const pathname = usePathname()
   const [isPending, startTransition] = useTransition()
 
-  // Synced local states
-  const [selectedConditions, setSelectedConditions] = useState<string[]>([])
-  const [priceRange, setPriceRange] = useState<number>(facets.maxPrice)
-  const [sortBy, setSortBy] = useState<string>('price_asc')
-  const [activeSpecs, setActiveSpecs] = useState<Record<string, string[]>>({})
+  // ─── Derived directly from the URL (single source of truth) ───────────
+  const selectedConditions = useMemo(
+    () => searchParams.get('condition')?.split(',').filter(Boolean) ?? [],
+    [searchParams],
+  )
 
-  // Track and synchronize state changes when the URL search queries alter
-  useEffect(() => {
-    setSelectedConditions(searchParams.get('condition')?.split(',').filter(Boolean) || [])
-    setPriceRange(Number(searchParams.get('maxPrice')) || facets.maxPrice)
-    setSortBy(searchParams.get('sort') || 'price_asc')
+  const sortBy = searchParams.get('sort') || 'price_asc'
 
+  const activeSpecs = useMemo(() => {
     const specs: Record<string, string[]> = {}
     searchParams.forEach((value, key) => {
       if (key.startsWith('spec_')) {
         specs[key.replace('spec_', '')] = value.split(',').filter(Boolean)
       }
     })
-    setActiveSpecs(specs)
-  }, [searchParams, facets.maxPrice])
+    return specs
+  }, [searchParams])
 
+  // ─── Draft state for the price slider only (commit-on-release) ────────
+  const urlPrice = Number(searchParams.get('maxPrice')) || facets.maxPrice
+  const [draftPrice, setDraftPrice] = useState<number>(urlPrice)
+  const [lastUrlPrice, setLastUrlPrice] = useState<number>(urlPrice)
+
+  // Sync draft when the URL changes externally (browser back/forward, etc.).
+  // This is the "adjust state during render" pattern from the React docs —
+  // it avoids an effect and does not cause an extra render pass.
+  if (lastUrlPrice !== urlPrice) {
+    setLastUrlPrice(urlPrice)
+    setDraftPrice(urlPrice)
+  }
+
+  const priceRange = draftPrice
+
+  // ─── Helpers ──────────────────────────────────────────────────────────
   const updateFilters = (
     nextConditions: string[],
     nextPrice: number,
@@ -48,15 +61,12 @@ export default function FilterSidebar({ locale, facets }: FilterSidebarProps) {
   ) => {
     const params = new URLSearchParams(searchParams.toString())
 
-    // 1. Map conditions cleanly
     if (nextConditions.length > 0) params.set('condition', nextConditions.join(','))
     else params.delete('condition')
 
-    // 2. Map sorting criteria and range sliders
     params.set('maxPrice', nextPrice.toString())
     params.set('sort', nextSort)
 
-    // 3. Clear and rewrite spec fields
     searchParams.forEach((_, key) => {
       if (key.startsWith('spec_')) params.delete(key)
     })
@@ -67,7 +77,6 @@ export default function FilterSidebar({ locale, facets }: FilterSidebarProps) {
     })
 
     startTransition(() => {
-      // 🛠️ Keeps the user exactly where they are currently browsing
       router.push(`${pathname}?${params.toString()}`)
     })
   }
@@ -76,7 +85,6 @@ export default function FilterSidebar({ locale, facets }: FilterSidebarProps) {
     const updated = selectedConditions.includes(cond)
       ? selectedConditions.filter((c) => c !== cond)
       : [...selectedConditions, cond]
-    setSelectedConditions(updated)
     updateFilters(updated, priceRange, sortBy, activeSpecs)
   }
 
@@ -89,11 +97,10 @@ export default function FilterSidebar({ locale, facets }: FilterSidebarProps) {
     const updatedSpecs = { ...activeSpecs, [specKey]: updatedVals }
     if (updatedVals.length === 0) delete updatedSpecs[specKey]
 
-    setActiveSpecs(updatedSpecs)
     updateFilters(selectedConditions, priceRange, sortBy, updatedSpecs)
   }
 
-  // 🎯 Fixed: Moved dictionary into its own definition block to eliminate circular reference errors
+  // 🎯 Dictionary scoped to its own definition block to avoid circular refs
   const translationsDictionary = {
     en: {
       title: 'Filters',
@@ -168,10 +175,9 @@ export default function FilterSidebar({ locale, facets }: FilterSidebarProps) {
         </label>
         <select
           value={sortBy}
-          onChange={(e) => {
-            setSortBy(e.target.value)
+          onChange={(e) =>
             updateFilters(selectedConditions, priceRange, e.target.value, activeSpecs)
-          }}
+          }
           style={{
             fontFamily: '"Sarchia", sans-serif',
             width: '100%',
@@ -209,9 +215,9 @@ export default function FilterSidebar({ locale, facets }: FilterSidebarProps) {
           type="range"
           min={facets.minPrice}
           max={facets.maxPrice || 2000}
-          value={priceRange}
-          onChange={(e) => setPriceRange(Number(e.target.value))}
-          onMouseUp={() => updateFilters(selectedConditions, priceRange, sortBy, activeSpecs)}
+          value={draftPrice}
+          onChange={(e) => setDraftPrice(Number(e.target.value))}
+          onMouseUp={() => updateFilters(selectedConditions, draftPrice, sortBy, activeSpecs)}
           style={{ width: '100%', accentColor: '#0070f3', cursor: 'pointer' }}
         />
         <div

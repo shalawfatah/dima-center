@@ -1,5 +1,6 @@
 'use client'
 
+import { isBuildComplete, fetchBundlePrices, type BundlePrices } from '@/utils/pc_builder_bundle'
 import { useState, useEffect, useMemo, useCallback } from 'react'
 import { useLocalStorageState } from '../utils/pc_build_local_storage'
 import { COMPONENT_SLOTS, dict, phoneErrorLabel } from '@/utils/pc_build_items'
@@ -43,6 +44,8 @@ export default function PcBuilderClient({
   const [buyerNumber, setBuyerNumber] = useState('')
   const [message, setMessage] = useState({ type: '', text: '' })
   const [showClearConfirmModal, setShowClearConfirmModal] = useState(false)
+  const [bundlePrices, setBundlePrices] = useState<BundlePrices>({})
+  const [bundlePricesKey, setBundlePricesKey] = useState<string>('')
 
   const dynamicExchangeRate = generals?.exchangeRate ?? 1500
 
@@ -53,6 +56,56 @@ export default function PcBuilderClient({
   }, [])
 
   usePcBuilderUrlSync({ mounted, products, currentLocale, setSelections })
+
+  const isComplete = useMemo(
+    () => (mounted ? isBuildComplete(selections) : false),
+    [mounted, selections],
+  )
+
+  // A stable fingerprint of the current selections for bundle purposes.
+  // Whenever this changes, any in-flight fetch is stale and a new one must run.
+  const selectionsKey = useMemo(() => {
+    if (!isComplete) return ''
+    return Object.entries(selections)
+      .map(([slot, item]: [string, any]) => `${slot}:${item?.barcode || ''}:${item?.quantity || 1}`)
+      .sort()
+      .join('|')
+  }, [isComplete, selections])
+
+  // Derived — no state, no setState in the effect body, no lint error.
+  const bundleLoading = isComplete && selectionsKey !== '' && bundlePricesKey !== selectionsKey
+
+  const effectiveBundlePrices =
+    isComplete && bundlePricesKey === selectionsKey ? bundlePrices : undefined
+
+  const bundleActive = !!effectiveBundlePrices && Object.keys(effectiveBundlePrices).length > 0
+
+  // Fetch bundle prices whenever the build fingerprint changes.
+  // Uses AbortController so a mid-flight change to selections cancels stale requests.
+  // All setState calls live inside promise callbacks — never in the effect body.
+  useEffect(() => {
+    if (!mounted || !selectionsKey) return
+
+    const controller = new AbortController()
+    let cancelled = false
+
+    fetchBundlePrices(selections, controller.signal)
+      .then((prices) => {
+        if (cancelled) return
+        setBundlePrices(prices)
+        setBundlePricesKey(selectionsKey)
+      })
+      .catch((err) => {
+        if (cancelled || err?.name === 'AbortError') return
+        setBundlePrices({})
+        setBundlePricesKey(selectionsKey)
+      })
+
+    return () => {
+      cancelled = true
+      controller.abort()
+    }
+  }, [mounted, selectionsKey, selections])
 
   const openModal = (slotKey: string) => setActiveModalSlot(slotKey)
   const closeModal = () => setActiveModalSlot(null)
@@ -101,8 +154,8 @@ export default function PcBuilderClient({
 
   const { totalPrice, totalOriginalPrice } = useMemo(() => {
     if (!mounted) return { totalPrice: 0, totalOriginalPrice: 0 }
-    return calculateBuildTotals(selections)
-  }, [selections, mounted])
+    return calculateBuildTotals(selections, effectiveBundlePrices)
+  }, [selections, mounted, effectiveBundlePrices])
 
   const handleWhatsAppBuildOrder = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
@@ -270,6 +323,8 @@ export default function PcBuilderClient({
             hasSelections={hasSelections}
             onSubmit={handleWhatsAppBuildOrder}
             fontFam={bodyFontFamily}
+            bundleActive={bundleActive}
+            bundleLoading={bundleLoading}
             titleColor={titleColor}
             bodyColor={bodyColor}
             boxTitleColor={boxTitleColor}

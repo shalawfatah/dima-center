@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useSyncExternalStore } from 'react'
 import useEmblaCarousel from 'embla-carousel-react'
 import Image from 'next/image'
 
@@ -92,7 +92,6 @@ export default function ProductGallery({
   imagesGallery,
   isRtl = false,
   cardBgColor,
-  headingFont,
   bodyFont,
   titleColor,
   bodyColor,
@@ -124,7 +123,6 @@ export default function ProductGallery({
     }
   })
 
-  const [selectedIndex, setSelectedIndex] = useState(0)
   const [isLightboxOpen, setIsLightboxOpen] = useState(false)
   const [lightboxIndex, setLightboxIndex] = useState(0)
 
@@ -138,42 +136,38 @@ export default function ProductGallery({
     direction: isRtl ? 'rtl' : 'ltr',
   })
 
-  const onSelect = useCallback(() => {
-    if (!emblaMainApi || !emblaThumbsApi) return
-
-    let current = 0
-    if (typeof emblaMainApi.selectedScrollSnap === 'function') {
-      current = emblaMainApi.selectedScrollSnap()
-    } else if (typeof (emblaMainApi as any).selectedSnap === 'function') {
-      current = (emblaMainApi as any).selectedSnap()
-    } else {
-      return
-    }
-
-    setSelectedIndex(current)
-
-    if (typeof emblaThumbsApi.scrollTo === 'function') {
-      emblaThumbsApi.scrollTo(current)
-    }
-  }, [emblaMainApi, emblaThumbsApi])
+  const selectedIndex = useSyncExternalStore(
+    useCallback(
+      (onStoreChange: () => void) => {
+        if (!emblaMainApi) return () => {}
+        emblaMainApi.on('select', onStoreChange)
+        emblaMainApi.on('reInit', onStoreChange)
+        return () => {
+          emblaMainApi.off('select', onStoreChange)
+          emblaMainApi.off('reInit', onStoreChange)
+        }
+      },
+      [emblaMainApi],
+    ),
+    useCallback(() => {
+      if (!emblaMainApi) return 0
+      if (typeof emblaMainApi.selectedScrollSnap === 'function') {
+        return emblaMainApi.selectedScrollSnap()
+      }
+      if (typeof (emblaMainApi as any).selectedSnap === 'function') {
+        return (emblaMainApi as any).selectedSnap()
+      }
+      return 0
+    }, [emblaMainApi]),
+    () => 0,
+  )
 
   useEffect(() => {
-    if (!emblaMainApi) return
-
-    onSelect()
-
-    if (typeof emblaMainApi.on === 'function') {
-      emblaMainApi.on('select', onSelect)
-      emblaMainApi.on('reInit', onSelect)
+    if (!emblaThumbsApi) return
+    if (typeof emblaThumbsApi.scrollTo === 'function') {
+      emblaThumbsApi.scrollTo(selectedIndex)
     }
-
-    return () => {
-      if (emblaMainApi && typeof emblaMainApi.off === 'function') {
-        emblaMainApi.off('select', onSelect)
-        emblaMainApi.off('reInit', onSelect)
-      }
-    }
-  }, [emblaMainApi, onSelect])
+  }, [emblaThumbsApi, selectedIndex])
 
   const onThumbClick = useCallback(
     (index: number) => {
@@ -215,8 +209,14 @@ export default function ProductGallery({
 
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') closeLightbox()
-      if (e.key === 'ArrowRight') isRtl ? showPrev() : showNext()
-      if (e.key === 'ArrowLeft') isRtl ? showNext() : showPrev()
+      if (e.key === 'ArrowRight') {
+        if (isRtl) showPrev()
+        else showNext()
+      }
+      if (e.key === 'ArrowLeft') {
+        if (isRtl) showNext()
+        else showPrev()
+      }
     }
 
     document.addEventListener('keydown', handleKeyDown)
@@ -229,7 +229,6 @@ export default function ProductGallery({
     }
   }, [isLightboxOpen, closeLightbox, showNext, showPrev, isRtl])
 
-  // Use provided colors or fallbacks
   const headingColor = titleColor || '#000000'
   const textColor = bodyColor || '#333333'
 
@@ -277,7 +276,8 @@ export default function ProductGallery({
           type="button"
           onClick={(e) => {
             e.stopPropagation()
-            isRtl ? showNext() : showPrev()
+            if (isRtl) showNext()
+            else showPrev()
           }}
           aria-label="Previous image"
           style={{
@@ -324,7 +324,8 @@ export default function ProductGallery({
           type="button"
           onClick={(e) => {
             e.stopPropagation()
-            isRtl ? showPrev() : showNext()
+            if (isRtl) showPrev()
+            else showNext()
           }}
           aria-label="Next image"
           style={{
@@ -453,7 +454,6 @@ export default function ProductGallery({
           .embla-zoom-hint { position: absolute; bottom: 12px; right: 12px; background: rgba(0,0,0,0.5); color: #fff; border-radius: 6px; padding: 6px; display: flex; }
         `}</style>
 
-        {/* Main Viewport Carousel */}
         <div className="embla" ref={emblaMainRef} style={{ background: resolvedBg }}>
           <div className="embla__container">
             {allImages.map((src, index) => (
@@ -477,7 +477,6 @@ export default function ProductGallery({
           </div>
         </div>
 
-        {/* Sub-thumbnail Strip */}
         <div className="embla-thumbs" ref={emblaThumbsRef}>
           <div className="embla-thumbs__container">
             {allImages.map((src, index) => (

@@ -347,6 +347,10 @@ export interface BuildSummarySidebarProps {
   boxPriceColor?: string
   boxBgColor?: string
   borderColor?: string
+  /** True when the build is complete and bundle prices were successfully fetched. */
+  bundleActive?: boolean
+  /** True while the bundle-price fetch is in flight. */
+  bundleLoading?: boolean
 }
 
 export interface ExtendedPcBuilderClientProps extends PcBuilderClientProps {
