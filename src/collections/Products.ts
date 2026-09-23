@@ -129,7 +129,7 @@ export const Products: CollectionConfig = {
       label: 'Technical Specifications',
       fields: [
         { name: 'key', type: 'text', required: true },
-        { name: 'value', type: 'text', required: true, localized: true },
+        { name: 'value', type: 'text', required: true },
       ],
     },
     // === ✅ ROOT LEVEL MEDIA FIELDS ===
