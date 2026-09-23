@@ -33,6 +33,11 @@ export default function ComponentSlotCard({
 
   const displayImage = chosenItem?.featuredImage?.url || slot.defaultImage
 
+  const currentQty = chosenItem?.quantity || 1
+  const maxStock = Number(chosenItem?.stock)
+  const hasStockLimit = Number.isFinite(maxStock) && maxStock > 0
+  const atMax = !!chosenItem && hasStockLimit && currentQty >= maxStock
+
   return (
     <div
       className="pc-builder-component-card"
@@ -97,18 +102,23 @@ export default function ComponentSlotCard({
                   fontWeight: 600,
                   fontSize: '14px',
                 }}
+                title={hasStockLimit ? `Max available: ${maxStock}` : undefined}
               >
-                {chosenItem.quantity || 1}
+                {currentQty}
               </span>
               <button
                 type="button"
                 className="pc-builder-btn action"
                 onClick={() => onQuantityChange(slot.key, 1)}
+                disabled={atMax}
+                title={atMax ? `Max available: ${maxStock}` : undefined}
                 style={{
                   fontFamily: bodyFont || 'inherit',
                   color: textColor,
                   backgroundColor: 'transparent',
                   border: `1px solid ${textColor}`,
+                  opacity: atMax ? 0.35 : 1,
+                  cursor: atMax ? 'not-allowed' : 'pointer',
                 }}
               >
                 +
