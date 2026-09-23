@@ -1,4 +1,3 @@
-// src/app/api/pc-builder/bundle-prices/route.ts
 import { NextRequest, NextResponse } from 'next/server'
 import { getBruskConfig } from '@/utils/brusk_api/brusk_client'
 
@@ -18,15 +17,18 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Items are required' }, { status: 400 })
   }
 
+  console.log('[bundle-route] incoming items:', body.items)
+
   let config
   try {
     config = getBruskConfig()
-  } catch (err: any) {
-    // Missing env creds — surface clearly, don't leak names to client
+  } catch {
+    console.error('[bundle-route] getBruskConfig failed — check BRUSK_* env vars')
     return NextResponse.json({ error: 'Bundle pricing not configured' }, { status: 500 })
   }
 
   const url = `${config.baseUrl}${config.prefix}/items/availability-items/${config.branchId}`
+  console.log('[bundle-route] → upstream URL:', url)
 
   const upstream = await fetch(url, {
     method: 'POST',
@@ -36,11 +38,14 @@ export async function POST(req: NextRequest) {
       Accept: 'application/json',
     },
     body: JSON.stringify({ items: body.items }),
-    // don't cache — prices change
     cache: 'no-store',
   })
 
+  console.log('[bundle-route] ← upstream status:', upstream.status)
+
   if (!upstream.ok) {
+    const errText = await upstream.clone().text()
+    console.error('[bundle-route] upstream error body:', errText.slice(0, 500))
     return NextResponse.json(
       { error: `Upstream error ${upstream.status}` },
       { status: upstream.status },
@@ -48,5 +53,19 @@ export async function POST(req: NextRequest) {
   }
 
   const data = await upstream.json()
+
+  console.log(
+    '[bundle-route] upstream items:',
+    (data?.record?.items ?? []).map((it: any) => ({
+      barcode: it.barcode,
+      name: it.name,
+      sellingPriceDollar: it.sellingPriceDollar,
+      sellingPriceMultipleDollar: it.sellingPriceMultipleDollar,
+      sellingPriceMultiple: it.sellingPriceMultiple,
+      hasBundleField: 'sellingPriceMultipleDollar' in it,
+      bundleFieldType: typeof it.sellingPriceMultipleDollar,
+    })),
+  )
+
   return NextResponse.json(data)
 }

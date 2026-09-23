@@ -62,8 +62,6 @@ export default function PcBuilderClient({
     [mounted, selections],
   )
 
-  // A stable fingerprint of the current selections for bundle purposes.
-  // Whenever this changes, any in-flight fetch is stale and a new one must run.
   const selectionsKey = useMemo(() => {
     if (!isComplete) return ''
     return Object.entries(selections)
@@ -72,7 +70,6 @@ export default function PcBuilderClient({
       .join('|')
   }, [isComplete, selections])
 
-  // Derived — no state, no setState in the effect body, no lint error.
   const bundleLoading = isComplete && selectionsKey !== '' && bundlePricesKey !== selectionsKey
 
   const effectiveBundlePrices =
@@ -80,23 +77,39 @@ export default function PcBuilderClient({
 
   const bundleActive = !!effectiveBundlePrices && Object.keys(effectiveBundlePrices).length > 0
 
-  // Fetch bundle prices whenever the build fingerprint changes.
-  // Uses AbortController so a mid-flight change to selections cancels stale requests.
-  // All setState calls live inside promise callbacks — never in the effect body.
+  console.log('[pcbuilder] state:', {
+    mounted,
+    isComplete,
+    selectionsKey,
+    bundlePricesKey,
+    bundleActive,
+    bundleLoading,
+    bundlePricesCount: Object.keys(bundlePrices).length,
+    effectiveBundlePricesCount: effectiveBundlePrices
+      ? Object.keys(effectiveBundlePrices).length
+      : 0,
+    selectionSlots: Object.keys(selections),
+    selectionBarcodes: Object.values(selections).map((s: any) => s?.barcode),
+  })
+
   useEffect(() => {
     if (!mounted || !selectionsKey) return
 
     const controller = new AbortController()
     let cancelled = false
 
+    console.log('[pcbuilder] effect firing — fetching bundle prices for key:', selectionsKey)
+
     fetchBundlePrices(selections, controller.signal)
       .then((prices) => {
         if (cancelled) return
+        console.log('[pcbuilder] fetch resolved with prices:', prices)
         setBundlePrices(prices)
         setBundlePricesKey(selectionsKey)
       })
       .catch((err) => {
         if (cancelled || err?.name === 'AbortError') return
+        console.error('[pcbuilder] fetch failed:', err)
         setBundlePrices({})
         setBundlePricesKey(selectionsKey)
       })
@@ -154,7 +167,23 @@ export default function PcBuilderClient({
 
   const { totalPrice, totalOriginalPrice } = useMemo(() => {
     if (!mounted) return { totalPrice: 0, totalOriginalPrice: 0 }
-    return calculateBuildTotals(selections, effectiveBundlePrices)
+    const result = calculateBuildTotals(selections, effectiveBundlePrices)
+
+    console.log('[pcbuilder] totals computed:', {
+      usingBundle: !!effectiveBundlePrices,
+      totalPrice: result.totalPrice,
+      totalOriginalPrice: result.totalOriginalPrice,
+      perSlot: Object.entries(selections).map(([slot, item]: [string, any]) => ({
+        slot,
+        barcode: item?.barcode,
+        normalPrice: item?.price,
+        bundlePrice: effectiveBundlePrices?.[slot],
+        final: effectiveBundlePrices?.[slot] ?? item?.price,
+        qty: item?.quantity || 1,
+      })),
+    })
+
+    return result
   }, [selections, mounted, effectiveBundlePrices])
 
   const handleWhatsAppBuildOrder = (e: React.FormEvent<HTMLFormElement>) => {

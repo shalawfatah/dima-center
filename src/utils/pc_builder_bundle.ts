@@ -2,27 +2,15 @@
 
 import { COMPONENT_SLOTS } from '@/utils/pc_build_items'
 
-/**
- * Slots that must ALL be filled for bundle pricing to kick in.
- * `cooler` is intentionally excluded — the client considers it optional,
- * so a build missing only the cooler still qualifies for bundle pricing.
- */
-export const BUNDLE_REQUIRED_SLOTS = COMPONENT_SLOTS.map((s) => s.key).filter((k) => k !== 'cooler') // → ['cpu','gpu','motherboard','ram','m-2','psu','case']
+export const BUNDLE_REQUIRED_SLOTS = COMPONENT_SLOTS.map((s) => s.key).filter((k) => k !== 'cooler')
 
 export type Selections = Record<string, any>
 export type BundlePrices = Record<string, number>
 
-/** True when every required slot has a chosen component. */
 export function isBuildComplete(selections: Selections): boolean {
   return BUNDLE_REQUIRED_SLOTS.every((key) => selections[key] != null)
 }
 
-/**
- * Calls our own Next.js API route (which in turn calls Tadbeer's
- * availability-items endpoint with server-side credentials).
- * Returns a map of { slotKey -> sellingPriceMultipleDollar } for whichever
- * slots the upstream returned a bundle price for.
- */
 export async function fetchBundlePrices(
   selections: Selections,
   signal?: AbortSignal,
@@ -32,9 +20,11 @@ export async function fetchBundlePrices(
       slotKey,
       barcode: item?.barcode,
       quantity: item?.quantity || 1,
+      rawPrice: item?.price,
     }))
-    // skip anything malformed — a missing barcode would 400 the whole request
     .filter((x) => typeof x.barcode === 'string' && x.barcode.length > 0)
+
+  console.log('[bundle] → request items:', items)
 
   if (items.length === 0) return {}
 
@@ -47,14 +37,29 @@ export async function fetchBundlePrices(
     signal,
   })
 
+  console.log('[bundle] ← route status:', res.status)
+
   if (!res.ok) {
+    const errText = await res.clone().text()
+    console.error('[bundle] route error body:', errText.slice(0, 500))
     throw new Error(`Bundle price fetch failed: ${res.status}`)
   }
 
   const data = await res.json()
   const apiItems: any[] = data?.record?.items ?? []
 
-  // Map by barcode back to slot keys
+  console.log(
+    '[bundle] ← upstream items:',
+    apiItems.map((it) => ({
+      barcode: it.barcode,
+      name: it.name,
+      sellingPriceDollar: it.sellingPriceDollar,
+      sellingPriceMultipleDollar: it.sellingPriceMultipleDollar,
+      hasBundleField: 'sellingPriceMultipleDollar' in it,
+      bundleFieldType: typeof it.sellingPriceMultipleDollar,
+    })),
+  )
+
   const byBarcode = new Map<string, any>()
   for (const it of apiItems) {
     if (it?.barcode) byBarcode.set(String(it.barcode), it)
@@ -64,9 +69,16 @@ export async function fetchBundlePrices(
   for (const { slotKey, barcode } of items) {
     const match = byBarcode.get(String(barcode))
     const bundlePrice = Number(match?.sellingPriceMultipleDollar)
-    if (Number.isFinite(bundlePrice) && bundlePrice > 0) {
-      prices[slotKey] = bundlePrice
-    }
+    const willUse = Number.isFinite(bundlePrice) && bundlePrice > 0
+    console.log(`[bundle] slot=${slotKey} barcode=${barcode}`, {
+      matched: !!match,
+      rawBundleValue: match?.sellingPriceMultipleDollar,
+      parsedBundlePrice: bundlePrice,
+      willUse,
+    })
+    if (willUse) prices[slotKey] = bundlePrice
   }
+
+  console.log('[bundle] → final bundlePrices map:', prices)
   return prices
 }
