@@ -34,10 +34,9 @@ export default async function PcBuilderPage({ params }: PageProps) {
         discountType: true,
         discountValue: true,
         category: true,
-        cat: true,
         featuredImage: true,
-        meta: true,
-        barcode: true, // ← added for bundle pricing
+        barcode: true,
+        stock: true,
       },
       limit: 0,
       pagination: false,

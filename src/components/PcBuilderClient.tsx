@@ -77,39 +77,20 @@ export default function PcBuilderClient({
 
   const bundleActive = !!effectiveBundlePrices && Object.keys(effectiveBundlePrices).length > 0
 
-  console.log('[pcbuilder] state:', {
-    mounted,
-    isComplete,
-    selectionsKey,
-    bundlePricesKey,
-    bundleActive,
-    bundleLoading,
-    bundlePricesCount: Object.keys(bundlePrices).length,
-    effectiveBundlePricesCount: effectiveBundlePrices
-      ? Object.keys(effectiveBundlePrices).length
-      : 0,
-    selectionSlots: Object.keys(selections),
-    selectionBarcodes: Object.values(selections).map((s: any) => s?.barcode),
-  })
-
   useEffect(() => {
     if (!mounted || !selectionsKey) return
 
     const controller = new AbortController()
     let cancelled = false
 
-    console.log('[pcbuilder] effect firing — fetching bundle prices for key:', selectionsKey)
-
     fetchBundlePrices(selections, controller.signal)
       .then((prices) => {
         if (cancelled) return
-        console.log('[pcbuilder] fetch resolved with prices:', prices)
         setBundlePrices(prices)
         setBundlePricesKey(selectionsKey)
       })
       .catch((err) => {
         if (cancelled || err?.name === 'AbortError') return
-        console.error('[pcbuilder] fetch failed:', err)
         setBundlePrices({})
         setBundlePricesKey(selectionsKey)
       })
@@ -158,8 +139,16 @@ export default function PcBuilderClient({
     setSelections((prev) => {
       const currentItem = prev[slotKey]
       if (!currentItem) return prev
-      const nextQty = (currentItem.quantity || 1) + delta
+
+      const currentQty = currentItem.quantity || 1
+      const nextQty = currentQty + delta
+
       if (nextQty < 1) return prev
+
+      const maxStock = Number(currentItem.stock)
+      if (Number.isFinite(maxStock) && maxStock > 0 && nextQty > maxStock) {
+        return prev
+      }
 
       return { ...prev, [slotKey]: { ...currentItem, quantity: nextQty } }
     })
@@ -167,23 +156,7 @@ export default function PcBuilderClient({
 
   const { totalPrice, totalOriginalPrice } = useMemo(() => {
     if (!mounted) return { totalPrice: 0, totalOriginalPrice: 0 }
-    const result = calculateBuildTotals(selections, effectiveBundlePrices)
-
-    console.log('[pcbuilder] totals computed:', {
-      usingBundle: !!effectiveBundlePrices,
-      totalPrice: result.totalPrice,
-      totalOriginalPrice: result.totalOriginalPrice,
-      perSlot: Object.entries(selections).map(([slot, item]: [string, any]) => ({
-        slot,
-        barcode: item?.barcode,
-        normalPrice: item?.price,
-        bundlePrice: effectiveBundlePrices?.[slot],
-        final: effectiveBundlePrices?.[slot] ?? item?.price,
-        qty: item?.quantity || 1,
-      })),
-    })
-
-    return result
+    return calculateBuildTotals(selections, effectiveBundlePrices)
   }, [selections, mounted, effectiveBundlePrices])
 
   const handleWhatsAppBuildOrder = (e: React.FormEvent<HTMLFormElement>) => {
