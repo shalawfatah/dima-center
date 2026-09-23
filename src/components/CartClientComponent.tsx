@@ -37,19 +37,19 @@ export default function CartClientComponent({
   const [buyerNumber, setBuyerNumber] = useState('')
 
   useEffect(() => {
-    try {
-      const stored = localStorage.getItem('cart')
-      if (stored) {
-        const parsed = JSON.parse(stored)
-        if (Array.isArray(parsed)) {
-          setCartItems(parsed)
+    queueMicrotask(() => {
+      try {
+        const stored = localStorage.getItem('cart')
+        if (stored) {
+          const parsed = JSON.parse(stored)
+          if (Array.isArray(parsed)) setCartItems(parsed)
         }
+      } catch (err) {
+        console.error('Error reading cart data:', err)
+      } finally {
+        setIsLoading(false)
       }
-    } catch (err) {
-      console.error('Error reading cart data:', err)
-    } finally {
-      setIsLoading(false)
-    }
+    })
   }, [])
 
   const saveCart = (updatedItems: CartItem[]) => {

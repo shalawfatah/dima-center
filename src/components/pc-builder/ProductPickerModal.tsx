@@ -92,7 +92,7 @@ export default function ProductPickerModal({
         <div className="pc-builder-modal-body">
           {filteredProducts.length === 0 ? (
             <p className="pc-builder-modal-empty">
-              {labels.noItems} "{currentSlotConfig.categorySlug}".
+              {`${labels.noItems} "${currentSlotConfig.categorySlug}".`}
             </p>
           ) : (
             filteredProducts.map((prod) => {

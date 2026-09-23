@@ -11,7 +11,7 @@ export default function SignInComponent() {
       {/* ... sign in fields ... */}
 
       <div style={{ marginTop: '1rem' }}>
-        <span>Don't have an account? </span>
+        <span>Don&apos;t have an account? </span>
         {/* Make sure this link points to your localized sign-up route */}
         <Link href={`/${locale}/signup`}>Sign Up</Link>
       </div>

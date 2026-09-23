@@ -1,5 +1,10 @@
 import { exchangeLabel, phoneAriaLabel, pickLocale } from '@/utils/pc_builder_translations'
-import { submitLabel, whatsappPriceNotice } from '@/utils/pc_build_items'
+import {
+  submitLabel,
+  whatsappPriceNotice,
+  normalPriceLabel,
+  wholesalePriceLabel,
+} from '@/utils/pc_build_items'
 import styles from '@/styles/pc_builder.module.css'
 import { BuildSummarySidebarProps } from '@/types/types'
 
@@ -15,6 +20,8 @@ export default function BuildSummarySidebar({
   hasSelections,
   onSubmit,
   fontFam,
+  bundleActive,
+  bundleLoading,
   titleColor,
   bodyColor,
   boxTitleColor,
@@ -49,6 +56,31 @@ export default function BuildSummarySidebar({
         >
           {t.summary}
         </h3>
+
+        {bundleLoading && (
+          <div
+            className={styles['pc-builder-bundle-badge']}
+            style={{
+              color: textColor,
+              fontFamily: fontFam,
+              opacity: 0.75,
+            }}
+          >
+            ⏳ Checking bundle price…
+          </div>
+        )}
+
+        {!bundleLoading && bundleActive && (
+          <div
+            className={styles['pc-builder-bundle-badge']}
+            style={{
+              color: textColor,
+              fontFamily: fontFam,
+            }}
+          >
+            ✅ Bundle pricing applied
+          </div>
+        )}
 
         <div
           className={styles['pc-builder-price-row']}
@@ -95,7 +127,9 @@ export default function BuildSummarySidebar({
               fontFamily: fontFam,
             }}
           >
-            {t.totalPrice}
+            {bundleActive
+              ? wholesalePriceLabel[currentLocale] || wholesalePriceLabel.en
+              : normalPriceLabel[currentLocale] || normalPriceLabel.en}
           </span>
           <div className={styles['pc-builder-total-price-wrap']}>
             {totalOriginalPrice > totalPrice && (
@@ -122,9 +156,11 @@ export default function BuildSummarySidebar({
           </div>
         </div>
 
-        <div className={styles['pc-builder-whatsapp-notice']}>
-          ℹ️ {whatsappPriceNotice[currentLocale] || whatsappPriceNotice.en}
-        </div>
+        {!bundleActive && (
+          <div className={styles['pc-builder-whatsapp-notice']}>
+            ℹ️ {whatsappPriceNotice[currentLocale] || whatsappPriceNotice.en}
+          </div>
+        )}
 
         <form onSubmit={onSubmit} className={styles['pc-builder-order-form']}>
           <input
@@ -138,9 +174,6 @@ export default function BuildSummarySidebar({
               {
                 borderColor: resolvedBorderColor,
                 backgroundColor: resolvedBoxBg,
-                // Custom properties so the CSS module's :-webkit-autofill rules
-                // (which can't read inline `color`/`backgroundColor`) can still
-                // pick up the right colors and stop iOS/WebKit forcing black text.
                 '--pc-input-text': textColor,
                 '--pc-input-bg': resolvedBoxBg,
               } as React.CSSProperties

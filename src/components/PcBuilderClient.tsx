@@ -1,5 +1,6 @@
 'use client'
 
+import { isBuildComplete, fetchBundlePrices, type BundlePrices } from '@/utils/pc_builder_bundle'
 import { useState, useEffect, useMemo, useCallback } from 'react'
 import { useLocalStorageState } from '../utils/pc_build_local_storage'
 import { COMPONENT_SLOTS, dict, phoneErrorLabel } from '@/utils/pc_build_items'
@@ -43,6 +44,8 @@ export default function PcBuilderClient({
   const [buyerNumber, setBuyerNumber] = useState('')
   const [message, setMessage] = useState({ type: '', text: '' })
   const [showClearConfirmModal, setShowClearConfirmModal] = useState(false)
+  const [bundlePrices, setBundlePrices] = useState<BundlePrices>({})
+  const [bundlePricesKey, setBundlePricesKey] = useState<string>('')
 
   const dynamicExchangeRate = generals?.exchangeRate ?? 1500
 
@@ -53,6 +56,69 @@ export default function PcBuilderClient({
   }, [])
 
   usePcBuilderUrlSync({ mounted, products, currentLocale, setSelections })
+
+  const isComplete = useMemo(
+    () => (mounted ? isBuildComplete(selections) : false),
+    [mounted, selections],
+  )
+
+  const selectionsKey = useMemo(() => {
+    if (!isComplete) return ''
+    return Object.entries(selections)
+      .map(([slot, item]: [string, any]) => `${slot}:${item?.barcode || ''}:${item?.quantity || 1}`)
+      .sort()
+      .join('|')
+  }, [isComplete, selections])
+
+  const bundleLoading = isComplete && selectionsKey !== '' && bundlePricesKey !== selectionsKey
+
+  const effectiveBundlePrices =
+    isComplete && bundlePricesKey === selectionsKey ? bundlePrices : undefined
+
+  const bundleActive = !!effectiveBundlePrices && Object.keys(effectiveBundlePrices).length > 0
+
+  console.log('[pcbuilder] state:', {
+    mounted,
+    isComplete,
+    selectionsKey,
+    bundlePricesKey,
+    bundleActive,
+    bundleLoading,
+    bundlePricesCount: Object.keys(bundlePrices).length,
+    effectiveBundlePricesCount: effectiveBundlePrices
+      ? Object.keys(effectiveBundlePrices).length
+      : 0,
+    selectionSlots: Object.keys(selections),
+    selectionBarcodes: Object.values(selections).map((s: any) => s?.barcode),
+  })
+
+  useEffect(() => {
+    if (!mounted || !selectionsKey) return
+
+    const controller = new AbortController()
+    let cancelled = false
+
+    console.log('[pcbuilder] effect firing — fetching bundle prices for key:', selectionsKey)
+
+    fetchBundlePrices(selections, controller.signal)
+      .then((prices) => {
+        if (cancelled) return
+        console.log('[pcbuilder] fetch resolved with prices:', prices)
+        setBundlePrices(prices)
+        setBundlePricesKey(selectionsKey)
+      })
+      .catch((err) => {
+        if (cancelled || err?.name === 'AbortError') return
+        console.error('[pcbuilder] fetch failed:', err)
+        setBundlePrices({})
+        setBundlePricesKey(selectionsKey)
+      })
+
+    return () => {
+      cancelled = true
+      controller.abort()
+    }
+  }, [mounted, selectionsKey, selections])
 
   const openModal = (slotKey: string) => setActiveModalSlot(slotKey)
   const closeModal = () => setActiveModalSlot(null)
@@ -101,8 +167,24 @@ export default function PcBuilderClient({
 
   const { totalPrice, totalOriginalPrice } = useMemo(() => {
     if (!mounted) return { totalPrice: 0, totalOriginalPrice: 0 }
-    return calculateBuildTotals(selections)
-  }, [selections, mounted])
+    const result = calculateBuildTotals(selections, effectiveBundlePrices)
+
+    console.log('[pcbuilder] totals computed:', {
+      usingBundle: !!effectiveBundlePrices,
+      totalPrice: result.totalPrice,
+      totalOriginalPrice: result.totalOriginalPrice,
+      perSlot: Object.entries(selections).map(([slot, item]: [string, any]) => ({
+        slot,
+        barcode: item?.barcode,
+        normalPrice: item?.price,
+        bundlePrice: effectiveBundlePrices?.[slot],
+        final: effectiveBundlePrices?.[slot] ?? item?.price,
+        qty: item?.quantity || 1,
+      })),
+    })
+
+    return result
+  }, [selections, mounted, effectiveBundlePrices])
 
   const handleWhatsAppBuildOrder = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
@@ -270,6 +352,8 @@ export default function PcBuilderClient({
             hasSelections={hasSelections}
             onSubmit={handleWhatsAppBuildOrder}
             fontFam={bodyFontFamily}
+            bundleActive={bundleActive}
+            bundleLoading={bundleLoading}
             titleColor={titleColor}
             bodyColor={bodyColor}
             boxTitleColor={boxTitleColor}

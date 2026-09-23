@@ -130,3 +130,15 @@ export const whatsappPriceNotice: Record<string, string> = {
   ckb: 'ئەمە نرخی کۆتایی نیە، بۆ نرخی کەمتر و کۆتایی بەرهەمەکەت بنێرە بۆ وەتسئەپەکەمان.',
   ar: 'هذا ليس السعر النهائي، للحصول على سعر نهائي أقل، يرجى إرسال طلبك عبر الواتساب الخاص بنا.',
 }
+
+export const normalPriceLabel: Record<string, string> = {
+  en: 'Normal price',
+  ar: 'السعر العادي',
+  ckb: 'نرخی ئاسایی',
+}
+
+export const wholesalePriceLabel: Record<string, string> = {
+  en: 'Price after discount',
+  ar: 'السعر بعد الخصم',
+  ckb: 'نرخی دوای داشکاندن',
+}

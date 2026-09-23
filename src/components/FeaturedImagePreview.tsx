@@ -1,8 +1,8 @@
-// src/components/FeaturedImagePreview.tsx
 'use client'
 
 import React, { useEffect, useState } from 'react'
 import { useFormFields } from '@payloadcms/ui'
+import Image from 'next/image'
 
 export const FeaturedImagePreview: React.FC = () => {
   // Pulls the current selected media ID from the form state
@@ -11,26 +11,34 @@ export const FeaturedImagePreview: React.FC = () => {
   const [imageUrl, setImageUrl] = useState<string | null>(null)
 
   useEffect(() => {
-    if (!mediaId) {
-      setImageUrl(null)
-      return
+    // Defer all setState calls out of the synchronous effect body.
+    // The `cancelled` flag prevents an outdated fetch from clobbering
+    // the state of a newer mediaId (classic race when the user picks
+    // media A, then quickly media B).
+    let cancelled = false
+
+    const load = async () => {
+      if (!mediaId) {
+        if (!cancelled) setImageUrl(null)
+        return
+      }
+
+      try {
+        const res = await fetch(`/api/media/${mediaId}`)
+        if (!res.ok) throw new Error('Failed to fetch media details')
+        const data = await res.json()
+        if (!cancelled) setImageUrl(data?.url ?? null)
+      } catch (err) {
+        console.error('Error loading media preview:', err)
+        if (!cancelled) setImageUrl(null)
+      }
     }
 
-    // Fetch the media record from Payload's REST API to extract the real file URL
-    fetch(`/api/media/${mediaId}`)
-      .then((res) => {
-        if (!res.ok) throw new Error('Failed to fetch media details')
-        return res.json()
-      })
-      .then((data) => {
-        if (data && data.url) {
-          setImageUrl(data.url)
-        }
-      })
-      .catch((err) => {
-        console.error('Error loading media preview:', err)
-        setImageUrl(null)
-      })
+    load()
+
+    return () => {
+      cancelled = true
+    }
   }, [mediaId])
 
   if (!imageUrl) return null
@@ -38,24 +46,22 @@ export const FeaturedImagePreview: React.FC = () => {
   return (
     <div
       style={{
+        position: 'relative', // required for fill
         marginTop: '12px',
         borderRadius: '6px',
         overflow: 'hidden',
         border: '1px solid var(--theme-elevation-150, #e2e8f0)',
         backgroundColor: 'var(--theme-elevation-50, #f8fafc)',
         padding: '8px',
+        height: '180px', // give the wrapper an explicit height
       }}
     >
-      <img
+      <Image
         src={imageUrl}
         alt="Featured Preview"
-        style={{
-          width: '100%',
-          height: 'auto',
-          display: 'block',
-          maxHeight: '180px',
-          objectFit: 'contain',
-        }}
+        fill
+        sizes="(max-width: 768px) 100vw, 400px"
+        style={{ objectFit: 'contain' }}
       />
     </div>
   )
