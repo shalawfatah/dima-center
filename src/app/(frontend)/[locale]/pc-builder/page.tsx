@@ -37,6 +37,7 @@ export default async function PcBuilderPage({ params }: PageProps) {
         cat: true,
         featuredImage: true,
         meta: true,
+        barcode: true, // ← added for bundle pricing
       },
       limit: 0,
       pagination: false,
@@ -68,7 +69,6 @@ export default async function PcBuilderPage({ params }: PageProps) {
   let bodyFont = isRtl ? '"Sarchia", sans-serif' : 'system-ui, sans-serif'
   let dynamicFontFaceCSS = ''
 
-  // Extract all relevant typography colors including box-specific overrides
   const titleColor = typography?.titleColor || undefined
   const bodyColor = typography?.bodyColor || undefined
   const boxTitleColor = typography?.boxTitleColor || undefined
@@ -95,7 +95,7 @@ export default async function PcBuilderPage({ params }: PageProps) {
     dynamicFontFaceCSS += `
       @font-face {
         font-family: '${fontName}';
-        src: url('${fontName}') format('truetype');
+        src: url('${bodyFontObj.url}') format('truetype');
         font-display: swap;
       }
     `
