@@ -127,7 +127,9 @@ export default function BuildSummarySidebar({
               fontFamily: fontFam,
             }}
           >
-            {t.totalPrice}
+            {bundleActive
+              ? wholesalePriceLabel[currentLocale] || wholesalePriceLabel.en
+              : normalPriceLabel[currentLocale] || normalPriceLabel.en}
           </span>
           <div className={styles['pc-builder-total-price-wrap']}>
             {totalOriginalPrice > totalPrice && (
@@ -154,33 +156,10 @@ export default function BuildSummarySidebar({
           </div>
         </div>
 
-        {bundleActive ? (
-          <div
-            className={styles['pc-builder-price-notice']}
-            style={{
-              color: textColor,
-              fontFamily: fontFam,
-              fontWeight: 600,
-            }}
-          >
-            {wholesalePriceLabel[currentLocale] || wholesalePriceLabel.en}
+        {!bundleActive && (
+          <div className={styles['pc-builder-whatsapp-notice']}>
+            ℹ️ {whatsappPriceNotice[currentLocale] || whatsappPriceNotice.en}
           </div>
-        ) : (
-          <>
-            <div
-              className={styles['pc-builder-price-notice']}
-              style={{
-                color: textColor,
-                fontFamily: fontFam,
-                fontWeight: 600,
-              }}
-            >
-              {normalPriceLabel[currentLocale] || normalPriceLabel.en}
-            </div>
-            <div className={styles['pc-builder-whatsapp-notice']}>
-              ℹ️ {whatsappPriceNotice[currentLocale] || whatsappPriceNotice.en}
-            </div>
-          </>
         )}
 
         <form onSubmit={onSubmit} className={styles['pc-builder-order-form']}>
@@ -195,9 +174,6 @@ export default function BuildSummarySidebar({
               {
                 borderColor: resolvedBorderColor,
                 backgroundColor: resolvedBoxBg,
-                // Custom properties so the CSS module's :-webkit-autofill rules
-                // (which can't read inline `color`/`backgroundColor`) can still
-                // pick up the right colors and stop iOS/WebKit forcing black text.
                 '--pc-input-text': textColor,
                 '--pc-input-bg': resolvedBoxBg,
               } as React.CSSProperties
