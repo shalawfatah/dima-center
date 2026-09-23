@@ -7,7 +7,7 @@ export async function fetchProductById(id: string, locale: string, payload: any)
       where: { stock: { greater_than: 0 } },
       id: numericId,
       locale,
-      fallbackLocale: 'ckb',
+      fallbackLocale: 'en',
       depth: 1,
     })
     if (product) return { product, collectionName: 'products' as const }
