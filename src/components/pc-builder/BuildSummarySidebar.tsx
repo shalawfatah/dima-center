@@ -1,5 +1,10 @@
 import { exchangeLabel, phoneAriaLabel, pickLocale } from '@/utils/pc_builder_translations'
-import { submitLabel, whatsappPriceNotice } from '@/utils/pc_build_items'
+import {
+  submitLabel,
+  whatsappPriceNotice,
+  normalPriceLabel,
+  wholesalePriceLabel,
+} from '@/utils/pc_build_items'
 import styles from '@/styles/pc_builder.module.css'
 import { BuildSummarySidebarProps } from '@/types/types'
 
@@ -149,9 +154,34 @@ export default function BuildSummarySidebar({
           </div>
         </div>
 
-        <div className={styles['pc-builder-whatsapp-notice']}>
-          ℹ️ {whatsappPriceNotice[currentLocale] || whatsappPriceNotice.en}
-        </div>
+        {bundleActive ? (
+          <div
+            className={styles['pc-builder-price-notice']}
+            style={{
+              color: textColor,
+              fontFamily: fontFam,
+              fontWeight: 600,
+            }}
+          >
+            {wholesalePriceLabel[currentLocale] || wholesalePriceLabel.en}
+          </div>
+        ) : (
+          <>
+            <div
+              className={styles['pc-builder-price-notice']}
+              style={{
+                color: textColor,
+                fontFamily: fontFam,
+                fontWeight: 600,
+              }}
+            >
+              {normalPriceLabel[currentLocale] || normalPriceLabel.en}
+            </div>
+            <div className={styles['pc-builder-whatsapp-notice']}>
+              ℹ️ {whatsappPriceNotice[currentLocale] || whatsappPriceNotice.en}
+            </div>
+          </>
+        )}
 
         <form onSubmit={onSubmit} className={styles['pc-builder-order-form']}>
           <input
